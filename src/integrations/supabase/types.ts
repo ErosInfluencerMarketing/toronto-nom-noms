@@ -86,6 +86,36 @@ export type Database = {
         }
         Relationships: []
       }
+      templates: {
+        Row: {
+          created_at: string
+          id: string
+          message_body: string
+          name: string
+          platform: Database["public"]["Enums"]["platform_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_body: string
+          name: string
+          platform?: Database["public"]["Enums"]["platform_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_body?: string
+          name?: string
+          platform?: Database["public"]["Enums"]["platform_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
