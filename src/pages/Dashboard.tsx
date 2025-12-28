@@ -7,7 +7,9 @@ import { LeadCard } from '@/components/LeadCard';
 import { LeadForm } from '@/components/LeadForm';
 import { LeadFilters } from '@/components/LeadFilters';
 import { StatsCard } from '@/components/StatsCard';
+import { TemplatesSection } from '@/components/TemplatesSection';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -222,6 +224,10 @@ export default function Dashboard() {
             ))}
           </div>
         )}
+
+        {/* Templates Section */}
+        <Separator className="my-8" />
+        <TemplatesSection leads={leads} />
       </main>
 
       {/* Lead Form Dialog */}
