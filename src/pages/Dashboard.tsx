@@ -11,6 +11,7 @@ import { UpcomingOutreach } from '@/components/UpcomingOutreach';
 import { AnalyticsPanel } from '@/components/AnalyticsPanel';
 import { ViewToggle, ViewMode } from '@/components/ViewToggle';
 import { TemplatesSection } from '@/components/TemplatesSection';
+import { LeadImport } from '@/components/LeadImport';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -74,7 +75,8 @@ const exportLeadsToCSV = (leads: Lead[]) => {
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { leads, isLoading, createLead, updateLead, deleteLead } = useLeads();
+  const { leads, isLoading, createLead, updateLead, deleteLead, bulkCreateLeads } = useLeads();
+  const [isImporting, setIsImporting] = useState(false);
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
@@ -138,6 +140,15 @@ export default function Dashboard() {
     setIsFormOpen(true);
   };
 
+  const handleImportLeads = async (leadsData: LeadFormData[]) => {
+    setIsImporting(true);
+    try {
+      await bulkCreateLeads.mutateAsync(leadsData);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -194,8 +205,9 @@ export default function Dashboard() {
             onPlatformFilterChange={setPlatformFilter}
           />
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+            <LeadImport onImport={handleImportLeads} isLoading={isImporting} />
             <Button
               variant="outline"
               onClick={() => exportLeadsToCSV(filteredLeads)}
@@ -203,7 +215,7 @@ export default function Dashboard() {
               className="shrink-0"
             >
               <Download className="h-4 w-4 mr-2" />
-              Export CSV
+              Export
             </Button>
             <Button
               onClick={() => {
