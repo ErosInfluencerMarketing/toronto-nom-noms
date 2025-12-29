@@ -23,8 +23,53 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, LogOut, MapPin, Users } from 'lucide-react';
+import { Plus, LogOut, MapPin, Users, Download } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+
+const exportLeadsToCSV = (leads: Lead[]) => {
+  const headers = [
+    'Business Name',
+    'Owner Name',
+    'Email',
+    'Instagram Handle',
+    'Platform',
+    'Status',
+    'Next Outreach Date',
+    'Last Outreach Date',
+    'Notes',
+    'Created At',
+  ];
+
+  const rows = leads.map((lead) => [
+    lead.business_name,
+    lead.owner_name || '',
+    lead.email || '',
+    lead.instagram_handle || '',
+    lead.platform,
+    lead.status,
+    lead.next_outreach_date || '',
+    lead.last_outreach_date || '',
+    (lead.notes || '').replace(/"/g, '""'),
+    format(new Date(lead.created_at), 'yyyy-MM-dd'),
+  ]);
+
+  const csvContent = [
+    headers.join(','),
+    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `leads-export-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast.success('Leads exported successfully');
+};
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -151,6 +196,15 @@ export default function Dashboard() {
           
           <div className="flex items-center gap-3">
             <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+            <Button
+              variant="outline"
+              onClick={() => exportLeadsToCSV(filteredLeads)}
+              disabled={filteredLeads.length === 0}
+              className="shrink-0"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
             <Button
               onClick={() => {
                 setEditingLead(null);
