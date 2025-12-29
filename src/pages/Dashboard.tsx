@@ -6,7 +6,10 @@ import { Lead, LeadFormData, LeadStatus, Platform } from '@/types/lead';
 import { LeadCard } from '@/components/LeadCard';
 import { LeadForm } from '@/components/LeadForm';
 import { LeadFilters } from '@/components/LeadFilters';
-import { StatsCard } from '@/components/StatsCard';
+import { LeadListView } from '@/components/LeadListView';
+import { UpcomingOutreach } from '@/components/UpcomingOutreach';
+import { AnalyticsPanel } from '@/components/AnalyticsPanel';
+import { ViewToggle, ViewMode } from '@/components/ViewToggle';
 import { TemplatesSection } from '@/components/TemplatesSection';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -20,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, LogOut, MapPin, Users, Phone, Calendar, CheckCircle } from 'lucide-react';
+import { Plus, LogOut, MapPin, Users } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Dashboard() {
@@ -31,6 +34,7 @@ export default function Dashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('card');
   
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
@@ -49,14 +53,6 @@ export default function Dashboard() {
       return matchesSearch && matchesStatus && matchesPlatform;
     });
   }, [leads, search, statusFilter, platformFilter]);
-
-  const stats = useMemo(() => ({
-    total: leads.length,
-    new: leads.filter((l) => l.status === 'new').length,
-    contacted: leads.filter((l) => l.status === 'contacted').length,
-    demoBooked: leads.filter((l) => l.status === 'demo_booked').length,
-    onboarded: leads.filter((l) => l.status === 'onboarded').length,
-  }), [leads]);
 
   const handleCreateLead = (data: LeadFormData) => {
     createLead.mutate(data, {
@@ -132,41 +128,17 @@ export default function Dashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-6">
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <StatsCard
-            title="Total Leads"
-            value={stats.total}
-            icon={Users}
-            iconClassName="bg-primary/10 text-primary"
-          />
-          <StatsCard
-            title="New"
-            value={stats.new}
-            icon={Plus}
-            iconClassName="bg-status-new/10 text-status-new"
-          />
-          <StatsCard
-            title="Contacted"
-            value={stats.contacted}
-            icon={Phone}
-            iconClassName="bg-status-contacted/10 text-status-contacted"
-          />
-          <StatsCard
-            title="Demo Booked"
-            value={stats.demoBooked}
-            icon={Calendar}
-            iconClassName="bg-status-demo/10 text-status-demo"
-          />
-          <StatsCard
-            title="Onboarded"
-            value={stats.onboarded}
-            icon={CheckCircle}
-            iconClassName="bg-status-onboarded/10 text-status-onboarded"
-          />
+        {/* Analytics and Upcoming Outreach */}
+        <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <AnalyticsPanel leads={leads} />
+          </div>
+          <div className="lg:col-span-1">
+            <UpcomingOutreach leads={leads} onEdit={handleEdit} />
+          </div>
         </div>
 
-        {/* Filters and Add Button */}
+        {/* Filters and Actions */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
           <LeadFilters
             search={search}
@@ -177,19 +149,22 @@ export default function Dashboard() {
             onPlatformFilterChange={setPlatformFilter}
           />
           
-          <Button
-            onClick={() => {
-              setEditingLead(null);
-              setIsFormOpen(true);
-            }}
-            className="shrink-0"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Lead
-          </Button>
+          <div className="flex items-center gap-3">
+            <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+            <Button
+              onClick={() => {
+                setEditingLead(null);
+                setIsFormOpen(true);
+              }}
+              className="shrink-0"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Lead
+            </Button>
+          </div>
         </div>
 
-        {/* Leads Grid */}
+        {/* Leads View */}
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-muted-foreground">Loading leads...</div>
@@ -212,7 +187,7 @@ export default function Dashboard() {
               </Button>
             )}
           </div>
-        ) : (
+        ) : viewMode === 'card' ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredLeads.map((lead) => (
               <LeadCard
@@ -223,6 +198,12 @@ export default function Dashboard() {
               />
             ))}
           </div>
+        ) : (
+          <LeadListView
+            leads={filteredLeads}
+            onEdit={handleEdit}
+            onDelete={(id) => setDeleteConfirmId(id)}
+          />
         )}
 
         {/* Templates Section */}
