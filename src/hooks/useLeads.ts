@@ -42,10 +42,34 @@ export function useLeads() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead created successfully');
     },
     onError: (error) => {
       toast.error('Failed to create lead: ' + error.message);
+    },
+  });
+
+  const bulkCreateLeads = useMutation({
+    mutationFn: async (leadsData: LeadFormData[]) => {
+      if (!user) throw new Error('Not authenticated');
+      
+      const leadsWithUserId = leadsData.map(lead => ({
+        ...lead,
+        user_id: user.id,
+      }));
+
+      const { data, error } = await supabase
+        .from('leads')
+        .insert(leadsWithUserId)
+        .select();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+    },
+    onError: (error) => {
+      toast.error('Failed to import leads: ' + error.message);
     },
   });
 
@@ -95,5 +119,6 @@ export function useLeads() {
     createLead,
     updateLead,
     deleteLead,
+    bulkCreateLeads,
   };
 }
