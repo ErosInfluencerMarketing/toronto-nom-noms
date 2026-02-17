@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const supabase = createClient(
@@ -24,13 +24,14 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error('Auth error:', userError);
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
+    console.log('Enriching leads for user:', userId);
 
     const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
@@ -42,7 +43,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get leads with missing fields
     const { data: leads, error: leadsError } = await supabase
       .from('leads')
       .select('*')
@@ -54,6 +54,8 @@ Deno.serve(async (req) => {
       !l.email || !l.instagram_handle || !l.website || !l.address
     ) || [];
 
+    console.log(`Found ${leadsToEnrich.length} leads to enrich`);
+
     if (leadsToEnrich.length === 0) {
       return new Response(
         JSON.stringify({ success: true, enriched: 0, message: 'All leads are fully populated' }),
@@ -61,116 +63,103 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Process in batches of 5
-    const batchSize = 5;
-    let totalEnriched = 0;
+    // Process only 1 lead per call to stay within timeout
+    const lead = leadsToEnrich[0];
+    const missingFields: string[] = [];
+    if (!lead.email) missingFields.push('email');
+    if (!lead.instagram_handle) missingFields.push('instagram_handle');
+    if (!lead.website) missingFields.push('website');
+    if (!lead.address) missingFields.push('address');
 
-    for (let i = 0; i < leadsToEnrich.length; i += batchSize) {
-      const batch = leadsToEnrich.slice(i, i + batchSize);
-      
-      // Search for each business to find missing info
-      const enrichPromises = batch.map(async (lead: any) => {
-        const missingFields: string[] = [];
-        if (!lead.email) missingFields.push('email');
-        if (!lead.instagram_handle) missingFields.push('instagram');
-        if (!lead.website) missingFields.push('website');
-        if (!lead.address) missingFields.push('address');
+    const addressHint = lead.notes?.match(/Address: (.+)/)?.[1] || '';
+    const searchQuery = `${lead.business_name} ${addressHint} Toronto contact`;
+    console.log(`Searching: ${searchQuery}`);
 
-        if (missingFields.length === 0) return null;
+    const searchResponse = await fetch('https://api.firecrawl.dev/v1/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: searchQuery, limit: 3 }),
+    });
 
-        try {
-          // Search for the business
-          const searchResponse = await fetch('https://api.firecrawl.dev/v1/search', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query: `"${lead.business_name}" ${lead.address || ''} contact email instagram`,
-              limit: 5,
-              scrapeOptions: { formats: ['markdown'] },
-            }),
-          });
+    const searchData = await searchResponse.json();
+    console.log(`Search: status=${searchResponse.status}, results=${(searchData.data || []).length}`);
 
-          const searchData = await searchResponse.json();
-          if (!searchResponse.ok) return null;
+    if (!searchResponse.ok || !(searchData.data?.length)) {
+      return new Response(
+        JSON.stringify({ success: true, enriched: 0, total: leadsToEnrich.length, message: 'No search results' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-          const results = searchData.data || [];
-          if (results.length === 0) return null;
+    const content = searchData.data.map((r: any) =>
+      `${r.title || ''} | ${r.url || ''} | ${r.description || ''}`
+    ).join('\n');
 
-          const content = results.map((r: any) =>
-            `Title: ${r.title || ''}\nURL: ${r.url || ''}\nContent: ${(r.markdown || '').slice(0, 1500)}`
-          ).join('\n---\n');
+    console.log('Calling AI...');
 
-          // Use AI to extract missing info
-          const aiResponse = await fetch(AI_GATEWAY_URL, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${lovableApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              messages: [
-                {
-                  role: 'system',
-                  content: `Extract contact information for the business "${lead.business_name}". Return ONLY a JSON object with these fields (only include fields you find with high confidence):
-- email: string (contact/business email)
-- instagram_handle: string (Instagram handle WITHOUT @)
-- website: string (business website URL)
-- address: string (full street address)
-
-Return valid JSON only, no markdown. Use empty string for unknown fields.`
-                },
-                {
-                  role: 'user',
-                  content: `Find the missing information (${missingFields.join(', ')}) for "${lead.business_name}" from these search results:\n\n${content}`
-                }
-              ],
-              temperature: 0.1,
-            }),
-          });
-
-          const aiData = await aiResponse.json();
-          if (!aiResponse.ok) return null;
-
-          const aiContent = aiData.choices?.[0]?.message?.content || '{}';
-          const cleaned = aiContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-          const extracted = JSON.parse(cleaned);
-
-          // Build update object with only newly found data
-          const updates: Record<string, string> = {};
-          if (!lead.email && extracted.email) updates.email = extracted.email;
-          if (!lead.instagram_handle && extracted.instagram_handle) updates.instagram_handle = extracted.instagram_handle;
-          if (!lead.website && extracted.website) updates.website = extracted.website;
-          if (!lead.address && extracted.address) updates.address = extracted.address;
-
-          if (Object.keys(updates).length === 0) return null;
-
-          const { error: updateError } = await supabase
-            .from('leads')
-            .update(updates)
-            .eq('id', lead.id);
-
-          if (updateError) {
-            console.error(`Failed to update lead ${lead.id}:`, updateError);
-            return null;
+    const aiResponse = await fetch(AI_GATEWAY_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [
+          {
+            role: 'user',
+            content: `Extract contact info for "${lead.business_name}" from these search results. Return ONLY a JSON object: {"email":"","instagram_handle":"","website":"","address":""}. Use empty string if not found.\n\n${content}`
           }
+        ],
+        temperature: 0,
+      }),
+    });
 
-          return lead.id;
-        } catch (e) {
-          console.error(`Error enriching ${lead.business_name}:`, e);
-          return null;
-        }
-      });
+    console.log(`AI response status: ${aiResponse.status}`);
+    const aiData = await aiResponse.json();
 
-      const results = await Promise.all(enrichPromises);
-      totalEnriched += results.filter(Boolean).length;
+    if (!aiResponse.ok) {
+      console.error('AI error:', JSON.stringify(aiData).slice(0, 200));
+      return new Response(
+        JSON.stringify({ success: false, error: 'AI extraction failed' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const aiContent = aiData.choices?.[0]?.message?.content || '{}';
+    console.log('AI content:', aiContent.slice(0, 300));
+    const cleaned = aiContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const extracted = JSON.parse(cleaned);
+
+    const updates: Record<string, string> = {};
+    if (!lead.email && extracted.email) updates.email = extracted.email;
+    if (!lead.instagram_handle && extracted.instagram_handle) updates.instagram_handle = extracted.instagram_handle;
+    if (!lead.website && extracted.website) updates.website = extracted.website;
+    if (!lead.address && extracted.address) updates.address = extracted.address;
+
+    if (Object.keys(updates).length > 0) {
+      console.log(`Updating ${lead.business_name}:`, JSON.stringify(updates));
+      const { error: updateError } = await supabase
+        .from('leads')
+        .update(updates)
+        .eq('id', lead.id);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+      }
+    } else {
+      console.log('No new data found for', lead.business_name);
     }
 
     return new Response(
-      JSON.stringify({ success: true, enriched: totalEnriched, total: leadsToEnrich.length }),
+      JSON.stringify({
+        success: true,
+        enriched: Object.keys(updates).length > 0 ? 1 : 0,
+        total: leadsToEnrich.length,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
