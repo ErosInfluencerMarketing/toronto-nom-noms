@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Lead, Platform, LeadStatus } from '@/types/lead';
+import { Sequence } from '@/types/sequence';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -8,10 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { BarChart3, Users, Phone, MessageSquare, Calendar, CheckCircle, TrendingUp } from 'lucide-react';
+import { BarChart3, Users, Phone, MessageSquare, Calendar, CheckCircle, TrendingUp, Mail, Send } from 'lucide-react';
 
 interface AnalyticsPanelProps {
   leads: Lead[];
+  sequences?: Sequence[];
 }
 
 interface StatItem {
@@ -22,7 +24,7 @@ interface StatItem {
   percentage?: number;
 }
 
-export function AnalyticsPanel({ leads }: AnalyticsPanelProps) {
+export function AnalyticsPanel({ leads, sequences = [] }: AnalyticsPanelProps) {
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
 
   const filteredLeads = useMemo(() => {
@@ -45,12 +47,29 @@ export function AnalyticsPanel({ leads }: AnalyticsPanelProps) {
       l.status === 'demo_booked' || l.status === 'onboarded'
     ).length;
 
+    // Email stats from sequences
+    const totalEmailsSent = sequences.reduce((sum, seq) => sum + (seq.current_step || 0), 0);
+    const leadsEmailed = new Set(sequences.filter(seq => seq.current_step > 0).map(seq => seq.lead_id)).size;
+
     return [
       {
         label: 'Total Leads',
         value: total,
         icon: Users,
         color: 'text-primary bg-primary/10',
+      },
+      {
+        label: 'Emails Sent',
+        value: totalEmailsSent,
+        icon: Send,
+        color: 'text-chart-1 bg-chart-1/10',
+      },
+      {
+        label: 'Leads Emailed',
+        value: leadsEmailed,
+        icon: Mail,
+        color: 'text-chart-2 bg-chart-2/10',
+        percentage: total > 0 ? Math.round((leadsEmailed / total) * 100) : 0,
       },
       {
         label: 'Contacted',
@@ -81,7 +100,7 @@ export function AnalyticsPanel({ leads }: AnalyticsPanelProps) {
         percentage: demosBooked > 0 ? Math.round((onboarded / demosBooked) * 100) : 0,
       },
     ];
-  }, [filteredLeads]);
+  }, [filteredLeads, sequences]);
 
   const conversionRate = useMemo(() => {
     const total = filteredLeads.length;
@@ -127,7 +146,7 @@ export function AnalyticsPanel({ leads }: AnalyticsPanelProps) {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
           {stats.map((stat) => (
             <div
               key={stat.label}
