@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
             from: "Toronto Leads <hello@nomspass.com>",
             to: [lead.email],
             subject,
-            text: message,
+            html: message,
           }),
         });
 
