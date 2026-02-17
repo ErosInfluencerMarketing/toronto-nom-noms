@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const message = fillPlaceholders(template.message_body, lead);
+        const message = fillPlaceholders(template.message_body, lead).replace(/\n/g, '<br>');
         const step = seq.current_step + 1;
         const subject =
           step === 1
