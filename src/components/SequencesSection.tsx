@@ -6,6 +6,7 @@ import { SequenceFormData } from '@/types/sequence';
 import { SequenceStepForm } from '@/components/SequenceStepForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import {
@@ -14,13 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,7 +39,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<SequenceFormData>({
-    lead_id: '',
+    lead_ids: [],
     steps: [{ template_id: '', delay_days: 0 }],
   });
 
@@ -53,11 +47,11 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   const leadsWithEmail = leads.filter((l) => !!l.email);
 
   const handleCreate = () => {
-    if (!formData.lead_id || formData.steps.some((s) => !s.template_id)) return;
+    if (formData.lead_ids.length === 0 || formData.steps.some((s) => !s.template_id)) return;
     createSequence.mutate(formData, {
       onSuccess: () => {
         setIsFormOpen(false);
-        setFormData({ lead_id: '', steps: [{ template_id: '', delay_days: 0 }] });
+        setFormData({ lead_ids: [], steps: [{ template_id: '', delay_days: 0 }] });
       },
     });
   };
@@ -233,19 +227,34 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Lead</Label>
-              <Select value={formData.lead_id} onValueChange={(v) => setFormData({ ...formData, lead_id: v })}>
-                <SelectTrigger className="bg-secondary border-border">
-                  <SelectValue placeholder="Select a lead..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {leadsWithEmail.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>
-                      {l.business_name} — {l.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Leads ({formData.lead_ids.length} selected)</Label>
+              <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-lg p-2 bg-secondary">
+                {leadsWithEmail.map((l) => {
+                  const isSelected = formData.lead_ids.includes(l.id);
+                  return (
+                    <label
+                      key={l.id}
+                      className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-background/50 text-sm ${
+                        isSelected ? 'bg-background' : ''
+                      }`}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={(checked) => {
+                          setFormData({
+                            ...formData,
+                            lead_ids: checked
+                              ? [...formData.lead_ids, l.id]
+                              : formData.lead_ids.filter((id) => id !== l.id),
+                          });
+                        }}
+                      />
+                      <span className="text-foreground">{l.business_name}</span>
+                      <span className="text-muted-foreground text-xs ml-auto">{l.email}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="space-y-3">
@@ -272,9 +281,9 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
               <Button variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
               <Button
                 onClick={handleCreate}
-                disabled={!formData.lead_id || formData.steps.some((s) => !s.template_id) || createSequence.isPending}
+                disabled={formData.lead_ids.length === 0 || formData.steps.some((s) => !s.template_id) || createSequence.isPending}
               >
-                {createSequence.isPending ? 'Starting...' : 'Start Sequence'}
+                {createSequence.isPending ? 'Starting...' : `Start Sequence (${formData.lead_ids.length} lead${formData.lead_ids.length !== 1 ? 's' : ''})`}
               </Button>
             </div>
           </div>
