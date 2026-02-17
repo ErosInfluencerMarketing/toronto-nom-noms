@@ -225,7 +225,10 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
                         variant="ghost"
                         size="sm"
                         className="h-7 w-7 p-0"
-                        onClick={item.action}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          item.action();
+                        }}
                       >
                         <item.icon className="h-3.5 w-3.5" />
                       </Button>
