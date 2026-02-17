@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/AppSidebar';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -211,52 +213,55 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                <MapPin className="h-5 w-5 text-primary" />
+    <SidebarProvider>
+      <AppSidebar />
+      <div className="min-h-screen bg-background flex-1 w-full">
+        {/* Header */}
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger className="-ml-1" />
+                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <MapPin className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">Toronto Leads</h1>
+                  <p className="text-xs text-muted-foreground">Restaurant & Coffee Shop CRM</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground">Toronto Leads</h1>
-                <p className="text-xs text-muted-foreground">Restaurant & Coffee Shop CRM</p>
+              
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground hidden sm:block">
+                  {user?.email}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
               </div>
             </div>
-            
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground hidden sm:block">
-                {user?.email}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
+          </div>
+        </header>
+
+        <main className="container mx-auto px-4 py-6">
+          {/* Analytics and Upcoming Outreach */}
+          <div id="analytics" className="scroll-mt-20 grid lg:grid-cols-3 gap-6 mb-8">
+            <div className="lg:col-span-2">
+              <AnalyticsPanel leads={leads} />
+            </div>
+            <div className="lg:col-span-1">
+              <UpcomingOutreach leads={leads} onEdit={handleEdit} />
             </div>
           </div>
-        </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-6">
-        {/* Analytics and Upcoming Outreach */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <AnalyticsPanel leads={leads} />
-          </div>
-          <div className="lg:col-span-1">
-            <UpcomingOutreach leads={leads} onEdit={handleEdit} />
-          </div>
-        </div>
-
-        {/* Filters and Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+          {/* Filters and Actions */}
+          <div id="leads" className="scroll-mt-20 flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
           <LeadFilters
             search={search}
             onSearchChange={setSearch}
@@ -372,13 +377,17 @@ export default function Dashboard() {
           />
         )}
 
-        {/* Templates Section */}
-        <Separator className="my-8" />
-        <TemplatesSection leads={leads} />
+          {/* Templates Section */}
+          <Separator className="my-8" />
+          <div id="templates" className="scroll-mt-20">
+            <TemplatesSection leads={leads} />
+          </div>
 
-        {/* Sequences Section */}
-        <Separator className="my-8" />
-        <SequencesSection leads={leads} />
+          {/* Sequences Section */}
+          <Separator className="my-8" />
+          <div id="sequences" className="scroll-mt-20">
+            <SequencesSection leads={leads} />
+          </div>
       </main>
 
       {/* Lead Form Dialog */}
@@ -421,6 +430,7 @@ export default function Dashboard() {
         leads={selectedLeads}
         onComplete={() => setSelectedLeadIds(new Set())}
       />
-    </div>
+      </div>
+    </SidebarProvider>
   );
 }
