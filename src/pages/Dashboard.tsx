@@ -12,6 +12,7 @@ import { AnalyticsPanel } from '@/components/AnalyticsPanel';
 import { ViewToggle, ViewMode } from '@/components/ViewToggle';
 import { TemplatesSection } from '@/components/TemplatesSection';
 import { LeadImport } from '@/components/LeadImport';
+import { LeadScraper } from '@/components/LeadScraper';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -207,6 +208,7 @@ export default function Dashboard() {
           
           <div className="flex items-center gap-3 flex-wrap">
             <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+            <LeadScraper onImport={handleImportLeads} isLoading={isImporting} />
             <LeadImport onImport={handleImportLeads} isLoading={isImporting} />
             <Button
               variant="outline"
