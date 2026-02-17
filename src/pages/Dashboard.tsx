@@ -97,6 +97,15 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    leads.forEach((lead) => {
+      if (lead.category) cats.add(lead.category);
+    });
+    return Array.from(cats).sort();
+  }, [leads]);
 
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
@@ -107,10 +116,11 @@ export default function Dashboard() {
       
       const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
       const matchesPlatform = platformFilter === 'all' || lead.platform === platformFilter;
+      const matchesCategory = categoryFilter === 'all' || lead.category === categoryFilter;
       
-      return matchesSearch && matchesStatus && matchesPlatform;
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory;
     });
-  }, [leads, search, statusFilter, platformFilter]);
+  }, [leads, search, statusFilter, platformFilter, categoryFilter]);
 
   const handleCreateLead = (data: LeadFormData) => {
     createLead.mutate(data, {
@@ -245,6 +255,9 @@ export default function Dashboard() {
             onStatusFilterChange={setStatusFilter}
             platformFilter={platformFilter}
             onPlatformFilterChange={setPlatformFilter}
+            categoryFilter={categoryFilter}
+            onCategoryFilterChange={setCategoryFilter}
+            categories={categories}
           />
           
           <div className="flex items-center gap-3 flex-wrap">
