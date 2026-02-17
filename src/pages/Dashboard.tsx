@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { supabase } from '@/integrations/supabase/client';
@@ -119,7 +119,6 @@ export default function Dashboard() {
   }, [leads]);
 
   const filteredLeads = useMemo(() => {
-    setCurrentPage(1);
     return leads.filter((lead) => {
       const matchesSearch =
         search === '' ||
@@ -133,6 +132,10 @@ export default function Dashboard() {
       return matchesSearch && matchesStatus && matchesPlatform && matchesCategory;
     });
   }, [leads, search, statusFilter, platformFilter, categoryFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, platformFilter, categoryFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
   const paginatedLeads = useMemo(() => {
