@@ -300,32 +300,46 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
 
             <div className="space-y-2">
               <Label>Leads ({formData.lead_ids.length} selected)</Label>
-              <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-lg p-2 bg-secondary">
-                {leadsWithEmail.map((l) => {
-                  const isSelected = formData.lead_ids.includes(l.id);
-                  return (
-                    <label
-                      key={l.id}
-                      className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-background/50 text-sm ${
-                        isSelected ? 'bg-background' : ''
-                      }`}
-                    >
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={(checked) => {
-                          setFormData({
-                            ...formData,
-                            lead_ids: checked
-                              ? [...formData.lead_ids, l.id]
-                              : formData.lead_ids.filter((id) => id !== l.id),
-                          });
-                        }}
-                      />
-                      <span className="text-foreground">{l.business_name}</span>
-                      <span className="text-muted-foreground text-xs ml-auto">{l.email}</span>
-                    </label>
-                  );
-                })}
+              <div className="border border-border rounded-lg bg-secondary">
+                <label className="flex items-center gap-2 p-2 border-b border-border cursor-pointer hover:bg-background/50 text-sm font-medium">
+                  <Checkbox
+                    checked={leadsWithEmail.length > 0 && formData.lead_ids.length === leadsWithEmail.length}
+                    onCheckedChange={(checked) => {
+                      setFormData({
+                        ...formData,
+                        lead_ids: checked ? leadsWithEmail.map((l) => l.id) : [],
+                      });
+                    }}
+                  />
+                  <span className="text-foreground">Select All ({leadsWithEmail.length})</span>
+                </label>
+                <div className="max-h-40 overflow-y-auto space-y-1 p-2">
+                  {leadsWithEmail.map((l) => {
+                    const isSelected = formData.lead_ids.includes(l.id);
+                    return (
+                      <label
+                        key={l.id}
+                        className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-background/50 text-sm ${
+                          isSelected ? 'bg-background' : ''
+                        }`}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => {
+                            setFormData({
+                              ...formData,
+                              lead_ids: checked
+                                ? [...formData.lead_ids, l.id]
+                                : formData.lead_ids.filter((id) => id !== l.id),
+                            });
+                          }}
+                        />
+                        <span className="text-foreground">{l.business_name}</span>
+                        <span className="text-muted-foreground text-xs ml-auto">{l.email}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
