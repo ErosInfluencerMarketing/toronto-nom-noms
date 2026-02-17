@@ -12,6 +12,7 @@ export interface Sequence {
   user_id: string;
   lead_id: string;
   template_id: string;
+  name: string;
   max_followups: number;
   interval_days: number;
   current_step: number;
@@ -23,6 +24,7 @@ export interface Sequence {
 }
 
 export interface SequenceFormData {
+  name: string;
   lead_ids: string[];
   steps: { template_id: string; delay_days: number }[];
 }

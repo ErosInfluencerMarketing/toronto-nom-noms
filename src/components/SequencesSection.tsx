@@ -4,11 +4,21 @@ import { useTemplates } from '@/hooks/useTemplates';
 import { Lead } from '@/types/lead';
 import { SequenceFormData } from '@/types/sequence';
 import { SequenceStepForm } from '@/components/SequenceStepForm';
+import { ViewToggle, ViewMode } from '@/components/ViewToggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -37,8 +47,10 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   const { templates } = useTemplates();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('card');
 
   const [formData, setFormData] = useState<SequenceFormData>({
+    name: '',
     lead_ids: [],
     steps: [{ template_id: '', delay_days: 0 }],
   });
@@ -47,11 +59,11 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   const leadsWithEmail = leads.filter((l) => !!l.email);
 
   const handleCreate = () => {
-    if (formData.lead_ids.length === 0 || formData.steps.some((s) => !s.template_id)) return;
+    if (formData.lead_ids.length === 0 || formData.steps.some((s) => !s.template_id) || !formData.name.trim()) return;
     createSequence.mutate(formData, {
       onSuccess: () => {
         setIsFormOpen(false);
-        setFormData({ lead_ids: [], steps: [{ template_id: '', delay_days: 0 }] });
+        setFormData({ name: '', lead_ids: [], steps: [{ template_id: '', delay_days: 0 }] });
       },
     });
   };
@@ -101,14 +113,17 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
           <h2 className="text-lg font-semibold text-foreground">Email Sequences</h2>
           <span className="text-sm text-muted-foreground">({sequences.length})</span>
         </div>
-        <Button
-          size="sm"
-          onClick={() => setIsFormOpen(true)}
-          disabled={emailTemplates.length === 0 || leadsWithEmail.length === 0}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          New Sequence
-        </Button>
+        <div className="flex items-center gap-2">
+          <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+          <Button
+            size="sm"
+            onClick={() => setIsFormOpen(true)}
+            disabled={emailTemplates.length === 0 || leadsWithEmail.length === 0}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Sequence
+          </Button>
+        </div>
       </div>
 
       {emailTemplates.length === 0 && (
@@ -125,14 +140,15 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
           <p className="text-sm text-muted-foreground mb-2">No active sequences</p>
           <p className="text-xs text-muted-foreground">Create a sequence to auto-send follow-up emails</p>
         </div>
-      ) : (
+      ) : viewMode === 'card' ? (
         <div className="grid gap-4 md:grid-cols-2">
           {sequences.map((seq) => (
             <Card key={seq.id} className="bg-card border-border">
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-semibold text-foreground">{getLeadName(seq.lead_id)}</p>
+                    {seq.name && <p className="font-bold text-foreground">{seq.name}</p>}
+                    <p className={`${seq.name ? 'text-sm text-muted-foreground' : 'font-semibold text-foreground'}`}>{getLeadName(seq.lead_id)}</p>
                     <p className="text-xs text-muted-foreground">
                       {seq.steps && seq.steps.length > 0
                         ? `${seq.steps.length} step${seq.steps.length !== 1 ? 's' : ''}`
@@ -145,7 +161,6 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
                   </Badge>
                 </div>
 
-                {/* Show steps detail */}
                 {seq.steps && seq.steps.length > 0 && (
                   <div className="space-y-1">
                     {seq.steps.map((step, idx) => (
@@ -179,28 +194,16 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
                 <div className="flex items-center gap-2">
                   {seq.status === 'active' && (
                     <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'paused' })}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'paused' })}>
                         <Pause className="h-3 w-3 mr-1" /> Pause
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'replied' })}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'replied' })}>
                         <MessageCircle className="h-3 w-3 mr-1" /> Mark Replied
                       </Button>
                     </>
                   )}
                   {seq.status === 'paused' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'active' })}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'active' })}>
                       <Play className="h-3 w-3 mr-1" /> Resume
                     </Button>
                   )}
@@ -217,6 +220,65 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
             </Card>
           ))}
         </div>
+      ) : (
+        <div className="rounded-lg border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Lead</TableHead>
+                <TableHead>Steps</TableHead>
+                <TableHead>Progress</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Next Send</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sequences.map((seq) => (
+                <TableRow key={seq.id}>
+                  <TableCell className="font-medium text-foreground">{seq.name || '—'}</TableCell>
+                  <TableCell className="text-foreground">{getLeadName(seq.lead_id)}</TableCell>
+                  <TableCell className="text-muted-foreground">{seq.steps?.length || seq.max_followups}</TableCell>
+                  <TableCell className="text-muted-foreground">{seq.current_step}/{seq.steps?.length || seq.max_followups}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={statusColor[seq.status]}>
+                      {statusIcon[seq.status]}
+                      <span className="ml-1 capitalize">{seq.status}</span>
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs">
+                    {seq.next_send_at && seq.status === 'active'
+                      ? format(new Date(seq.next_send_at), 'MMM d, h:mm a')
+                      : '—'}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {seq.status === 'active' && (
+                        <>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'paused' })}>
+                            <Pause className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'replied' })}>
+                            <MessageCircle className="h-3.5 w-3.5" />
+                          </Button>
+                        </>
+                      )}
+                      {seq.status === 'paused' && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'active' })}>
+                          <Play className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteConfirmId(seq.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       {/* Create Sequence Dialog */}
@@ -226,6 +288,16 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
             <DialogTitle className="text-foreground">Start Email Sequence</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Sequence Name</Label>
+              <Input
+                placeholder="e.g. Q1 Follow-up Campaign"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="bg-secondary border-border"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label>Leads ({formData.lead_ids.length} selected)</Label>
               <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-lg p-2 bg-secondary">
@@ -281,7 +353,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
               <Button variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
               <Button
                 onClick={handleCreate}
-                disabled={formData.lead_ids.length === 0 || formData.steps.some((s) => !s.template_id) || createSequence.isPending}
+                disabled={formData.lead_ids.length === 0 || !formData.name.trim() || formData.steps.some((s) => !s.template_id) || createSequence.isPending}
               >
                 {createSequence.isPending ? 'Starting...' : `Start Sequence (${formData.lead_ids.length} lead${formData.lead_ids.length !== 1 ? 's' : ''})`}
               </Button>
