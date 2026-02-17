@@ -1,10 +1,13 @@
 import { Platform } from './lead';
 
+export type Channel = 'email' | 'instagram';
+
 export interface Template {
   id: string;
   user_id: string;
   name: string;
   platform: Platform;
+  channel: Channel;
   message_body: string;
   created_at: string;
   updated_at: string;
@@ -13,6 +16,7 @@ export interface Template {
 export interface TemplateFormData {
   name: string;
   platform: Platform;
+  channel: Channel;
   message_body: string;
 }
 

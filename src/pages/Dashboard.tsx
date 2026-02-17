@@ -13,6 +13,7 @@ import { UpcomingOutreach } from '@/components/UpcomingOutreach';
 import { AnalyticsPanel } from '@/components/AnalyticsPanel';
 import { ViewToggle, ViewMode } from '@/components/ViewToggle';
 import { TemplatesSection } from '@/components/TemplatesSection';
+import { SequencesSection } from '@/components/SequencesSection';
 import { LeadImport } from '@/components/LeadImport';
 import { LeadScraper } from '@/components/LeadScraper';
 import { Button } from '@/components/ui/button';
@@ -340,6 +341,10 @@ export default function Dashboard() {
         {/* Templates Section */}
         <Separator className="my-8" />
         <TemplatesSection leads={leads} />
+
+        {/* Sequences Section */}
+        <Separator className="my-8" />
+        <SequencesSection leads={leads} />
       </main>
 
       {/* Lead Form Dialog */}

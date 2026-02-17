@@ -4,6 +4,7 @@ import { Lead } from '@/types/lead';
 import { PlatformBadge } from './PlatformBadge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Edit2, Trash2, Eye, Copy, FileText } from 'lucide-react';
+import { Edit2, Trash2, Eye, Copy, FileText, Mail, Instagram } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TemplateCardProps {
@@ -63,6 +64,10 @@ export function TemplateCard({ template, leads, onEdit, onDelete }: TemplateCard
                 <FileText className="h-4 w-4 text-primary" />
                 <h3 className="font-semibold text-foreground truncate">{template.name}</h3>
                 <PlatformBadge platform={template.platform} />
+                <Badge variant="outline" className="text-[10px] flex items-center gap-1">
+                  {template.channel === 'email' ? <Mail className="h-3 w-3" /> : <Instagram className="h-3 w-3" />}
+                  {template.channel === 'email' ? 'Email' : 'IG DM'}
+                </Badge>
               </div>
               
               <p className="text-sm text-muted-foreground line-clamp-3 font-mono bg-secondary/50 rounded p-2 mt-2">
