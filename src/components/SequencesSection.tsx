@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { useSequences } from '@/hooks/useSequences';
 import { useTemplates } from '@/hooks/useTemplates';
 import { Lead } from '@/types/lead';
-import { Template } from '@/types/template';
-import { Sequence, SequenceFormData } from '@/types/sequence';
+import { SequenceFormData } from '@/types/sequence';
+import { SequenceStepForm } from '@/components/SequenceStepForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -47,21 +46,39 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
 
   const [formData, setFormData] = useState<SequenceFormData>({
     lead_id: '',
-    template_id: '',
-    max_followups: 3,
-    interval_days: 2,
+    steps: [{ template_id: '', delay_days: 0 }],
   });
 
   const emailTemplates = templates.filter((t) => t.channel === 'email');
   const leadsWithEmail = leads.filter((l) => !!l.email);
 
   const handleCreate = () => {
-    if (!formData.lead_id || !formData.template_id) return;
+    if (!formData.lead_id || formData.steps.some((s) => !s.template_id)) return;
     createSequence.mutate(formData, {
       onSuccess: () => {
         setIsFormOpen(false);
-        setFormData({ lead_id: '', template_id: '', max_followups: 3, interval_days: 2 });
+        setFormData({ lead_id: '', steps: [{ template_id: '', delay_days: 0 }] });
       },
+    });
+  };
+
+  const handleStepChange = (index: number, data: { template_id: string; delay_days: number }) => {
+    const newSteps = [...formData.steps];
+    newSteps[index] = data;
+    setFormData({ ...formData, steps: newSteps });
+  };
+
+  const handleAddStep = () => {
+    setFormData({
+      ...formData,
+      steps: [...formData.steps, { template_id: '', delay_days: 2 }],
+    });
+  };
+
+  const handleRemoveStep = (index: number) => {
+    setFormData({
+      ...formData,
+      steps: formData.steps.filter((_, i) => i !== index),
     });
   };
 
@@ -122,7 +139,11 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-semibold text-foreground">{getLeadName(seq.lead_id)}</p>
-                    <p className="text-xs text-muted-foreground">Template: {getTemplateName(seq.template_id)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {seq.steps && seq.steps.length > 0
+                        ? `${seq.steps.length} step${seq.steps.length !== 1 ? 's' : ''}`
+                        : `Template: ${getTemplateName(seq.template_id)}`}
+                    </p>
                   </div>
                   <Badge variant="outline" className={statusColor[seq.status]}>
                     {statusIcon[seq.status]}
@@ -130,9 +151,32 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
                   </Badge>
                 </div>
 
+                {/* Show steps detail */}
+                {seq.steps && seq.steps.length > 0 && (
+                  <div className="space-y-1">
+                    {seq.steps.map((step, idx) => (
+                      <div
+                        key={step.id || idx}
+                        className={`text-xs flex items-center gap-2 ${
+                          idx < seq.current_step
+                            ? 'text-muted-foreground line-through'
+                            : idx === seq.current_step
+                            ? 'text-primary font-medium'
+                            : 'text-muted-foreground'
+                        }`}
+                      >
+                        <span className="w-4 text-right">{idx + 1}.</span>
+                        <span>{getTemplateName(step.template_id)}</span>
+                        <span className="text-muted-foreground">
+                          ({step.delay_days}d {idx === 0 ? 'delay' : 'after prev'})
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>Step {seq.current_step}/{seq.max_followups}</span>
-                  <span>Every {seq.interval_days}d</span>
+                  <span>Step {seq.current_step}/{seq.steps?.length || seq.max_followups}</span>
                   {seq.next_send_at && seq.status === 'active' && (
                     <span>Next: {format(new Date(seq.next_send_at), 'MMM d, h:mm a')}</span>
                   )}
@@ -183,7 +227,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
 
       {/* Create Sequence Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="bg-card border-border max-w-md">
+        <DialogContent className="bg-card border-border max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-foreground">Start Email Sequence</DialogTitle>
           </DialogHeader>
@@ -204,52 +248,31 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Email Template</Label>
-              <Select value={formData.template_id} onValueChange={(v) => setFormData({ ...formData, template_id: v })}>
-                <SelectTrigger className="bg-secondary border-border">
-                  <SelectValue placeholder="Select a template..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {emailTemplates.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Max Follow-ups</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={formData.max_followups}
-                  onChange={(e) => setFormData({ ...formData, max_followups: parseInt(e.target.value) || 3 })}
-                  className="bg-secondary border-border"
-                />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Steps</Label>
+                <Button type="button" variant="outline" size="sm" onClick={handleAddStep}>
+                  <Plus className="h-3 w-3 mr-1" /> Add Step
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label>Interval (days)</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={30}
-                  value={formData.interval_days}
-                  onChange={(e) => setFormData({ ...formData, interval_days: parseInt(e.target.value) || 2 })}
-                  className="bg-secondary border-border"
+              {formData.steps.map((step, idx) => (
+                <SequenceStepForm
+                  key={idx}
+                  step={step}
+                  stepIndex={idx}
+                  templates={emailTemplates}
+                  onChange={handleStepChange}
+                  onRemove={handleRemoveStep}
+                  canRemove={formData.steps.length > 1}
                 />
-              </div>
+              ))}
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
               <Button
                 onClick={handleCreate}
-                disabled={!formData.lead_id || !formData.template_id || createSequence.isPending}
+                disabled={!formData.lead_id || formData.steps.some((s) => !s.template_id) || createSequence.isPending}
               >
                 {createSequence.isPending ? 'Starting...' : 'Start Sequence'}
               </Button>
