@@ -184,25 +184,27 @@ export default function Dashboard() {
   const handleSync = async () => {
     setIsSyncing(true);
     let totalEnriched = 0;
-    let remaining = 0;
+    const skipIds: string[] = [];
     try {
-      // Process leads one at a time, calling repeatedly
       for (let i = 0; i < 30; i++) {
-        const { data, error } = await supabase.functions.invoke('enrich-leads');
+        const { data, error } = await supabase.functions.invoke('enrich-leads', {
+          body: { skipIds },
+        });
         if (error) throw error;
         if (!data?.success) {
           toast.error(data?.error || 'Sync failed');
           break;
         }
         totalEnriched += data.enriched;
-        remaining = data.total - 1;
+        // Track processed lead to avoid re-processing
+        if (data.processedId) skipIds.push(data.processedId);
         queryClient.invalidateQueries({ queryKey: ['leads'] });
         
-        if (data.total <= 1) break; // No more leads to enrich
+        if (data.total <= 1) break;
         
-        toast.info(`Syncing... ${totalEnriched} enriched, ~${remaining} remaining`);
+        toast.info(`Syncing... ${totalEnriched} enriched, ~${data.total - 1} remaining`);
       }
-      toast.success(`Sync complete! Enriched ${totalEnriched} leads`);
+      toast.success(`Sync complete! Found emails for ${totalEnriched} leads`);
     } catch (error) {
       console.error('Sync error:', error);
       toast.error('Failed to sync leads');
