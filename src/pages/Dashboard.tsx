@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeads } from '@/hooks/useLeads';
+import { useSequences } from '@/hooks/useSequences';
 import { Lead, LeadFormData, LeadStatus, Platform } from '@/types/lead';
 import { LeadCard } from '@/components/LeadCard';
 import { LeadForm } from '@/components/LeadForm';
@@ -89,6 +90,7 @@ export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { leads, isLoading, createLead, updateLead, deleteLead, bulkCreateLeads } = useLeads();
+  const { sequences } = useSequences();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -255,7 +257,7 @@ export default function Dashboard() {
           {/* Analytics and Upcoming Outreach */}
           <div id="analytics" className="scroll-mt-20 grid lg:grid-cols-3 gap-6 mb-8">
             <div className="lg:col-span-2">
-              <AnalyticsPanel leads={leads} />
+              <AnalyticsPanel leads={leads} sequences={sequences} />
             </div>
             <div className="lg:col-span-1">
               <UpcomingOutreach leads={leads} onEdit={handleEdit} />
