@@ -8,6 +8,7 @@ export interface Template {
   name: string;
   platform: Platform;
   channel: Channel;
+  subject: string | null;
   message_body: string;
   created_at: string;
   updated_at: string;
@@ -17,6 +18,7 @@ export interface TemplateFormData {
   name: string;
   platform: Platform;
   channel: Channel;
+  subject: string;
   message_body: string;
 }
 

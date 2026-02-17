@@ -74,10 +74,13 @@ Deno.serve(async (req) => {
 
         const message = fillPlaceholders(template.message_body, lead).replace(/\n/g, '<br>');
         const step = seq.current_step + 1;
-        const subject =
+        const defaultSubject =
           step === 1
             ? `Hey ${lead.business_name}!`
             : `Following up — ${lead.business_name} (${step})`;
+        const subject = template.subject
+          ? fillPlaceholders(template.subject, lead)
+          : defaultSubject;
 
         // Send email via Resend
         const res = await fetch("https://api.resend.com/emails", {

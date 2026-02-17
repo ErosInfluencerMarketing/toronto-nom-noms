@@ -70,6 +70,11 @@ export function TemplateCard({ template, leads, onEdit, onDelete }: TemplateCard
                 </Badge>
               </div>
               
+              {template.subject && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  <span className="font-medium text-foreground/70">Subject:</span> {template.subject}
+                </p>
+              )}
               <p className="text-sm text-muted-foreground line-clamp-3 font-mono bg-secondary/50 rounded p-2 mt-2">
                 {template.message_body}
               </p>

@@ -59,6 +59,9 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
     const template = templates.find((t) => t.id === templateId);
     if (template) {
       setMessage(fillPlaceholders(template.message_body, lead));
+      if (template.subject) {
+        setSubject(fillPlaceholders(template.subject, lead));
+      }
     }
   };
 
