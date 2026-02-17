@@ -57,14 +57,41 @@ Deno.serve(async (req) => {
 
     for (const seq of sequences) {
       try {
+        // Fetch steps for this sequence
+        const { data: steps } = await supabase
+          .from("sequence_steps")
+          .select("*")
+          .eq("sequence_id", seq.id)
+          .order("step_number", { ascending: true });
+
+        const nextStepNumber = seq.current_step + 1;
+        const hasSteps = steps && steps.length > 0;
+
+        // Determine which template to use
+        let templateId: string;
+        if (hasSteps) {
+          const currentStep = steps.find((s: any) => s.step_number === nextStepNumber);
+          if (!currentStep) {
+            // No more steps — mark completed
+            await supabase
+              .from("sequences")
+              .update({ status: "completed", next_send_at: null })
+              .eq("id", seq.id);
+            continue;
+          }
+          templateId = currentStep.template_id;
+        } else {
+          // Legacy: single-template sequence
+          templateId = seq.template_id;
+        }
+
         // Fetch lead and template
         const [{ data: lead }, { data: template }] = await Promise.all([
           supabase.from("leads").select("*").eq("id", seq.lead_id).single(),
-          supabase.from("templates").select("*").eq("id", seq.template_id).single(),
+          supabase.from("templates").select("*").eq("id", templateId).single(),
         ]);
 
         if (!lead || !template || !lead.email) {
-          // Mark as completed if lead/template missing
           await supabase
             .from("sequences")
             .update({ status: "completed" })
@@ -72,12 +99,11 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const message = fillPlaceholders(template.message_body, lead).replace(/\n/g, '<br>');
-        const step = seq.current_step + 1;
+        const message = fillPlaceholders(template.message_body, lead).replace(/\n/g, "<br>");
         const defaultSubject =
-          step === 1
+          nextStepNumber === 1
             ? `Hey ${lead.business_name}!`
-            : `Following up — ${lead.business_name} (${step})`;
+            : `Following up — ${lead.business_name} (${nextStepNumber})`;
         const subject = template.subject
           ? fillPlaceholders(template.subject, lead)
           : defaultSubject;
@@ -104,21 +130,33 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Update sequence
-        const isComplete = step >= seq.max_followups;
-        const nextSend = new Date();
-        nextSend.setDate(nextSend.getDate() + seq.interval_days);
+        // Determine next send time
+        const totalSteps = hasSteps ? steps.length : seq.max_followups;
+        const isComplete = nextStepNumber >= totalSteps;
+
+        let nextSendAt: string | null = null;
+        if (!isComplete && hasSteps) {
+          const nextStep = steps.find((s: any) => s.step_number === nextStepNumber + 1);
+          if (nextStep) {
+            const next = new Date();
+            next.setDate(next.getDate() + nextStep.delay_days);
+            nextSendAt = next.toISOString();
+          }
+        } else if (!isComplete) {
+          const next = new Date();
+          next.setDate(next.getDate() + seq.interval_days);
+          nextSendAt = next.toISOString();
+        }
 
         await supabase
           .from("sequences")
           .update({
-            current_step: step,
+            current_step: nextStepNumber,
             status: isComplete ? "completed" : "active",
-            next_send_at: isComplete ? null : nextSend.toISOString(),
+            next_send_at: nextSendAt,
           })
           .eq("id", seq.id);
 
-        // Update lead's last outreach date
         await supabase
           .from("leads")
           .update({ last_outreach_date: new Date().toISOString().split("T")[0] })

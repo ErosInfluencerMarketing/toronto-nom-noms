@@ -95,6 +95,48 @@ export type Database = {
         }
         Relationships: []
       }
+      sequence_steps: {
+        Row: {
+          created_at: string
+          delay_days: number
+          id: string
+          sequence_id: string
+          step_number: number
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          delay_days?: number
+          id?: string
+          sequence_id: string
+          step_number?: number
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          delay_days?: number
+          id?: string
+          sequence_id?: string
+          step_number?: number
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sequence_steps_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "sequences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sequence_steps_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sequences: {
         Row: {
           created_at: string
