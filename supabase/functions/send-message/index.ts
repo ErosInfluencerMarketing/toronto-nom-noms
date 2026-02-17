@@ -99,9 +99,9 @@ Deno.serve(async (req) => {
       } else {
         try {
           // Look up Instagram user ID by username
-          const searchRes = await fetch(
-            `https://graph.facebook.com/v21.0/${IG_ACCOUNT_ID}?fields=business_discovery.fields(id,username)&access_token=${META_ACCESS_TOKEN}&business_discovery.username=${lead.instagram_handle.replace("@", "")}`
-          );
+          const username = lead.instagram_handle.replace("@", "");
+          const lookupUrl = `https://graph.facebook.com/v21.0/${IG_ACCOUNT_ID}?fields=business_discovery.username(${username}){id,username}&access_token=${META_ACCESS_TOKEN}`;
+          const searchRes = await fetch(lookupUrl);
           const searchData = await searchRes.json();
 
           if (!searchRes.ok || !searchData.business_discovery?.id) {
