@@ -46,39 +46,45 @@ export function useSequences() {
       if (!user) throw new Error('Not authenticated');
 
       const firstDelay = formData.steps[0]?.delay_days ?? 0;
-      const nextSend = new Date();
-      nextSend.setDate(nextSend.getDate() + firstDelay);
+      const results = [];
 
-      const { data, error } = await supabase
-        .from('sequences')
-        .insert({
-          user_id: user.id,
-          lead_id: formData.lead_id,
-          template_id: formData.steps[0].template_id,
-          max_followups: formData.steps.length,
-          interval_days: firstDelay,
-          current_step: 0,
-          status: 'active',
-          next_send_at: nextSend.toISOString(),
-        } as any)
-        .select()
-        .single();
-      if (error) throw error;
+      for (const leadId of formData.lead_ids) {
+        const nextSend = new Date();
+        nextSend.setDate(nextSend.getDate() + firstDelay);
 
-      // Insert steps
-      const stepsToInsert = formData.steps.map((step, idx) => ({
-        sequence_id: data.id,
-        template_id: step.template_id,
-        step_number: idx + 1,
-        delay_days: step.delay_days,
-      }));
+        const { data, error } = await supabase
+          .from('sequences')
+          .insert({
+            user_id: user.id,
+            lead_id: leadId,
+            template_id: formData.steps[0].template_id,
+            max_followups: formData.steps.length,
+            interval_days: firstDelay,
+            current_step: 0,
+            status: 'active',
+            next_send_at: nextSend.toISOString(),
+          } as any)
+          .select()
+          .single();
+        if (error) throw error;
 
-      const { error: stepsErr } = await supabase
-        .from('sequence_steps')
-        .insert(stepsToInsert);
-      if (stepsErr) throw stepsErr;
+        // Insert steps
+        const stepsToInsert = formData.steps.map((step, idx) => ({
+          sequence_id: data.id,
+          template_id: step.template_id,
+          step_number: idx + 1,
+          delay_days: step.delay_days,
+        }));
 
-      return data;
+        const { error: stepsErr } = await supabase
+          .from('sequence_steps')
+          .insert(stepsToInsert);
+        if (stepsErr) throw stepsErr;
+
+        results.push(data);
+      }
+
+      return results;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sequences'] });

@@ -23,6 +23,6 @@ export interface Sequence {
 }
 
 export interface SequenceFormData {
-  lead_id: string;
+  lead_ids: string[];
   steps: { template_id: string; delay_days: number }[];
 }
