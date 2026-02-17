@@ -22,6 +22,7 @@ import { LeadScraper } from '@/components/LeadScraper';
 import { BulkMessage } from '@/components/BulkMessage';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send } from 'lucide-react';
+import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -106,6 +107,8 @@ export default function Dashboard() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(100);
 
   const categories = useMemo(() => {
     const cats = new Set<string>();
@@ -116,6 +119,7 @@ export default function Dashboard() {
   }, [leads]);
 
   const filteredLeads = useMemo(() => {
+    setCurrentPage(1);
     return leads.filter((lead) => {
       const matchesSearch =
         search === '' ||
@@ -129,6 +133,12 @@ export default function Dashboard() {
       return matchesSearch && matchesStatus && matchesPlatform && matchesCategory;
     });
   }, [leads, search, statusFilter, platformFilter, categoryFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
+  const paginatedLeads = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredLeads.slice(start, start + pageSize);
+  }, [filteredLeads, currentPage, pageSize]);
 
   const selectedLeads = useMemo(
     () => filteredLeads.filter((l) => selectedLeadIds.has(l.id)),
@@ -362,7 +372,7 @@ export default function Dashboard() {
           </div>
         ) : viewMode === 'card' ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredLeads.map((lead) => (
+            {paginatedLeads.map((lead) => (
               <LeadCard
                 key={lead.id}
                 lead={lead}
@@ -373,13 +383,45 @@ export default function Dashboard() {
           </div>
         ) : (
           <LeadListView
-            leads={filteredLeads}
+            leads={paginatedLeads}
             onEdit={handleEdit}
             onDelete={(id) => setDeleteConfirmId(id)}
             onUpdate={(data) => updateLead.mutate(data)}
             selectedIds={selectedLeadIds}
             onSelectionChange={setSelectedLeadIds}
           />
+        )}
+
+        {/* Pagination Controls */}
+        {filteredLeads.length > 0 && (
+          <div className="flex items-center justify-between mt-6 flex-wrap gap-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>
+                {((currentPage - 1) * pageSize) + 1}–{Math.min(currentPage * pageSize, filteredLeads.length)} of {filteredLeads.length}
+              </span>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setCurrentPage(1); }}>
+                <SelectTrigger className="w-[80px] h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                  <SelectItem value="250">250</SelectItem>
+                  <SelectItem value="500">500</SelectItem>
+                </SelectContent>
+              </Select>
+              <span>per page</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+              </Button>
+              <span className="text-sm text-muted-foreground">Page {currentPage} / {totalPages}</span>
+              <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                Next <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
         )}
 
           {/* Templates Section */}
