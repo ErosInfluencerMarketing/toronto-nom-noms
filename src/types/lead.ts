@@ -10,6 +10,7 @@ export interface Lead {
   instagram_handle: string | null;
   website: string | null;
   address: string | null;
+  category: string | null;
   platform: Platform;
   status: LeadStatus;
   next_outreach_date: string | null;
@@ -26,6 +27,7 @@ export interface LeadFormData {
   instagram_handle?: string;
   website?: string;
   address?: string;
+  category?: string;
   platform: Platform;
   status: LeadStatus;
   next_outreach_date?: string;

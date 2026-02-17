@@ -123,13 +123,13 @@ export function LeadScraper({ onImport, isLoading }: LeadScraperProps) {
       instagram_handle: biz.instagram_handle || undefined,
       website: biz.website || undefined,
       address: biz.address || undefined,
+      category: biz.category || undefined,
       platform,
       status: 'new' as const,
       notes: [
         biz.phone_number && `Phone: ${biz.phone_number}`,
         biz.rating && `Rating: ${biz.rating}`,
         biz.price_range && `Price: ${biz.price_range}`,
-        biz.category && `Category: ${biz.category}`,
       ]
         .filter(Boolean)
         .join('\n'),
