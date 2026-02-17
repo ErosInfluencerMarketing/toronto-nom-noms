@@ -376,6 +376,7 @@ export default function Dashboard() {
             leads={filteredLeads}
             onEdit={handleEdit}
             onDelete={(id) => setDeleteConfirmId(id)}
+            onUpdate={(data) => updateLead.mutate(data)}
             selectedIds={selectedLeadIds}
             onSelectionChange={setSelectedLeadIds}
           />
