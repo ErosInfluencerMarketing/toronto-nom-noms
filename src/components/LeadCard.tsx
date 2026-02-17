@@ -2,6 +2,7 @@ import { Lead } from '@/types/lead';
 import { StatusBadge } from './StatusBadge';
 import { PlatformBadge } from './PlatformBadge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Mail, Instagram, Calendar, Edit2, Trash2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -20,6 +21,11 @@ export function LeadCard({ lead, onEdit, onDelete }: LeadCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="font-semibold text-foreground truncate">{lead.business_name}</h3>
+              {lead.category && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">
+                  {lead.category}
+                </Badge>
+              )}
               <PlatformBadge platform={lead.platform} />
             </div>
             

@@ -2,6 +2,7 @@ import { Lead } from '@/types/lead';
 import { StatusBadge } from './StatusBadge';
 import { PlatformBadge } from './PlatformBadge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -51,7 +52,14 @@ export function LeadListView({ leads, onEdit, onDelete }: LeadListViewProps) {
                 className="hover:bg-secondary/30 transition-colors"
               >
                 <TableCell className="font-medium text-foreground">
-                  {lead.business_name}
+                  <div className="flex items-center gap-2">
+                    {lead.business_name}
+                    {lead.category && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">
+                        {lead.category}
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {lead.owner_name || '-'}
