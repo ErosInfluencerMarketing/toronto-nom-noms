@@ -32,6 +32,7 @@ const templateSchema = z.object({
   name: z.string().min(1, 'Template name is required').max(100),
   platform: z.enum(['eros', 'noms']),
   channel: z.enum(['email', 'instagram']),
+  subject: z.string().max(200).optional(),
   message_body: z.string().min(1, 'Message body is required').max(2000),
 });
 
@@ -49,6 +50,7 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
     name: '',
     platform: 'eros',
     channel: 'email',
+    subject: '',
     message_body: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -59,6 +61,7 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
         name: template.name,
         platform: template.platform,
         channel: template.channel || 'email',
+        subject: template.subject || '',
         message_body: template.message_body,
       });
     } else {
@@ -66,6 +69,7 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
         name: '',
         platform: 'eros',
         channel: 'email',
+        subject: '',
         message_body: '',
       });
     }
@@ -201,6 +205,22 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
             </Select>
           </div>
           
+          {formData.channel === 'email' && (
+            <div className="space-y-2">
+              <Label htmlFor="subject">Subject Line</Label>
+              <Input
+                id="subject"
+                value={formData.subject}
+                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                className="bg-secondary border-border"
+                placeholder="e.g., Hey [Business Name]!"
+              />
+              <p className="text-xs text-muted-foreground">
+                Supports placeholders like [Business Name]. Leave blank for auto-generated subject.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="message_body">Message Body *</Label>
             <div className="flex flex-wrap gap-1.5 mb-2">

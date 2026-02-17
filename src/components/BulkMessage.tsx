@@ -57,6 +57,9 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
     const template = templates.find((t) => t.id === templateId);
     if (template) {
       setMessageTemplate(template.message_body);
+      if (template.subject) {
+        setSubjectTemplate(template.subject);
+      }
     }
   };
 

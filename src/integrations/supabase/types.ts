@@ -160,6 +160,7 @@ export type Database = {
           message_body: string
           name: string
           platform: Database["public"]["Enums"]["platform_type"]
+          subject: string | null
           updated_at: string
           user_id: string
         }
@@ -170,6 +171,7 @@ export type Database = {
           message_body: string
           name: string
           platform?: Database["public"]["Enums"]["platform_type"]
+          subject?: string | null
           updated_at?: string
           user_id: string
         }
@@ -180,6 +182,7 @@ export type Database = {
           message_body?: string
           name?: string
           platform?: Database["public"]["Enums"]["platform_type"]
+          subject?: string | null
           updated_at?: string
           user_id?: string
         }
