@@ -13,13 +13,26 @@ export function useLeads() {
     queryFn: async () => {
       if (!user) return [];
       
-      const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const allLeads: Lead[] = [];
+      const pageSize = 1000;
+      let from = 0;
       
-      if (error) throw error;
-      return data as Lead[];
+      while (true) {
+        const { data, error } = await supabase
+          .from('leads')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+        
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        
+        allLeads.push(...(data as Lead[]));
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+      
+      return allLeads;
     },
     enabled: !!user,
   });
