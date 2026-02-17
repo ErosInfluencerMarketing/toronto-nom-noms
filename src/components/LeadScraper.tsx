@@ -28,6 +28,8 @@ interface ScrapedBusiness {
   address?: string;
   phone_number?: string;
   website?: string;
+  email?: string;
+  instagram_handle?: string;
   rating?: string;
   category?: string;
   price_range?: string;
@@ -117,14 +119,14 @@ export function LeadScraper({ onImport, isLoading }: LeadScraperProps) {
     const leads: LeadFormData[] = selectedBusinesses.map((biz) => ({
       business_name: biz.business_name,
       owner_name: undefined,
-      email: undefined,
-      instagram_handle: undefined,
+      email: biz.email || undefined,
+      instagram_handle: biz.instagram_handle || undefined,
+      website: biz.website || undefined,
+      address: biz.address || undefined,
       platform,
       status: 'new' as const,
       notes: [
-        biz.address && `Address: ${biz.address}`,
         biz.phone_number && `Phone: ${biz.phone_number}`,
-        biz.website && `Website: ${biz.website}`,
         biz.rating && `Rating: ${biz.rating}`,
         biz.price_range && `Price: ${biz.price_range}`,
         biz.category && `Category: ${biz.category}`,

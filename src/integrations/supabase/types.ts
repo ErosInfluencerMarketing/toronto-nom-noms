@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       leads: {
         Row: {
+          address: string | null
           business_name: string
           created_at: string
           email: string | null
@@ -29,8 +30,10 @@ export type Database = {
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
           user_id: string
+          website: string | null
         }
         Insert: {
+          address?: string | null
           business_name: string
           created_at?: string
           email?: string | null
@@ -44,8 +47,10 @@ export type Database = {
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           user_id: string
+          website?: string | null
         }
         Update: {
+          address?: string | null
           business_name?: string
           created_at?: string
           email?: string | null
@@ -59,6 +64,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           user_id?: string
+          website?: string | null
         }
         Relationships: []
       }

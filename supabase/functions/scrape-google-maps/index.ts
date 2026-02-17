@@ -37,11 +37,9 @@ Deno.serve(async (req) => {
     }
 
     const searchLocation = location || 'Toronto';
-    const searchQuery = `${query} ${searchLocation} restaurants cafes site:google.com/maps`;
 
-    console.log('Searching for:', searchQuery);
+    console.log('Searching for:', query, 'in', searchLocation);
 
-    // Use Firecrawl search to find businesses
     const searchResponse = await fetch('https://api.firecrawl.dev/v1/search', {
       method: 'POST',
       headers: {
@@ -77,12 +75,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Combine search result content for AI extraction
     const combinedContent = results.map((r: any, i: number) => 
-      `Result ${i + 1}:\nTitle: ${r.title || 'N/A'}\nURL: ${r.url || 'N/A'}\nDescription: ${r.description || 'N/A'}\nContent: ${(r.markdown || '').slice(0, 1500)}`
+      `Result ${i + 1}:\nTitle: ${r.title || 'N/A'}\nURL: ${r.url || 'N/A'}\nDescription: ${r.description || 'N/A'}\nContent: ${(r.markdown || '').slice(0, 2000)}`
     ).join('\n\n---\n\n');
 
-    // Use AI to extract structured business data
     const aiResponse = await fetch(AI_GATEWAY_URL, {
       method: 'POST',
       headers: {
@@ -94,11 +90,22 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You extract restaurant and cafe business information from search results. Return ONLY a JSON array of businesses. Each business should have: business_name, address, phone_number, website, rating, category, price_range. If a field is unknown, use an empty string. Only include actual businesses (restaurants, cafes, coffee shops, etc). Do not include directories, articles, or non-business results. Return valid JSON only, no markdown.`
+            content: `You extract restaurant and cafe business information from search results. Return ONLY a JSON array of businesses. Each business object must have these fields:
+- business_name: string (the business name)
+- address: string (full street address if available)
+- phone_number: string (phone number if available)
+- website: string (website URL if available)
+- email: string (email address if found in content, look for contact emails, info@ addresses, etc.)
+- instagram_handle: string (Instagram handle WITHOUT the @ symbol, look for instagram.com links or @mentions)
+- rating: string (Google rating if available)
+- category: string (type of business e.g. "Coffee Shop", "Italian Restaurant")
+- price_range: string (price range if available)
+
+If a field is unknown, use an empty string. Only include actual businesses (restaurants, cafes, coffee shops, etc). Do not include directories, articles, or non-business results. Return valid JSON only, no markdown.`
           },
           {
             role: 'user',
-            content: `Extract all restaurant and cafe businesses from these search results about "${query}" in ${searchLocation}:\n\n${combinedContent}`
+            content: `Extract all restaurant and cafe businesses from these search results about "${query}" in ${searchLocation}. Pay special attention to finding email addresses and Instagram handles:\n\n${combinedContent}`
           }
         ],
         temperature: 0.1,
@@ -120,7 +127,6 @@ Deno.serve(async (req) => {
 
     let businesses = [];
     try {
-      // Strip markdown code fences if present
       const cleaned = aiContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const parsed = JSON.parse(cleaned);
       businesses = Array.isArray(parsed) ? parsed : parsed.businesses || [];
