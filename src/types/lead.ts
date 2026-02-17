@@ -8,6 +8,8 @@ export interface Lead {
   owner_name: string | null;
   email: string | null;
   instagram_handle: string | null;
+  website: string | null;
+  address: string | null;
   platform: Platform;
   status: LeadStatus;
   next_outreach_date: string | null;
@@ -22,6 +24,8 @@ export interface LeadFormData {
   owner_name?: string;
   email?: string;
   instagram_handle?: string;
+  website?: string;
+  address?: string;
   platform: Platform;
   status: LeadStatus;
   next_outreach_date?: string;

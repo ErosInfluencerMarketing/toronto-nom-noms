@@ -2,3 +2,6 @@ project_id = "dzjkxypxlbqnastasrjx"
 
 [functions.scrape-google-maps]
 verify_jwt = false
+
+[functions.enrich-leads]
+verify_jwt = false

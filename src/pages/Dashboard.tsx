@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeads } from '@/hooks/useLeads';
@@ -25,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, LogOut, MapPin, Users, Download } from 'lucide-react';
+import { Plus, LogOut, MapPin, Users, Download, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -35,6 +37,8 @@ const exportLeadsToCSV = (leads: Lead[]) => {
     'Owner Name',
     'Email',
     'Instagram Handle',
+    'Website',
+    'Address',
     'Platform',
     'Status',
     'Next Outreach Date',
@@ -48,6 +52,8 @@ const exportLeadsToCSV = (leads: Lead[]) => {
     lead.owner_name || '',
     lead.email || '',
     lead.instagram_handle || '',
+    lead.website || '',
+    lead.address || '',
     lead.platform,
     lead.status,
     lead.next_outreach_date || '',
@@ -77,7 +83,9 @@ export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { leads, isLoading, createLead, updateLead, deleteLead, bulkCreateLeads } = useLeads();
+  const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
@@ -150,6 +158,25 @@ export default function Dashboard() {
     }
   };
 
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('enrich-leads');
+      if (error) throw error;
+      if (data?.success) {
+        toast.success(`Enriched ${data.enriched} of ${data.total} leads with missing data`);
+        queryClient.invalidateQueries({ queryKey: ['leads'] });
+      } else {
+        toast.error(data?.error || 'Sync failed');
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast.error('Failed to sync leads');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -209,6 +236,15 @@ export default function Dashboard() {
           <div className="flex items-center gap-3 flex-wrap">
             <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
             <LeadScraper onImport={handleImportLeads} isLoading={isImporting} />
+            <Button
+              variant="outline"
+              onClick={handleSync}
+              disabled={isSyncing || leads.length === 0}
+              className="shrink-0"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Syncing...' : 'Sync'}
+            </Button>
             <LeadImport onImport={handleImportLeads} isLoading={isImporting} />
             <Button
               variant="outline"
