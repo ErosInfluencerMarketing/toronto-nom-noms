@@ -160,20 +160,32 @@ export default function Dashboard() {
 
   const handleSync = async () => {
     setIsSyncing(true);
+    let totalEnriched = 0;
+    let remaining = 0;
     try {
-      const { data, error } = await supabase.functions.invoke('enrich-leads');
-      if (error) throw error;
-      if (data?.success) {
-        toast.success(`Enriched ${data.enriched} of ${data.total} leads with missing data`);
+      // Process leads one at a time, calling repeatedly
+      for (let i = 0; i < 30; i++) {
+        const { data, error } = await supabase.functions.invoke('enrich-leads');
+        if (error) throw error;
+        if (!data?.success) {
+          toast.error(data?.error || 'Sync failed');
+          break;
+        }
+        totalEnriched += data.enriched;
+        remaining = data.total - 1;
         queryClient.invalidateQueries({ queryKey: ['leads'] });
-      } else {
-        toast.error(data?.error || 'Sync failed');
+        
+        if (data.total <= 1) break; // No more leads to enrich
+        
+        toast.info(`Syncing... ${totalEnriched} enriched, ~${remaining} remaining`);
       }
+      toast.success(`Sync complete! Enriched ${totalEnriched} leads`);
     } catch (error) {
       console.error('Sync error:', error);
       toast.error('Failed to sync leads');
     } finally {
       setIsSyncing(false);
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
     }
   };
 
