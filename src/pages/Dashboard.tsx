@@ -16,6 +16,7 @@ import { TemplatesSection } from '@/components/TemplatesSection';
 import { SequencesSection } from '@/components/SequencesSection';
 import { LeadImport } from '@/components/LeadImport';
 import { LeadScraper } from '@/components/LeadScraper';
+import { BulkMessage } from '@/components/BulkMessage';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -28,7 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, LogOut, MapPin, Users, Download, RefreshCw } from 'lucide-react';
+import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -99,6 +100,8 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
+  const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
 
   const categories = useMemo(() => {
     const cats = new Set<string>();
@@ -122,6 +125,11 @@ export default function Dashboard() {
       return matchesSearch && matchesStatus && matchesPlatform && matchesCategory;
     });
   }, [leads, search, statusFilter, platformFilter, categoryFilter]);
+
+  const selectedLeads = useMemo(
+    () => filteredLeads.filter((l) => selectedLeadIds.has(l.id)),
+    [filteredLeads, selectedLeadIds]
+  );
 
   const handleCreateLead = (data: LeadFormData) => {
     createLead.mutate(data, {
@@ -296,6 +304,30 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Bulk selection bar */}
+        {viewMode === 'list' && selectedLeadIds.size > 0 && (
+          <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <span className="text-sm text-foreground font-medium">
+              {selectedLeadIds.size} lead{selectedLeadIds.size !== 1 ? 's' : ''} selected
+            </span>
+            <Button
+              size="sm"
+              onClick={() => setBulkMessageOpen(true)}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Send Email to Selected
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedLeadIds(new Set())}
+              className="text-muted-foreground"
+            >
+              Clear selection
+            </Button>
+          </div>
+        )}
+
         {/* Leads View */}
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
@@ -335,6 +367,8 @@ export default function Dashboard() {
             leads={filteredLeads}
             onEdit={handleEdit}
             onDelete={(id) => setDeleteConfirmId(id)}
+            selectedIds={selectedLeadIds}
+            onSelectionChange={setSelectedLeadIds}
           />
         )}
 
@@ -379,6 +413,14 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bulk Message Dialog */}
+      <BulkMessage
+        open={bulkMessageOpen}
+        onOpenChange={setBulkMessageOpen}
+        leads={selectedLeads}
+        onComplete={() => setSelectedLeadIds(new Set())}
+      />
     </div>
   );
 }
