@@ -95,8 +95,66 @@ export type Database = {
         }
         Relationships: []
       }
+      sequences: {
+        Row: {
+          created_at: string
+          current_step: number
+          id: string
+          interval_days: number
+          lead_id: string
+          max_followups: number
+          next_send_at: string | null
+          status: string
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_step?: number
+          id?: string
+          interval_days?: number
+          lead_id: string
+          max_followups?: number
+          next_send_at?: string | null
+          status?: string
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_step?: number
+          id?: string
+          interval_days?: number
+          lead_id?: string
+          max_followups?: number
+          next_send_at?: string | null
+          status?: string
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sequences_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sequences_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       templates: {
         Row: {
+          channel: Database["public"]["Enums"]["channel_type"]
           created_at: string
           id: string
           message_body: string
@@ -106,6 +164,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          channel?: Database["public"]["Enums"]["channel_type"]
           created_at?: string
           id?: string
           message_body: string
@@ -115,6 +174,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          channel?: Database["public"]["Enums"]["channel_type"]
           created_at?: string
           id?: string
           message_body?: string
@@ -133,6 +193,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      channel_type: "email" | "instagram"
       lead_status: "new" | "contacted" | "demo_booked" | "onboarded"
       platform_type: "eros" | "noms"
     }
@@ -262,6 +323,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      channel_type: ["email", "instagram"],
       lead_status: ["new", "contacted", "demo_booked", "onboarded"],
       platform_type: ["eros", "noms"],
     },

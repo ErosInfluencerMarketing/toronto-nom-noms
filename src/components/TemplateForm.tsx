@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Template, TemplateFormData, PLACEHOLDERS } from '@/types/template';
+import { Template, TemplateFormData, Channel, PLACEHOLDERS } from '@/types/template';
 import { Platform } from '@/types/lead';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,7 @@ import { z } from 'zod';
 const templateSchema = z.object({
   name: z.string().min(1, 'Template name is required').max(100),
   platform: z.enum(['eros', 'noms']),
+  channel: z.enum(['email', 'instagram']),
   message_body: z.string().min(1, 'Message body is required').max(2000),
 });
 
@@ -39,6 +40,7 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
   const [formData, setFormData] = useState<TemplateFormData>({
     name: '',
     platform: 'eros',
+    channel: 'email',
     message_body: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -48,12 +50,14 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
       setFormData({
         name: template.name,
         platform: template.platform,
+        channel: template.channel || 'email',
         message_body: template.message_body,
       });
     } else {
       setFormData({
         name: '',
         platform: 'eros',
+        channel: 'email',
         message_body: '',
       });
     }
@@ -121,6 +125,22 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
               <SelectContent>
                 <SelectItem value="eros">Eros</SelectItem>
                 <SelectItem value="noms">Noms</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="channel">Channel</Label>
+            <Select
+              value={formData.channel}
+              onValueChange={(value: Channel) => setFormData({ ...formData, channel: value })}
+            >
+              <SelectTrigger className="bg-secondary border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="instagram">Instagram DM</SelectItem>
               </SelectContent>
             </Select>
           </div>
