@@ -145,6 +145,7 @@ export type Database = {
           interval_days: number
           lead_id: string
           max_followups: number
+          name: string | null
           next_send_at: string | null
           status: string
           template_id: string
@@ -158,6 +159,7 @@ export type Database = {
           interval_days?: number
           lead_id: string
           max_followups?: number
+          name?: string | null
           next_send_at?: string | null
           status?: string
           template_id: string
@@ -171,6 +173,7 @@ export type Database = {
           interval_days?: number
           lead_id?: string
           max_followups?: number
+          name?: string | null
           next_send_at?: string | null
           status?: string
           template_id?: string

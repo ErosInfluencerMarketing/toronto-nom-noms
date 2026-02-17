@@ -57,6 +57,7 @@ export function useSequences() {
           .insert({
             user_id: user.id,
             lead_id: leadId,
+            name: formData.name,
             template_id: formData.steps[0].template_id,
             max_followups: formData.steps.length,
             interval_days: firstDelay,

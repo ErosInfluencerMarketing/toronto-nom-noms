@@ -1,0 +1,1 @@
+ALTER TABLE public.sequences ADD COLUMN name text DEFAULT '';
