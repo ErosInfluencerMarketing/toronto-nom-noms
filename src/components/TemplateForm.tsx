@@ -248,6 +248,18 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
             {errors.message_body && (
               <p className="text-xs text-destructive">{errors.message_body}</p>
             )}
+            {formData.message_body && (
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Preview</Label>
+                <div
+                  className="rounded-md border border-border bg-background p-3 text-sm max-w-none
+                    [&_a]:text-primary [&_a]:underline [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-2 [&_h2]:mb-1
+                    [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5
+                    max-h-[150px] overflow-y-auto"
+                  dangerouslySetInnerHTML={{ __html: formData.message_body }}
+                />
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               Use the toolbar to format text with HTML tags. Click placeholders to insert dynamic fields.
             </p>
