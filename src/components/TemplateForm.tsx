@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Template, TemplateFormData, Channel, PLACEHOLDERS } from '@/types/template';
 import { Platform } from '@/types/lead';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Bold, Italic, Underline, Link, List, ListOrdered, Heading2 } from 'lucide-react';
 import { z } from 'zod';
 
 const templateSchema = z.object({
@@ -37,6 +44,7 @@ interface TemplateFormProps {
 }
 
 export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading }: TemplateFormProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [formData, setFormData] = useState<TemplateFormData>({
     name: '',
     platform: 'eros',
@@ -83,11 +91,59 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
   };
 
   const insertPlaceholder = (placeholder: string) => {
-    setFormData({
-      ...formData,
-      message_body: formData.message_body + placeholder,
-    });
+    insertAtCursor(placeholder);
   };
+
+  const wrapSelection = (before: string, after: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = formData.message_body;
+    const selected = text.substring(start, end);
+    const newText = text.substring(0, start) + before + selected + after + text.substring(end);
+    setFormData({ ...formData, message_body: newText });
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + before.length, end + before.length);
+    }, 0);
+  };
+
+  const insertAtCursor = (insert: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      setFormData({ ...formData, message_body: formData.message_body + insert });
+      return;
+    }
+    const start = textarea.selectionStart;
+    const text = formData.message_body;
+    const newText = text.substring(0, start) + insert + text.substring(start);
+    setFormData({ ...formData, message_body: newText });
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + insert.length, start + insert.length);
+    }, 0);
+  };
+
+  const insertLink = () => {
+    const textarea = textareaRef.current;
+    const selected = textarea ? formData.message_body.substring(textarea.selectionStart, textarea.selectionEnd) : '';
+    if (selected) {
+      wrapSelection('<a href="URL">', '</a>');
+    } else {
+      insertAtCursor('<a href="URL">link text</a>');
+    }
+  };
+
+  const formatActions = [
+    { icon: Bold, label: 'Bold', action: () => wrapSelection('<b>', '</b>') },
+    { icon: Italic, label: 'Italic', action: () => wrapSelection('<i>', '</i>') },
+    { icon: Underline, label: 'Underline', action: () => wrapSelection('<u>', '</u>') },
+    { icon: Link, label: 'Link', action: insertLink },
+    { icon: Heading2, label: 'Heading', action: () => wrapSelection('<h2>', '</h2>') },
+    { icon: List, label: 'Bullet List', action: () => insertAtCursor('\n<ul>\n  <li>Item</li>\n</ul>\n') },
+    { icon: ListOrdered, label: 'Numbered List', action: () => insertAtCursor('\n<ol>\n  <li>Item</li>\n</ol>\n') },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -159,18 +215,41 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
                 </Badge>
               ))}
             </div>
+            <TooltipProvider delayDuration={300}>
+              <div className="flex items-center gap-0.5 p-1 border border-border rounded-t-md bg-muted/50">
+                {formatActions.map((item) => (
+                  <Tooltip key={item.label}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={item.action}
+                      >
+                        <item.icon className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </div>
+            </TooltipProvider>
             <Textarea
+              ref={textareaRef}
               id="message_body"
               value={formData.message_body}
               onChange={(e) => setFormData({ ...formData, message_body: e.target.value })}
-              className="bg-secondary border-border min-h-[150px] font-mono text-sm"
+              className="bg-secondary border-border min-h-[150px] font-mono text-sm rounded-t-none -mt-px"
               placeholder="Hi [Owner Name], I noticed [Business Name] on Instagram..."
             />
             {errors.message_body && (
               <p className="text-xs text-destructive">{errors.message_body}</p>
             )}
             <p className="text-xs text-muted-foreground">
-              Click placeholders above to insert them into your message
+              Use the toolbar to format text with HTML tags. Click placeholders to insert dynamic fields.
             </p>
           </div>
           
