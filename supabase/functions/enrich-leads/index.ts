@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     if (leadsError) throw leadsError;
 
     const leadsToEnrich = leads?.filter((l: any) =>
-      !l.email || !l.instagram_handle || !l.website || !l.address
+      !l.email || !l.instagram_handle || !l.website || !l.address || !l.category
     ) || [];
 
     console.log(`Found ${leadsToEnrich.length} leads to enrich`);
@@ -70,6 +70,7 @@ Deno.serve(async (req) => {
     if (!lead.instagram_handle) missingFields.push('instagram_handle');
     if (!lead.website) missingFields.push('website');
     if (!lead.address) missingFields.push('address');
+    if (!lead.category) missingFields.push('category');
 
     const addressHint = lead.notes?.match(/Address: (.+)/)?.[1] || '';
     const searchQuery = `${lead.business_name} ${addressHint} Toronto contact`;
@@ -111,7 +112,7 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: 'user',
-            content: `Extract contact info for "${lead.business_name}" from these search results. Return ONLY a JSON object: {"email":"","instagram_handle":"","website":"","address":""}. Use empty string if not found.\n\n${content}`
+            content: `Extract contact info for "${lead.business_name}" from these search results. Return ONLY a JSON object: {"email":"","instagram_handle":"","website":"","address":"","category":""}. For category, use a cuisine/business type like "Cafe", "Italian", "Pizza", "Coffee Shop", "Bakery", "Japanese", "Brunch", etc. Use empty string if not found.\n\n${content}`
           }
         ],
         temperature: 0,
@@ -139,6 +140,7 @@ Deno.serve(async (req) => {
     if (!lead.instagram_handle && extracted.instagram_handle) updates.instagram_handle = extracted.instagram_handle;
     if (!lead.website && extracted.website) updates.website = extracted.website;
     if (!lead.address && extracted.address) updates.address = extracted.address;
+    if (!lead.category && extracted.category) updates.category = extracted.category;
 
     if (Object.keys(updates).length > 0) {
       console.log(`Updating ${lead.business_name}:`, JSON.stringify(updates));
