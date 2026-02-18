@@ -44,12 +44,15 @@ Deno.serve(async (req) => {
       );
     }
 
+    const BATCH_SIZE = 50; // Process at most 50 per invocation to avoid timeouts
     const now = new Date().toISOString();
     const { data: sequences, error: seqErr } = await supabase
       .from("sequences")
       .select("*")
       .eq("status", "active")
-      .lte("next_send_at", now);
+      .lte("next_send_at", now)
+      .order("next_send_at", { ascending: true })
+      .limit(BATCH_SIZE);
 
     if (seqErr) throw seqErr;
     if (!sequences || sequences.length === 0) {
