@@ -1,9 +1,11 @@
+import { useNavigate } from 'react-router-dom';
 import {
   BarChart3,
   Users,
   FileText,
   Zap,
   Calendar,
+  Shield,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -15,6 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const navItems = [
   { title: 'Dashboard', icon: BarChart3, sectionId: 'analytics' },
@@ -29,6 +32,9 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ activeSection }: AppSidebarProps) {
+  const { isAdmin } = useUserRole();
+  const navigate = useNavigate();
+
   const scrollTo = (sectionId: string) => {
     const el = document.getElementById(sectionId);
     if (el) {
@@ -55,6 +61,17 @@ export function AppSidebar({ activeSection }: AppSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => navigate('/admin')}
+                    tooltip="Admin Panel"
+                  >
+                    <Shield className="h-4 w-4" />
+                    <span>Admin</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
