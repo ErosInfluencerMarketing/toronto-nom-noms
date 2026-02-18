@@ -9,11 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { BarChart3, Users, Phone, MessageSquare, Calendar, CheckCircle, TrendingUp, Mail, Send } from 'lucide-react';
+import { BarChart3, Users, Phone, MessageSquare, Calendar, CheckCircle, TrendingUp, Mail, Send, Zap } from 'lucide-react';
 
 interface AnalyticsPanelProps {
   leads: Lead[];
   sequences?: Sequence[];
+  sequenceStatusCounts?: { active: number; paused: number; completed: number; replied: number; total: number };
 }
 
 interface StatItem {
@@ -24,7 +25,7 @@ interface StatItem {
   percentage?: number;
 }
 
-export function AnalyticsPanel({ leads, sequences = [] }: AnalyticsPanelProps) {
+export function AnalyticsPanel({ leads, sequences = [], sequenceStatusCounts }: AnalyticsPanelProps) {
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
 
   const filteredLeads = useMemo(() => {
@@ -50,6 +51,7 @@ export function AnalyticsPanel({ leads, sequences = [] }: AnalyticsPanelProps) {
     // Email stats from sequences
     const totalEmailsSent = sequences.reduce((sum, seq) => sum + (seq.current_step || 0), 0);
     const leadsEmailed = new Set(sequences.filter(seq => seq.current_step > 0).map(seq => seq.lead_id)).size;
+    const activeSequences = sequenceStatusCounts?.active ?? sequences.filter(seq => seq.status === 'active').length;
 
     return [
       {
@@ -57,6 +59,12 @@ export function AnalyticsPanel({ leads, sequences = [] }: AnalyticsPanelProps) {
         value: total,
         icon: Users,
         color: 'text-primary bg-primary/10',
+      },
+      {
+        label: 'Active Sequences',
+        value: activeSequences,
+        icon: Zap,
+        color: 'text-chart-3 bg-chart-3/10',
       },
       {
         label: 'Emails Sent',
