@@ -4,6 +4,7 @@ export type LeadStatus = 'new' | 'contacted' | 'demo_booked' | 'onboarded';
 export interface Lead {
   id: string;
   user_id: string;
+  assigned_user_id: string | null;
   business_name: string;
   owner_name: string | null;
   email: string | null;
