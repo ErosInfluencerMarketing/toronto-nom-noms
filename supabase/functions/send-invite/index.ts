@@ -67,7 +67,8 @@ serve(async (req) => {
       status: "pending",
     });
 
-    // Generate signup link
+    // Generate signup link - handle already registered users gracefully
+    let actionLink: string | undefined;
     const { data: inviteData, error: inviteError } = await adminClient.auth.admin.generateLink({
       type: "invite",
       email,
@@ -77,16 +78,36 @@ serve(async (req) => {
     });
 
     if (inviteError) {
-      console.error("Invite error:", inviteError);
-      return new Response(JSON.stringify({ error: inviteError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // If user already exists, generate a magic link instead
+      if (inviteError.message?.includes("already been registered")) {
+        const { data: magicData, error: magicError } = await adminClient.auth.admin.generateLink({
+          type: "magiclink",
+          email,
+          options: {
+            redirectTo: `${req.headers.get("origin") || supabaseUrl}/auth`,
+          },
+        });
+        if (magicError) {
+          console.error("Magic link error:", magicError);
+          return new Response(JSON.stringify({ error: "User already registered. Magic link failed: " + magicError.message }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        actionLink = magicData?.properties?.action_link;
+      } else {
+        console.error("Invite error:", inviteError);
+        return new Response(JSON.stringify({ error: inviteError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      actionLink = inviteData?.properties?.action_link;
     }
 
     // Send email via Resend if configured
-    if (resendKey) {
-      const actionLink = inviteData?.properties?.action_link;
+    if (resendKey && actionLink) {
       await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
