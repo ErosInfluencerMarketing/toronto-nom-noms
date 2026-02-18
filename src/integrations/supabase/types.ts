@@ -17,6 +17,7 @@ export type Database = {
       leads: {
         Row: {
           address: string | null
+          assigned_user_id: string | null
           business_name: string
           category: string | null
           created_at: string
@@ -35,6 +36,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          assigned_user_id?: string | null
           business_name: string
           category?: string | null
           created_at?: string
@@ -53,6 +55,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          assigned_user_id?: string | null
           business_name?: string
           category?: string | null
           created_at?: string
@@ -233,14 +236,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_invites: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          invited_by: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          invited_by: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "user"
       channel_type: "email" | "instagram"
       lead_status: "new" | "contacted" | "demo_booked" | "onboarded"
       platform_type: "eros" | "noms"
@@ -371,6 +423,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user"],
       channel_type: ["email", "instagram"],
       lead_status: ["new", "contacted", "demo_booked", "onboarded"],
       platform_type: ["eros", "noms"],

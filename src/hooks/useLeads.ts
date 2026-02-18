@@ -46,7 +46,8 @@ export function useLeads() {
         .insert({
           ...leadData,
           user_id: user.id,
-        })
+          assigned_user_id: user.id,
+        } as any)
         .select()
         .single();
       
@@ -68,6 +69,7 @@ export function useLeads() {
       const leadsWithUserId = leadsData.map(lead => ({
         ...lead,
         user_id: user.id,
+        assigned_user_id: user.id,
       }));
 
       const { data, error } = await supabase
