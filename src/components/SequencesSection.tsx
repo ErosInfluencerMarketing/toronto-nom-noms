@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSequences } from '@/hooks/useSequences';
 import { useTemplates } from '@/hooks/useTemplates';
-import { Lead } from '@/types/lead';
+import { Lead, Platform } from '@/types/lead';
 import { SequenceFormData } from '@/types/sequence';
 import { SequenceStepForm } from '@/components/SequenceStepForm';
 import { ViewToggle, ViewMode } from '@/components/ViewToggle';
@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -55,8 +56,13 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
     steps: [{ template_id: '', delay_days: 0 }],
   });
 
+  const [leadPlatformFilter, setLeadPlatformFilter] = useState<Platform | 'all'>('all');
+
   const emailTemplates = templates.filter((t) => t.channel === 'email');
   const leadsWithEmail = leads.filter((l) => !!l.email);
+  const filteredLeads = leadsWithEmail.filter(
+    (l) => leadPlatformFilter === 'all' || l.platform === leadPlatformFilter
+  );
 
   const handleCreate = () => {
     if (formData.lead_ids.length === 0 || formData.steps.some((s) => !s.template_id) || !formData.name.trim()) return;
@@ -300,21 +306,42 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
 
             <div className="space-y-2">
               <Label>Leads ({formData.lead_ids.length} selected)</Label>
+              <div className="flex gap-1 mb-2">
+                {(['all', 'eros', 'noms'] as const).map((p) => (
+                  <Button
+                    key={p}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setLeadPlatformFilter(p)}
+                    className={cn(
+                      'text-xs',
+                      leadPlatformFilter === p
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {p === 'all' ? 'All' : p.charAt(0).toUpperCase() + p.slice(1)}
+                  </Button>
+                ))}
+              </div>
               <div className="border border-border rounded-lg bg-secondary">
                 <label className="flex items-center gap-2 p-2 border-b border-border cursor-pointer hover:bg-background/50 text-sm font-medium">
                   <Checkbox
-                    checked={leadsWithEmail.length > 0 && formData.lead_ids.length === leadsWithEmail.length}
+                    checked={filteredLeads.length > 0 && filteredLeads.every((l) => formData.lead_ids.includes(l.id))}
                     onCheckedChange={(checked) => {
-                      setFormData({
-                        ...formData,
-                        lead_ids: checked ? leadsWithEmail.map((l) => l.id) : [],
-                      });
+                      if (checked) {
+                        const newIds = new Set([...formData.lead_ids, ...filteredLeads.map((l) => l.id)]);
+                        setFormData({ ...formData, lead_ids: Array.from(newIds) });
+                      } else {
+                        const removeIds = new Set(filteredLeads.map((l) => l.id));
+                        setFormData({ ...formData, lead_ids: formData.lead_ids.filter((id) => !removeIds.has(id)) });
+                      }
                     }}
                   />
-                  <span className="text-foreground">Select All ({leadsWithEmail.length})</span>
+                  <span className="text-foreground">Select All ({filteredLeads.length})</span>
                 </label>
                 <div className="max-h-40 overflow-y-auto space-y-1 p-2">
-                  {leadsWithEmail.map((l) => {
+                  {filteredLeads.map((l) => {
                     const isSelected = formData.lead_ids.includes(l.id);
                     return (
                       <label
