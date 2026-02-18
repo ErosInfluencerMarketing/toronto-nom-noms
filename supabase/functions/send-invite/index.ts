@@ -107,8 +107,9 @@ serve(async (req) => {
     }
 
     // Send email via Resend if configured
+    console.log("Resend key present:", !!resendKey, "Action link present:", !!actionLink);
     if (resendKey && actionLink) {
-      await fetch("https://api.resend.com/emails", {
+      const emailRes = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -126,6 +127,10 @@ serve(async (req) => {
           `,
         }),
       });
+      const emailBody = await emailRes.text();
+      console.log("Resend response status:", emailRes.status, "body:", emailBody);
+    } else {
+      console.log("Skipping email send - missing resendKey or actionLink");
     }
 
     return new Response(JSON.stringify({ success: true }), {
