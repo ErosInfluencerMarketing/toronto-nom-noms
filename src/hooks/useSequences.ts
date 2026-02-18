@@ -1,44 +1,86 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Sequence, SequenceFormData, SequenceStatus } from '@/types/sequence';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-export function useSequences() {
+const PAGE_SIZE = 25;
+
+export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'all') {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: sequences = [], isLoading, error } = useQuery({
-    queryKey: ['sequences', user?.id],
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['sequences', user?.id, page, statusFilter],
     queryFn: async () => {
-      if (!user) return [];
-      const { data, error } = await supabase
+      if (!user) return { sequences: [], totalCount: 0 };
+
+      let query = supabase
         .from('sequences')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+
+      const { data: seqData, error, count } = await query;
       if (error) throw error;
 
-      // Fetch steps for all sequences
-      const seqIds = data.map((s: any) => s.id);
-      const { data: steps, error: stepsErr } = await supabase
-        .from('sequence_steps')
-        .select('*')
-        .in('sequence_id', seqIds)
-        .order('step_number', { ascending: true });
-      if (stepsErr) throw stepsErr;
+      // Fetch steps only for current page sequences
+      if (seqData && seqData.length > 0) {
+        const seqIds = seqData.map((s: any) => s.id);
+        const { data: steps, error: stepsErr } = await supabase
+          .from('sequence_steps')
+          .select('*')
+          .in('sequence_id', seqIds)
+          .order('step_number', { ascending: true });
+        if (stepsErr) throw stepsErr;
 
-      const stepsBySeq = (steps || []).reduce((acc: Record<string, any[]>, step: any) => {
-        if (!acc[step.sequence_id]) acc[step.sequence_id] = [];
-        acc[step.sequence_id].push(step);
-        return acc;
-      }, {});
+        const stepsBySeq = (steps || []).reduce((acc: Record<string, any[]>, step: any) => {
+          if (!acc[step.sequence_id]) acc[step.sequence_id] = [];
+          acc[step.sequence_id].push(step);
+          return acc;
+        }, {});
 
-      return data.map((seq: any) => ({
-        ...seq,
-        steps: stepsBySeq[seq.id] || [],
-      })) as unknown as Sequence[];
+        const sequences = seqData.map((seq: any) => ({
+          ...seq,
+          steps: stepsBySeq[seq.id] || [],
+        })) as unknown as Sequence[];
+
+        return { sequences, totalCount: count || 0 };
+      }
+
+      return { sequences: [] as Sequence[], totalCount: count || 0 };
     },
     enabled: !!user,
+    placeholderData: keepPreviousData,
+  });
+
+  // Fetch status counts for filter badges
+  const { data: statusCounts } = useQuery({
+    queryKey: ['sequences-counts', user?.id],
+    queryFn: async () => {
+      if (!user) return { active: 0, paused: 0, completed: 0, replied: 0, total: 0 };
+      
+      const statuses = ['active', 'paused', 'completed', 'replied'] as const;
+      const counts: Record<string, number> = {};
+      let total = 0;
+
+      for (const status of statuses) {
+        const { count } = await supabase
+          .from('sequences')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', status);
+        counts[status] = count || 0;
+        total += count || 0;
+      }
+
+      return { ...counts, total };
+    },
+    enabled: !!user,
+    staleTime: 30_000,
   });
 
   const createSequence = useMutation({
@@ -69,7 +111,6 @@ export function useSequences() {
           .single();
         if (error) throw error;
 
-        // Insert steps
         const stepsToInsert = formData.steps.map((step, idx) => ({
           sequence_id: data.id,
           template_id: step.template_id,
@@ -89,6 +130,7 @@ export function useSequences() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sequences'] });
+      queryClient.invalidateQueries({ queryKey: ['sequences-counts'] });
       toast.success('Sequence started');
     },
     onError: (error) => {
@@ -106,6 +148,7 @@ export function useSequences() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sequences'] });
+      queryClient.invalidateQueries({ queryKey: ['sequences-counts'] });
       toast.success('Sequence updated');
     },
     onError: (error) => {
@@ -115,13 +158,13 @@ export function useSequences() {
 
   const deleteSequence = useMutation({
     mutationFn: async (id: string) => {
-      // Delete steps first
       await supabase.from('sequence_steps').delete().eq('sequence_id', id);
       const { error } = await supabase.from('sequences').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sequences'] });
+      queryClient.invalidateQueries({ queryKey: ['sequences-counts'] });
       toast.success('Sequence deleted');
     },
     onError: (error) => {
@@ -129,5 +172,15 @@ export function useSequences() {
     },
   });
 
-  return { sequences, isLoading, error, createSequence, updateSequenceStatus, deleteSequence };
+  return {
+    sequences: data?.sequences || [],
+    totalCount: data?.totalCount || 0,
+    statusCounts: statusCounts || { active: 0, paused: 0, completed: 0, replied: 0, total: 0 },
+    pageSize: PAGE_SIZE,
+    isLoading,
+    error,
+    createSequence,
+    updateSequenceStatus,
+    deleteSequence,
+  };
 }
