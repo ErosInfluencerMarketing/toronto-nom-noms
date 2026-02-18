@@ -14,7 +14,7 @@ import { BarChart3, Users, Phone, MessageSquare, Calendar, CheckCircle, Trending
 interface AnalyticsPanelProps {
   leads: Lead[];
   sequences?: Sequence[];
-  sequenceStatusCounts?: { active: number; paused: number; completed: number; replied: number; total: number };
+  sequenceStatusCounts?: { active: number; paused: number; completed: number; replied: number; total: number; totalEmailsSent: number; leadsEmailed: number };
 }
 
 interface StatItem {
@@ -48,9 +48,9 @@ export function AnalyticsPanel({ leads, sequences = [], sequenceStatusCounts }: 
       l.status === 'demo_booked' || l.status === 'onboarded'
     ).length;
 
-    // Email stats from sequences
-    const totalEmailsSent = sequences.reduce((sum, seq) => sum + (seq.current_step || 0), 0);
-    const leadsEmailed = new Set(sequences.filter(seq => seq.current_step > 0).map(seq => seq.lead_id)).size;
+    // Email stats from server-side aggregates (accurate across all sequences)
+    const totalEmailsSent = sequenceStatusCounts?.totalEmailsSent ?? sequences.reduce((sum, seq) => sum + (seq.current_step || 0), 0);
+    const leadsEmailed = sequenceStatusCounts?.leadsEmailed ?? new Set(sequences.filter(seq => seq.current_step > 0).map(seq => seq.lead_id)).size;
     const activeSequences = sequenceStatusCounts?.active ?? sequences.filter(seq => seq.status === 'active').length;
 
     return [
