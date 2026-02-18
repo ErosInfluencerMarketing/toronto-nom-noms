@@ -58,11 +58,11 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
     placeholderData: keepPreviousData,
   });
 
-  // Fetch status counts for filter badges
+  // Fetch status counts and aggregate email stats
   const { data: statusCounts } = useQuery({
     queryKey: ['sequences-counts', user?.id],
     queryFn: async () => {
-      if (!user) return { active: 0, paused: 0, completed: 0, replied: 0, total: 0 };
+      if (!user) return { active: 0, paused: 0, completed: 0, replied: 0, total: 0, totalEmailsSent: 0, leadsEmailed: 0 };
       
       const statuses = ['active', 'paused', 'completed', 'replied'] as const;
       const counts: Record<string, number> = {};
@@ -77,7 +77,33 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
         total += count || 0;
       }
 
-      return { ...counts, total };
+      // Fetch aggregate email stats in pages to avoid 1000-row limit
+      let totalEmailsSent = 0;
+      const leadIdsEmailed = new Set<string>();
+      let offset = 0;
+      const batchSize = 1000;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data: batch } = await supabase
+          .from('sequences')
+          .select('current_step, lead_id')
+          .gt('current_step', 0)
+          .range(offset, offset + batchSize - 1);
+
+        if (!batch || batch.length === 0) {
+          hasMore = false;
+        } else {
+          for (const s of batch) {
+            totalEmailsSent += s.current_step || 0;
+            leadIdsEmailed.add(s.lead_id);
+          }
+          offset += batchSize;
+          if (batch.length < batchSize) hasMore = false;
+        }
+      }
+
+      return { ...counts, total, totalEmailsSent, leadsEmailed: leadIdsEmailed.size };
     },
     enabled: !!user,
     staleTime: 30_000,
