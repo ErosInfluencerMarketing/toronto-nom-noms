@@ -20,6 +20,8 @@ import { SequencesSection } from '@/components/SequencesSection';
 import { LeadImport } from '@/components/LeadImport';
 import { LeadScraper } from '@/components/LeadScraper';
 import { BulkMessage } from '@/components/BulkMessage';
+import { AssignLeadsDialog } from '@/components/AssignLeadsDialog';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,7 +35,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -90,6 +92,7 @@ const exportLeadsToCSV = (leads: Lead[]) => {
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
   const { leads, isLoading, createLead, updateLead, deleteLead, bulkCreateLeads } = useLeads();
   const { sequences, statusCounts } = useSequences();
   const queryClient = useQueryClient();
@@ -107,6 +110,7 @@ export default function Dashboard() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
 
@@ -327,18 +331,35 @@ export default function Dashboard() {
         </div>
 
         {/* Bulk selection bar */}
-        {viewMode === 'list' && selectedLeadIds.size > 0 && (
-          <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
+        {selectedLeadIds.size > 0 && (
+          <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20 flex-wrap">
             <span className="text-sm text-foreground font-medium">
               {selectedLeadIds.size} lead{selectedLeadIds.size !== 1 ? 's' : ''} selected
             </span>
             <Button
               size="sm"
+              variant="outline"
+              onClick={() => setSelectedLeadIds(new Set(filteredLeads.map((l) => l.id)))}
+            >
+              Select All {filteredLeads.length} Filtered
+            </Button>
+            <Button
+              size="sm"
               onClick={() => setBulkMessageOpen(true)}
             >
               <Send className="h-4 w-4 mr-2" />
-              Send Email to Selected
+              Send Email
             </Button>
+            {isAdmin && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setAssignDialogOpen(true)}
+              >
+                <UserCheck className="h-4 w-4 mr-2" />
+                Assign to Member
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -479,6 +500,14 @@ export default function Dashboard() {
         onOpenChange={setBulkMessageOpen}
         leads={selectedLeads}
         onComplete={() => setSelectedLeadIds(new Set())}
+      />
+
+      {/* Assign Leads Dialog */}
+      <AssignLeadsDialog
+        open={assignDialogOpen}
+        onOpenChange={setAssignDialogOpen}
+        leadIds={Array.from(selectedLeadIds)}
+        onAssigned={() => setSelectedLeadIds(new Set())}
       />
       </div>
     </SidebarProvider>
