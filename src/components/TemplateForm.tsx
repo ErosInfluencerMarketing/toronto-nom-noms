@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Template, TemplateFormData, Channel, PLACEHOLDERS } from '@/types/template';
+import { useTemplates } from '@/hooks/useTemplates';
+import { AIEmailWriter } from '@/components/AIEmailWriter';
 import { Platform } from '@/types/lead';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,6 +47,7 @@ interface TemplateFormProps {
 }
 
 export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading }: TemplateFormProps) {
+  const { templates: allTemplates } = useTemplates();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [formData, setFormData] = useState<TemplateFormData>({
     name: '',
@@ -220,6 +223,18 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
               </p>
             </div>
           )}
+
+          <AIEmailWriter
+            channel={formData.channel}
+            templates={allTemplates}
+            onGenerated={(result) => {
+              setFormData((prev) => ({
+                ...prev,
+                message_body: result.message_body,
+                ...(result.subject ? { subject: result.subject } : {}),
+              }));
+            }}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="message_body">Message Body *</Label>
