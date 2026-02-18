@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Lead } from '@/types/lead';
 import { useTemplates } from '@/hooks/useTemplates';
 import { supabase } from '@/integrations/supabase/client';
+import { AIEmailWriter } from '@/components/AIEmailWriter';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
@@ -187,6 +188,16 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
             />
             <p className="text-xs text-muted-foreground">Placeholders will be personalized per lead</p>
           </div>
+
+          {/* AI Writer */}
+          <AIEmailWriter
+            channel="email"
+            templates={templates}
+            onGenerated={(result) => {
+              setMessageTemplate(result.message_body);
+              if (result.subject) setSubjectTemplate(result.subject);
+            }}
+          />
 
           {/* Message body */}
           <div className="space-y-2">
