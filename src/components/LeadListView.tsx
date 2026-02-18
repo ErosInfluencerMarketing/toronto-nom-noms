@@ -4,9 +4,12 @@ import { StatusBadge } from './StatusBadge';
 import { PlatformBadge } from './PlatformBadge';
 import { QuickMessage } from './QuickMessage';
 import { InlineEditCell } from './InlineEditCell';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import {
   Table,
   TableBody,
@@ -15,11 +18,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Trash2, Calendar, Mail, Instagram, Send, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Trash2, Calendar, Mail, Instagram, Send, ArrowUp, ArrowDown, ArrowUpDown, UserCircle } from 'lucide-react';
 import { format, parseISO, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-type SortField = 'business_name' | 'owner_name' | 'email' | 'platform' | 'status' | 'category' | 'next_outreach_date' | 'last_outreach_date' | 'created_at';
+type SortField = 'business_name' | 'owner_name' | 'email' | 'platform' | 'status' | 'category' | 'next_outreach_date' | 'last_outreach_date' | 'created_at' | 'assigned_user_id';
 type SortDir = 'asc' | 'desc';
 
 interface LeadListViewProps {
@@ -47,7 +50,10 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
   const [messageLead, setMessageLead] = useState<Lead | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const { members } = useTeamMembers();
   const selectable = !!onSelectionChange && !!selectedIds;
+
+  const memberMap = new Map(members.map((m) => [m.id, m]));
 
   const allSelected = selectable && leads.length > 0 && leads.every((l) => selectedIds.has(l.id));
   const someSelected = selectable && leads.some((l) => selectedIds.has(l.id)) && !allSelected;
@@ -140,6 +146,7 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                 <SortableHead field="category">Category</SortableHead>
                 <SortableHead field="platform">Platform</SortableHead>
                 <SortableHead field="status">Status</SortableHead>
+                <SortableHead field="assigned_user_id">Assigned To</SortableHead>
                 <SortableHead field="next_outreach_date">Next Outreach</SortableHead>
                 <SortableHead field="last_outreach_date">Last Outreach</SortableHead>
                 <SortableHead field="created_at">Created</SortableHead>
@@ -220,6 +227,47 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                         options={statusOptions}
                         displayRender={(v) => <StatusBadge status={v as LeadStatus} />}
                       />
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const member = lead.assigned_user_id ? memberMap.get(lead.assigned_user_id) : null;
+                        if (!member) {
+                          return (
+                            <span className="flex items-center gap-1.5 text-sm text-muted-foreground/50">
+                              <UserCircle className="h-4 w-4" />
+                              Unassigned
+                            </span>
+                          );
+                        }
+                        const initials = (member.full_name || member.email || '?')
+                          .split(' ')
+                          .map((w) => w[0])
+                          .join('')
+                          .toUpperCase()
+                          .slice(0, 2);
+                        return (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="flex items-center gap-2 text-sm text-foreground">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                                      {initials}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="truncate max-w-[100px]">
+                                    {member.full_name || member.email || 'Unknown'}
+                                  </span>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{member.full_name || 'No name'}</p>
+                                {member.email && <p className="text-muted-foreground text-xs">{member.email}</p>}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       <InlineEditCell
