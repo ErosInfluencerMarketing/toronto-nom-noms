@@ -13,7 +13,7 @@ function fillPlaceholders(message: string, lead: any): string {
     .replace(/\[Example Restaurant\]/g, "La Bella Italia")
     .replace(
       /\[Instagram Handle\]/g,
-      lead.instagram_handle ? `@${lead.instagram_handle}` : ""
+      lead.instagram_handle ? `@${lead.instagram_handle}` : "Instagram"
     );
 }
 
