@@ -91,7 +91,7 @@ export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { leads, isLoading, createLead, updateLead, deleteLead, bulkCreateLeads } = useLeads();
-  const { sequences } = useSequences();
+  const { sequences, statusCounts } = useSequences();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -270,7 +270,7 @@ export default function Dashboard() {
           {/* Analytics and Upcoming Outreach */}
           <div id="analytics" className="scroll-mt-20 grid lg:grid-cols-3 gap-6 mb-8">
             <div className="lg:col-span-2">
-              <AnalyticsPanel leads={leads} sequences={sequences} />
+              <AnalyticsPanel leads={leads} sequences={sequences} sequenceStatusCounts={statusCounts as any} />
             </div>
             <div className="lg:col-span-1">
               <UpcomingOutreach leads={leads} onEdit={handleEdit} />
