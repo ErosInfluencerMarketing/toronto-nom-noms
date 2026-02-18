@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -151,6 +152,29 @@ export default function Auth() {
               )}
             </div>
             
+            {!isSignUp && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!email) {
+                    toast.error('Please enter your email address first');
+                    return;
+                  }
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/reset-password`,
+                  });
+                  if (error) {
+                    toast.error(error.message);
+                  } else {
+                    toast.success('Password reset link sent! Check your email.');
+                  }
+                }}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Forgot your password?
+              </button>
+            )}
+
             <Button
               type="submit"
               className="w-full"
