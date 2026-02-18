@@ -115,7 +115,7 @@ serve(async (req) => {
           Authorization: `Bearer ${resendKey}`,
         },
         body: JSON.stringify({
-          from: "Toronto Leads CRM <noreply@erosmarketing.io>",
+          from: "The Noms Company Inc. <hello@nomspass.com>",
           to: [email],
           subject: "You've been invited to Toronto Leads CRM",
           html: `
