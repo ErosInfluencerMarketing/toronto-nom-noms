@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const BATCH_SIZE = 50; // Process at most 50 per invocation to avoid timeouts
+    const BATCH_SIZE = 20; // Process at most 20 per invocation to avoid timeouts
     const now = new Date().toISOString();
     const { data: sequences, error: seqErr } = await supabase
       .from("sequences")
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     for (let i = 0; i < sequences.length; i++) {
       const seq = sequences[i];
       try {
-        // Rate limit: wait 600ms between sends (stays under 2/sec)
+        // Rate limit: Resend allows max 2 req/sec, so wait 600ms between sends
         if (i > 0) await sleep(600);
 
         const { data: steps } = await supabase
