@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSequences } from '@/hooks/useSequences';
 import { useTemplates } from '@/hooks/useTemplates';
 import { Lead, Platform } from '@/types/lead';
-import { SequenceFormData } from '@/types/sequence';
+import { SequenceFormData, SequenceStatus } from '@/types/sequence';
 import { SequenceStepForm } from '@/components/SequenceStepForm';
-import { ViewToggle, ViewMode } from '@/components/ViewToggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -36,19 +35,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Repeat, Pause, Play, CheckCircle, MessageCircle, Trash2 } from 'lucide-react';
+import { Plus, Repeat, Pause, Play, CheckCircle, MessageCircle, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface SequencesSectionProps {
   leads: Lead[];
 }
 
+const STATUS_TABS: { value: SequenceStatus | 'all'; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'active', label: 'Active' },
+  { value: 'paused', label: 'Paused' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'replied', label: 'Replied' },
+];
+
 export function SequencesSection({ leads }: SequencesSectionProps) {
-  const { sequences, isLoading, createSequence, updateSequenceStatus, deleteSequence } = useSequences();
+  const [page, setPage] = useState(0);
+  const [statusFilter, setStatusFilter] = useState<SequenceStatus | 'all'>('all');
+  const { sequences, totalCount, statusCounts, pageSize, isLoading, createSequence, updateSequenceStatus, deleteSequence } = useSequences(page, statusFilter);
   const { templates } = useTemplates();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('card');
 
   const [formData, setFormData] = useState<SequenceFormData>({
     name: '',
@@ -63,6 +71,8 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   const filteredLeads = leadsWithEmail.filter(
     (l) => leadPlatformFilter === 'all' || l.platform === leadPlatformFilter
   );
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const handleCreate = () => {
     if (formData.lead_ids.length === 0 || formData.steps.some((s) => !s.template_id) || !formData.name.trim()) return;
@@ -111,25 +121,58 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
     replied: <MessageCircle className="h-3 w-3" />,
   };
 
+  const handleStatusFilter = (status: SequenceStatus | 'all') => {
+    setStatusFilter(status);
+    setPage(0);
+  };
+
+  const getCountForStatus = (status: SequenceStatus | 'all') => {
+    if (status === 'all') return statusCounts.total;
+    return (statusCounts as any)[status] || 0;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Repeat className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-semibold text-foreground">Email Sequences</h2>
-          <span className="text-sm text-muted-foreground">({sequences.length})</span>
+          <span className="text-sm text-muted-foreground">({totalCount})</span>
         </div>
-        <div className="flex items-center gap-2">
-          <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+        <Button
+          size="sm"
+          onClick={() => setIsFormOpen(true)}
+          disabled={emailTemplates.length === 0 || leadsWithEmail.length === 0}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          New Sequence
+        </Button>
+      </div>
+
+      {/* Status filter tabs */}
+      <div className="flex gap-1 flex-wrap">
+        {STATUS_TABS.map((tab) => (
           <Button
+            key={tab.value}
+            variant="ghost"
             size="sm"
-            onClick={() => setIsFormOpen(true)}
-            disabled={emailTemplates.length === 0 || leadsWithEmail.length === 0}
+            onClick={() => handleStatusFilter(tab.value)}
+            className={cn(
+              'text-xs gap-1.5',
+              statusFilter === tab.value
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
           >
-            <Plus className="h-4 w-4 mr-2" />
-            New Sequence
+            {tab.label}
+            <span className={cn(
+              'text-[10px] px-1.5 py-0.5 rounded-full',
+              statusFilter === tab.value ? 'bg-primary-foreground/20' : 'bg-muted'
+            )}>
+              {getCountForStatus(tab.value)}
+            </span>
           </Button>
-        </div>
+        ))}
       </div>
 
       {emailTemplates.length === 0 && (
@@ -143,148 +186,99 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
       ) : sequences.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-32 text-center border border-dashed border-border rounded-lg">
           <Repeat className="h-8 w-8 text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground mb-2">No active sequences</p>
-          <p className="text-xs text-muted-foreground">Create a sequence to auto-send follow-up emails</p>
-        </div>
-      ) : viewMode === 'card' ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {sequences.map((seq) => (
-            <Card key={seq.id} className="bg-card border-border">
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    {seq.name && <p className="font-bold text-foreground">{seq.name}</p>}
-                    <p className={`${seq.name ? 'text-sm text-muted-foreground' : 'font-semibold text-foreground'}`}>{getLeadName(seq.lead_id)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {seq.steps && seq.steps.length > 0
-                        ? `${seq.steps.length} step${seq.steps.length !== 1 ? 's' : ''}`
-                        : `Template: ${getTemplateName(seq.template_id)}`}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className={statusColor[seq.status]}>
-                    {statusIcon[seq.status]}
-                    <span className="ml-1 capitalize">{seq.status}</span>
-                  </Badge>
-                </div>
-
-                {seq.steps && seq.steps.length > 0 && (
-                  <div className="space-y-1">
-                    {seq.steps.map((step, idx) => (
-                      <div
-                        key={step.id || idx}
-                        className={`text-xs flex items-center gap-2 ${
-                          idx < seq.current_step
-                            ? 'text-muted-foreground line-through'
-                            : idx === seq.current_step
-                            ? 'text-primary font-medium'
-                            : 'text-muted-foreground'
-                        }`}
-                      >
-                        <span className="w-4 text-right">{idx + 1}.</span>
-                        <span>{getTemplateName(step.template_id)}</span>
-                        <span className="text-muted-foreground">
-                          ({step.delay_days}d {idx === 0 ? 'delay' : 'after prev'})
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>Step {seq.current_step}/{seq.steps?.length || seq.max_followups}</span>
-                  {seq.next_send_at && seq.status === 'active' && (
-                    <span>Next: {format(new Date(seq.next_send_at), 'MMM d, h:mm a')}</span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {seq.status === 'active' && (
-                    <>
-                      <Button variant="outline" size="sm" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'paused' })}>
-                        <Pause className="h-3 w-3 mr-1" /> Pause
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'replied' })}>
-                        <MessageCircle className="h-3 w-3 mr-1" /> Mark Replied
-                      </Button>
-                    </>
-                  )}
-                  {seq.status === 'paused' && (
-                    <Button variant="outline" size="sm" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'active' })}>
-                      <Play className="h-3 w-3 mr-1" /> Resume
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 ml-auto text-muted-foreground hover:text-destructive"
-                    onClick={() => setDeleteConfirmId(seq.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <p className="text-sm text-muted-foreground mb-2">
+            {statusFilter !== 'all' ? `No ${statusFilter} sequences` : 'No sequences yet'}
+          </p>
         </div>
       ) : (
-        <div className="rounded-lg border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Lead</TableHead>
-                <TableHead>Steps</TableHead>
-                <TableHead>Progress</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Next Send</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sequences.map((seq) => (
-                <TableRow key={seq.id}>
-                  <TableCell className="font-medium text-foreground">{seq.name || '—'}</TableCell>
-                  <TableCell className="text-foreground">{getLeadName(seq.lead_id)}</TableCell>
-                  <TableCell className="text-muted-foreground">{seq.steps?.length || seq.max_followups}</TableCell>
-                  <TableCell className="text-muted-foreground">{seq.current_step}/{seq.steps?.length || seq.max_followups}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={statusColor[seq.status]}>
-                      {statusIcon[seq.status]}
-                      <span className="ml-1 capitalize">{seq.status}</span>
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-xs">
-                    {seq.next_send_at && seq.status === 'active'
-                      ? format(new Date(seq.next_send_at), 'MMM d, h:mm a')
-                      : '—'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      {seq.status === 'active' && (
-                        <>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'paused' })}>
-                            <Pause className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'replied' })}>
-                            <MessageCircle className="h-3.5 w-3.5" />
-                          </Button>
-                        </>
-                      )}
-                      {seq.status === 'paused' && (
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'active' })}>
-                          <Play className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteConfirmId(seq.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        <>
+          <div className="rounded-lg border border-border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Lead</TableHead>
+                  <TableHead>Progress</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Next Send</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {sequences.map((seq) => (
+                  <TableRow key={seq.id}>
+                    <TableCell className="font-medium text-foreground max-w-[180px] truncate">{seq.name || '—'}</TableCell>
+                    <TableCell className="text-foreground max-w-[180px] truncate">{getLeadName(seq.lead_id)}</TableCell>
+                    <TableCell className="text-muted-foreground">{seq.current_step}/{seq.steps?.length || seq.max_followups}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={statusColor[seq.status]}>
+                        {statusIcon[seq.status]}
+                        <span className="ml-1 capitalize">{seq.status}</span>
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {seq.next_send_at && seq.status === 'active'
+                        ? format(new Date(seq.next_send_at), 'MMM d, h:mm a')
+                        : '—'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {seq.status === 'active' && (
+                          <>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'paused' })}>
+                              <Pause className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'replied' })}>
+                              <MessageCircle className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
+                        {seq.status === 'paused' && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'active' })}>
+                            <Play className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteConfirmId(seq.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              Showing {page * pageSize + 1}–{Math.min((page + 1) * pageSize, totalCount)} of {totalCount}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="px-2 text-xs">
+                Page {page + 1} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Create Sequence Dialog */}
