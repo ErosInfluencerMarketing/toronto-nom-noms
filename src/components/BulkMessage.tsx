@@ -37,7 +37,7 @@ function fillPlaceholders(message: string, lead: Lead): string {
     .replace(/\[Business Name\]/g, lead.business_name || '')
     .replace(/\[Owner Name\]/g, lead.owner_name || 'there')
     .replace(/\[Example Restaurant\]/g, 'La Bella Italia')
-    .replace(/\[Instagram Handle\]/g, lead.instagram_handle ? `@${lead.instagram_handle}` : '');
+    .replace(/\[Instagram Handle\]/g, lead.instagram_handle ? `@${lead.instagram_handle}` : 'Instagram');
 }
 
 export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessageProps) {
@@ -128,7 +128,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border-border max-w-lg">
+      <DialogContent className="bg-card border-border max-w-lg max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             <Send className="h-5 w-5 text-primary" />
@@ -136,7 +136,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto flex-1 pr-2">
           {/* Recipients summary */}
           <div className="space-y-2">
             <Label>Recipients</Label>

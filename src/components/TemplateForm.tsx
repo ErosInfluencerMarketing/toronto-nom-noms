@@ -154,14 +154,14 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border-border max-w-lg animate-scale-in">
-        <DialogHeader>
+      <DialogContent className="bg-card border-border max-w-lg animate-scale-in max-h-[85vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-foreground">
             {template ? 'Edit Template' : 'Create New Template'}
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2">
           <div className="space-y-2">
             <Label htmlFor="name">Template Name *</Label>
             <Input
