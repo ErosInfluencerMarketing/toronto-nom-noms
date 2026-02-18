@@ -17,6 +17,14 @@ function fillPlaceholders(message: string, lead: any): string {
     );
 }
 
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -36,7 +44,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get all active sequences where next_send_at is in the past
     const now = new Date().toISOString();
     const { data: sequences, error: seqErr } = await supabase
       .from("sequences")
@@ -54,10 +61,14 @@ Deno.serve(async (req) => {
 
     let processed = 0;
     let errors = 0;
+    let skipped = 0;
 
-    for (const seq of sequences) {
+    for (let i = 0; i < sequences.length; i++) {
+      const seq = sequences[i];
       try {
-        // Fetch steps for this sequence
+        // Rate limit: wait 600ms between sends (stays under 2/sec)
+        if (i > 0) await sleep(600);
+
         const { data: steps } = await supabase
           .from("sequence_steps")
           .select("*")
@@ -67,12 +78,10 @@ Deno.serve(async (req) => {
         const nextStepNumber = seq.current_step + 1;
         const hasSteps = steps && steps.length > 0;
 
-        // Determine which template to use
         let templateId: string;
         if (hasSteps) {
           const currentStep = steps.find((s: any) => s.step_number === nextStepNumber);
           if (!currentStep) {
-            // No more steps — mark completed
             await supabase
               .from("sequences")
               .update({ status: "completed", next_send_at: null })
@@ -81,21 +90,32 @@ Deno.serve(async (req) => {
           }
           templateId = currentStep.template_id;
         } else {
-          // Legacy: single-template sequence
           templateId = seq.template_id;
         }
 
-        // Fetch lead and template
         const [{ data: lead }, { data: template }] = await Promise.all([
           supabase.from("leads").select("*").eq("id", seq.lead_id).single(),
           supabase.from("templates").select("*").eq("id", templateId).single(),
         ]);
 
-        if (!lead || !template || !lead.email) {
+        if (!lead || !template) {
+          console.error(`Missing lead or template for sequence ${seq.id}`);
           await supabase
             .from("sequences")
-            .update({ status: "completed" })
+            .update({ status: "completed", next_send_at: null })
             .eq("id", seq.id);
+          skipped++;
+          continue;
+        }
+
+        // Validate email before attempting to send
+        if (!lead.email || !isValidEmail(lead.email)) {
+          console.error(`Invalid/missing email for lead ${lead.id} (${lead.business_name}): "${lead.email}"`);
+          await supabase
+            .from("sequences")
+            .update({ status: "completed", next_send_at: null })
+            .eq("id", seq.id);
+          skipped++;
           continue;
         }
 
@@ -108,7 +128,6 @@ Deno.serve(async (req) => {
           ? fillPlaceholders(template.subject, lead)
           : defaultSubject;
 
-        // Send email via Resend
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -126,11 +145,21 @@ Deno.serve(async (req) => {
         if (!res.ok) {
           const errData = await res.json();
           console.error(`Resend error for sequence ${seq.id}:`, errData);
-          errors++;
+
+          // Permanent errors (validation) — stop retrying
+          if (res.status === 422) {
+            await supabase
+              .from("sequences")
+              .update({ status: "completed", next_send_at: null })
+              .eq("id", seq.id);
+            skipped++;
+          } else {
+            // Transient errors (rate limit, server) — leave active for next cron retry
+            errors++;
+          }
           continue;
         }
 
-        // Determine next send time
         const totalSteps = hasSteps ? steps.length : seq.max_followups;
         const isComplete = nextStepNumber >= totalSteps;
 
@@ -170,7 +199,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, processed, errors, total: sequences.length }),
+      JSON.stringify({ success: true, processed, errors, skipped, total: sequences.length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
