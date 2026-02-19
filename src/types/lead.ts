@@ -12,6 +12,7 @@ export interface Lead {
   website: string | null;
   address: string | null;
   category: string | null;
+  city: string | null;
   platform: Platform;
   status: LeadStatus;
   next_outreach_date: string | null;

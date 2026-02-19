@@ -20,6 +20,7 @@ export type Database = {
           assigned_user_id: string | null
           business_name: string
           category: string | null
+          city: string | null
           created_at: string
           email: string | null
           id: string
@@ -39,6 +40,7 @@ export type Database = {
           assigned_user_id?: string | null
           business_name: string
           category?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -58,6 +60,7 @@ export type Database = {
           assigned_user_id?: string | null
           business_name?: string
           category?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           id?: string

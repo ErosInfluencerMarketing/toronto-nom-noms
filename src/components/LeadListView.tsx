@@ -22,7 +22,7 @@ import { Trash2, Calendar, Mail, Instagram, Send, ArrowUp, ArrowDown, ArrowUpDow
 import { format, parseISO, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-type SortField = 'business_name' | 'owner_name' | 'email' | 'platform' | 'status' | 'category' | 'next_outreach_date' | 'last_outreach_date' | 'created_at' | 'assigned_user_id';
+type SortField = 'business_name' | 'owner_name' | 'email' | 'platform' | 'status' | 'category' | 'city' | 'next_outreach_date' | 'last_outreach_date' | 'created_at' | 'assigned_user_id';
 type SortDir = 'asc' | 'desc';
 
 interface LeadListViewProps {
@@ -144,6 +144,7 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                 <SortableHead field="owner_name">Owner</SortableHead>
                 <SortableHead field="email">Contact</SortableHead>
                 <SortableHead field="category">Category</SortableHead>
+                <SortableHead field="city">City</SortableHead>
                 <SortableHead field="platform">Platform</SortableHead>
                 <SortableHead field="status">Status</SortableHead>
                 <SortableHead field="assigned_user_id">Assigned To</SortableHead>
@@ -207,6 +208,14 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                         value={lead.category || ''}
                         onSave={(v) => handleFieldUpdate(lead, 'category', v)}
                         placeholder="Add category"
+                        className="text-muted-foreground"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <InlineEditCell
+                        value={lead.city || ''}
+                        onSave={(v) => handleFieldUpdate(lead, 'city', v)}
+                        placeholder="Add city"
                         className="text-muted-foreground"
                       />
                     </TableCell>
