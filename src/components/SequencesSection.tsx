@@ -35,7 +35,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Repeat, Pause, Play, CheckCircle, MessageCircle, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Repeat, Pause, Play, CheckCircle, MessageCircle, Trash2, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface SequencesSectionProps {
@@ -65,6 +65,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   });
 
   const [leadPlatformFilter, setLeadPlatformFilter] = useState<Platform | 'all'>('all');
+  const [leadSearch, setLeadSearch] = useState('');
 
   const emailTemplates = templates.filter((t) => t.channel === 'email');
   const leadsWithEmail = leads.filter((l) => !!l.email);
@@ -105,6 +106,12 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   };
 
   const getLeadName = (leadId: string) => leads.find((l) => l.id === leadId)?.business_name || 'Unknown';
+
+  const filteredSequences = useMemo(() => {
+    if (!leadSearch.trim()) return sequences;
+    const q = leadSearch.toLowerCase();
+    return sequences.filter((seq) => getLeadName(seq.lead_id).toLowerCase().includes(q));
+  }, [sequences, leadSearch, leads]);
   const getTemplateName = (templateId: string) => templates.find((t) => t.id === templateId)?.name || 'Unknown';
 
   const statusColor: Record<string, string> = {
@@ -149,8 +156,18 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
         </Button>
       </div>
 
-      {/* Status filter tabs */}
-      <div className="flex gap-1 flex-wrap">
+      {/* Search + Status filter tabs */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Search by lead..."
+            value={leadSearch}
+            onChange={(e) => setLeadSearch(e.target.value)}
+            className="h-8 w-48 pl-8 text-xs bg-secondary border-border"
+          />
+        </div>
+        <div className="flex gap-1 flex-wrap">
         {STATUS_TABS.map((tab) => (
           <Button
             key={tab.value}
@@ -172,7 +189,8 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
               {getCountForStatus(tab.value)}
             </span>
           </Button>
-        ))}
+          ))}
+        </div>
       </div>
 
       {emailTemplates.length === 0 && (
@@ -183,11 +201,11 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
         <div className="flex items-center justify-center h-32">
           <div className="text-muted-foreground">Loading sequences...</div>
         </div>
-      ) : sequences.length === 0 ? (
+      ) : filteredSequences.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-32 text-center border border-dashed border-border rounded-lg">
           <Repeat className="h-8 w-8 text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground mb-2">
-            {statusFilter !== 'all' ? `No ${statusFilter} sequences` : 'No sequences yet'}
+            {leadSearch.trim() ? 'No sequences match your search' : statusFilter !== 'all' ? `No ${statusFilter} sequences` : 'No sequences yet'}
           </p>
         </div>
       ) : (
@@ -205,7 +223,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sequences.map((seq) => (
+                {filteredSequences.map((seq) => (
                   <TableRow key={seq.id}>
                     <TableCell className="font-medium text-foreground max-w-[180px] truncate">{seq.name || '—'}</TableCell>
                     <TableCell className="text-foreground max-w-[180px] truncate">{getLeadName(seq.lead_id)}</TableCell>
