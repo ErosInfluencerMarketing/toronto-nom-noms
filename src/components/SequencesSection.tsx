@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSequences } from '@/hooks/useSequences';
 import { useTemplates } from '@/hooks/useTemplates';
 import { Lead, Platform } from '@/types/lead';
@@ -53,7 +53,9 @@ const STATUS_TABS: { value: SequenceStatus | 'all'; label: string }[] = [
 export function SequencesSection({ leads }: SequencesSectionProps) {
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<SequenceStatus | 'all'>('all');
-  const { sequences, totalCount, statusCounts, pageSize, isLoading, createSequence, updateSequenceStatus, deleteSequence } = useSequences(page, statusFilter);
+  const [leadSearch, setLeadSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const { sequences, totalCount, statusCounts, pageSize, isLoading, createSequence, updateSequenceStatus, deleteSequence } = useSequences(page, statusFilter, debouncedSearch);
   const { templates } = useTemplates();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -65,7 +67,14 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   });
 
   const [leadPlatformFilter, setLeadPlatformFilter] = useState<Platform | 'all'>('all');
-  const [leadSearch, setLeadSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(leadSearch);
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [leadSearch]);
 
   const emailTemplates = templates.filter((t) => t.channel === 'email');
   const leadsWithEmail = leads.filter((l) => !!l.email);
@@ -107,11 +116,6 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
 
   const getLeadName = (leadId: string) => leads.find((l) => l.id === leadId)?.business_name || 'Unknown';
 
-  const filteredSequences = useMemo(() => {
-    if (!leadSearch.trim()) return sequences;
-    const q = leadSearch.toLowerCase();
-    return sequences.filter((seq) => getLeadName(seq.lead_id).toLowerCase().includes(q));
-  }, [sequences, leadSearch, leads]);
   const getTemplateName = (templateId: string) => templates.find((t) => t.id === templateId)?.name || 'Unknown';
 
   const statusColor: Record<string, string> = {
@@ -201,7 +205,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
         <div className="flex items-center justify-center h-32">
           <div className="text-muted-foreground">Loading sequences...</div>
         </div>
-      ) : filteredSequences.length === 0 ? (
+      ) : sequences.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-32 text-center border border-dashed border-border rounded-lg">
           <Repeat className="h-8 w-8 text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground mb-2">
@@ -223,7 +227,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSequences.map((seq) => (
+                {sequences.map((seq) => (
                   <TableRow key={seq.id}>
                     <TableCell className="font-medium text-foreground max-w-[180px] truncate">{seq.name || '—'}</TableCell>
                     <TableCell className="text-foreground max-w-[180px] truncate">{getLeadName(seq.lead_id)}</TableCell>

@@ -6,14 +6,27 @@ import { toast } from 'sonner';
 
 const PAGE_SIZE = 25;
 
-export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'all') {
+export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'all', leadSearch = '') {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['sequences', user?.id, page, statusFilter],
+    queryKey: ['sequences', user?.id, page, statusFilter, leadSearch],
     queryFn: async () => {
       if (!user) return { sequences: [], totalCount: 0 };
+
+      // If searching by lead name, first find matching lead IDs
+      let matchingLeadIds: string[] | null = null;
+      if (leadSearch.trim()) {
+        const { data: matchingLeads } = await supabase
+          .from('leads')
+          .select('id')
+          .ilike('business_name', `%${leadSearch.trim()}%`);
+        matchingLeadIds = (matchingLeads || []).map((l: any) => l.id);
+        if (matchingLeadIds.length === 0) {
+          return { sequences: [], totalCount: 0 };
+        }
+      }
 
       let query = supabase
         .from('sequences')
@@ -23,6 +36,10 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
 
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
+      }
+
+      if (matchingLeadIds) {
+        query = query.in('lead_id', matchingLeadIds);
       }
 
       const { data: seqData, error, count } = await query;
