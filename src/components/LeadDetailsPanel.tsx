@@ -37,11 +37,14 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
   const [loadingSeqs, setLoadingSeqs] = useState(false);
 
   useEffect(() => {
-    if (lead) {
+    if (lead && open) {
       setNotes(lead.notes || '');
       fetchSequences(lead.id);
     }
-  }, [lead?.id]);
+    if (!open) {
+      setSequences([]);
+    }
+  }, [lead?.id, open]);
 
   const fetchSequences = async (leadId: string) => {
     setLoadingSeqs(true);
