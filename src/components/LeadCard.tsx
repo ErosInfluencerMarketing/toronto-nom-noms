@@ -13,9 +13,10 @@ interface LeadCardProps {
   lead: Lead;
   onEdit: (lead: Lead) => void;
   onDelete: (id: string) => void;
+  onViewDetails?: (lead: Lead) => void;
 }
 
-export function LeadCard({ lead, onEdit, onDelete }: LeadCardProps) {
+export function LeadCard({ lead, onEdit, onDelete, onViewDetails }: LeadCardProps) {
   const [messageOpen, setMessageOpen] = useState(false);
   const canMessage = !!lead.email || !!lead.instagram_handle;
 
@@ -26,7 +27,12 @@ export function LeadCard({ lead, onEdit, onDelete }: LeadCardProps) {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <h3 className="font-semibold text-foreground truncate">{lead.business_name}</h3>
+                <h3
+                  className="font-semibold text-foreground truncate cursor-pointer hover:text-primary transition-colors"
+                  onClick={() => onViewDetails?.(lead)}
+                >
+                  {lead.business_name}
+                </h3>
                 {lead.category && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">
                     {lead.category}

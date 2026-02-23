@@ -32,6 +32,7 @@ interface LeadListViewProps {
   onUpdate?: (lead: Partial<Lead> & { id: string }) => void;
   selectedIds?: Set<string>;
   onSelectionChange?: (ids: Set<string>) => void;
+  onViewDetails?: (lead: Lead) => void;
 }
 
 const statusOptions = [
@@ -46,7 +47,7 @@ const platformOptions = [
   { value: 'noms', label: 'Noms' },
 ];
 
-export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, onSelectionChange }: LeadListViewProps) {
+export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, onSelectionChange, onViewDetails }: LeadListViewProps) {
   const [messageLead, setMessageLead] = useState<Lead | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -169,10 +170,15 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                       </TableCell>
                     )}
                     <TableCell className="font-medium text-foreground">
-                      <InlineEditCell
-                        value={lead.business_name}
-                        onSave={(v) => handleFieldUpdate(lead, 'business_name', v)}
-                      />
+                      <span
+                        className="cursor-pointer hover:text-primary transition-colors"
+                        onClick={() => onViewDetails?.(lead)}
+                      >
+                        <InlineEditCell
+                          value={lead.business_name}
+                          onSave={(v) => handleFieldUpdate(lead, 'business_name', v)}
+                        />
+                      </span>
                     </TableCell>
                     <TableCell>
                       <InlineEditCell
