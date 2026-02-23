@@ -21,6 +21,7 @@ import { LeadImport } from '@/components/LeadImport';
 import { LeadScraper } from '@/components/LeadScraper';
 import { BulkMessage } from '@/components/BulkMessage';
 import { AssignLeadsDialog } from '@/components/AssignLeadsDialog';
+import { LeadDetailsPanel } from '@/components/LeadDetailsPanel';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -111,6 +112,7 @@ export default function Dashboard() {
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
 
@@ -402,6 +404,7 @@ export default function Dashboard() {
                 lead={lead}
                 onEdit={handleEdit}
                 onDelete={(id) => setDeleteConfirmId(id)}
+                onViewDetails={setDetailsLead}
               />
             ))}
           </div>
@@ -413,6 +416,7 @@ export default function Dashboard() {
             onUpdate={(data) => updateLead.mutate(data)}
             selectedIds={selectedLeadIds}
             onSelectionChange={setSelectedLeadIds}
+            onViewDetails={setDetailsLead}
           />
         )}
 
@@ -508,6 +512,13 @@ export default function Dashboard() {
         onOpenChange={setAssignDialogOpen}
         leadIds={Array.from(selectedLeadIds)}
         onAssigned={() => setSelectedLeadIds(new Set())}
+      />
+
+      {/* Lead Details Panel */}
+      <LeadDetailsPanel
+        lead={detailsLead}
+        open={!!detailsLead}
+        onOpenChange={(open) => !open && setDetailsLead(null)}
       />
       </div>
     </SidebarProvider>
