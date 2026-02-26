@@ -126,10 +126,12 @@ export default function Dashboard() {
 
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
+      const s = search.toLowerCase();
       const matchesSearch =
         search === '' ||
-        lead.business_name.toLowerCase().includes(search.toLowerCase()) ||
-        (lead.instagram_handle && lead.instagram_handle.toLowerCase().includes(search.toLowerCase()));
+        lead.business_name.toLowerCase().includes(s) ||
+        (lead.instagram_handle && lead.instagram_handle.toLowerCase().includes(s)) ||
+        (lead.email && lead.email.toLowerCase().includes(s));
       
       const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
       const matchesPlatform = platformFilter === 'all' || lead.platform === platformFilter;
