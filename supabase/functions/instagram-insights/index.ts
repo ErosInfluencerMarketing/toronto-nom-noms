@@ -53,9 +53,21 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'media') {
-      // Get recent media with insights
       const res = await fetch(
         `https://graph.facebook.com/v21.0/${igAccountId}/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink&limit=25&access_token=${accessToken}`
+      );
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+
+      return new Response(
+        JSON.stringify({ success: true, data: data.data || [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (action === 'tagged') {
+      const res = await fetch(
+        `https://graph.facebook.com/v21.0/${igAccountId}/tags?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink,username&limit=25&access_token=${accessToken}`
       );
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);

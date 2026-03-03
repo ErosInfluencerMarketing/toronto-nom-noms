@@ -7,8 +7,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowLeft, Users, UserCheck, Image, Heart, MessageCircle,
   ExternalLink, RefreshCw, TrendingUp, BarChart3, Award, Share2,
-  Bookmark, Eye,
+  Bookmark, Eye, Tag,
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
 interface AccountData {
@@ -35,18 +36,60 @@ interface MediaItem {
   permalink?: string;
 }
 
+function MediaGrid({ items, formatNumber }: { items: MediaItem[]; formatNumber: (n?: number) => string }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {items.map((item) => (
+        <Card key={item.id} className="overflow-hidden group">
+          <div className="relative aspect-square bg-muted">
+            {(item.media_url || item.thumbnail_url) ? (
+              <img
+                src={item.thumbnail_url || item.media_url}
+                alt={item.caption?.slice(0, 50) || 'Post'}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                <Image className="h-8 w-8" />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white">
+              <span className="flex items-center gap-1 text-sm font-medium">
+                <Heart className="h-4 w-4" /> {formatNumber(item.like_count)}
+              </span>
+              <span className="flex items-center gap-1 text-sm font-medium">
+                <MessageCircle className="h-4 w-4" /> {formatNumber(item.comments_count)}
+              </span>
+            </div>
+          </div>
+          {item.permalink && (
+            <CardContent className="p-2">
+              <a href={item.permalink} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+                <ExternalLink className="h-3 w-3" /> View on Instagram
+              </a>
+            </CardContent>
+          )}
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function InstagramInsights() {
   const navigate = useNavigate();
   const [account, setAccount] = useState<AccountData | null>(null);
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const [taggedMedia, setTaggedMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async (showToast = false) => {
     try {
-      const [accountRes, mediaRes] = await Promise.all([
+      const [accountRes, mediaRes, taggedRes] = await Promise.all([
         supabase.functions.invoke('instagram-insights', { body: { action: 'account' } }),
         supabase.functions.invoke('instagram-insights', { body: { action: 'media' } }),
+        supabase.functions.invoke('instagram-insights', { body: { action: 'tagged' } }),
       ]);
 
       if (accountRes.error) throw accountRes.error;
@@ -56,6 +99,7 @@ export default function InstagramInsights() {
       else toast.error(accountRes.data?.error || 'Failed to fetch account');
 
       if (mediaRes.data?.success) setMedia(mediaRes.data.data || []);
+      if (taggedRes.data?.success) setTaggedMedia(taggedRes.data.data || []);
 
       if (showToast) toast.success('Refreshed');
     } catch (err) {
@@ -331,53 +375,41 @@ export default function InstagramInsights() {
           </>
         ) : null}
 
-        {/* Recent Media */}
-        <div>
-          <h3 className="text-lg font-semibold text-foreground mb-3">Recent Posts</h3>
-          {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="aspect-square rounded-lg" />)}
-            </div>
-          ) : media.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No recent posts found.</p>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {media.map((item) => (
-                <Card key={item.id} className="overflow-hidden group">
-                  <div className="relative aspect-square bg-muted">
-                    {(item.media_url || item.thumbnail_url) ? (
-                      <img
-                        src={item.thumbnail_url || item.media_url}
-                        alt={item.caption?.slice(0, 50) || 'Post'}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <Image className="h-8 w-8" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white">
-                      <span className="flex items-center gap-1 text-sm font-medium">
-                        <Heart className="h-4 w-4" /> {formatNumber(item.like_count)}
-                      </span>
-                      <span className="flex items-center gap-1 text-sm font-medium">
-                        <MessageCircle className="h-4 w-4" /> {formatNumber(item.comments_count)}
-                      </span>
-                    </div>
-                  </div>
-                  {item.permalink && (
-                    <CardContent className="p-2">
-                      <a href={item.permalink} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-                        <ExternalLink className="h-3 w-3" /> View on Instagram
-                      </a>
-                    </CardContent>
-                  )}
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Media Tabs */}
+        <Tabs defaultValue="recent" className="w-full">
+          <TabsList>
+            <TabsTrigger value="recent">
+              <Image className="h-4 w-4 mr-1.5" /> Recent Posts
+            </TabsTrigger>
+            <TabsTrigger value="tagged">
+              <Tag className="h-4 w-4 mr-1.5" /> Collab & Tagged ({taggedMedia.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="recent">
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="aspect-square rounded-lg" />)}
+              </div>
+            ) : media.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No recent posts found.</p>
+            ) : (
+              <MediaGrid items={media} formatNumber={formatNumber} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="tagged">
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="aspect-square rounded-lg" />)}
+              </div>
+            ) : taggedMedia.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No collab or tagged posts found.</p>
+            ) : (
+              <MediaGrid items={taggedMedia} formatNumber={formatNumber} />
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
