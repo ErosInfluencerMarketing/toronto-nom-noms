@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.send-invite]
 verify_jwt = false
+
+[functions.instagram-insights]
+verify_jwt = false

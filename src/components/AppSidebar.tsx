@@ -6,6 +6,7 @@ import {
   Zap,
   Calendar,
   Shield,
+  Instagram,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -72,6 +73,15 @@ export function AppSidebar({ activeSection }: AppSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => navigate('/instagram')}
+                  tooltip="Instagram Insights"
+                >
+                  <Instagram className="h-4 w-4" />
+                  <span>Instagram</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
