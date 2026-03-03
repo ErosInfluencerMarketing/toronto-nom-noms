@@ -86,11 +86,16 @@ export default function InstagramInsights() {
 
   const fetchData = async (showToast = false) => {
     try {
-      const [accountRes, mediaRes, taggedRes] = await Promise.all([
+      const [accountRes, mediaRes] = await Promise.all([
         supabase.functions.invoke('instagram-insights', { body: { action: 'account' } }),
         supabase.functions.invoke('instagram-insights', { body: { action: 'media' } }),
-        supabase.functions.invoke('instagram-insights', { body: { action: 'tagged' } }),
       ]);
+
+      // Tagged/collab fetch is best-effort (requires extra Meta permissions)
+      let taggedRes: { data?: any; error?: any } = {};
+      try {
+        taggedRes = await supabase.functions.invoke('instagram-insights', { body: { action: 'tagged' } });
+      } catch { /* ignore */ }
 
       if (accountRes.error) throw accountRes.error;
       if (mediaRes.error) throw mediaRes.error;
