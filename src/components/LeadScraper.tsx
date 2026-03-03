@@ -124,6 +124,7 @@ export function LeadScraper({ onImport, isLoading }: LeadScraperProps) {
       website: biz.website || undefined,
       address: biz.address || undefined,
       category: biz.category || undefined,
+      city: location.trim() || undefined,
       platform,
       status: 'new' as const,
       notes: [
