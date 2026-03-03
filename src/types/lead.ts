@@ -30,6 +30,7 @@ export interface LeadFormData {
   website?: string;
   address?: string;
   category?: string;
+  city?: string;
   platform: Platform;
   status: LeadStatus;
   next_outreach_date?: string;
