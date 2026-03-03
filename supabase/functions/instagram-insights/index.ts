@@ -66,16 +66,29 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'tagged') {
-      const res = await fetch(
-        `https://graph.facebook.com/v21.0/${igAccountId}/tags?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink,username&limit=25&access_token=${accessToken}`
-      );
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-
-      return new Response(
-        JSON.stringify({ success: true, data: data.data || [] }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      try {
+        const res = await fetch(
+          `https://graph.facebook.com/v21.0/${igAccountId}/tags?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink,username&limit=25&access_token=${accessToken}`
+        );
+        const data = await res.json();
+        if (data.error) {
+          console.warn('Tagged media permission error:', data.error.message);
+          return new Response(
+            JSON.stringify({ success: true, data: [], permission_error: true }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        return new Response(
+          JSON.stringify({ success: true, data: data.data || [] }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (e) {
+        console.warn('Tagged media fetch failed:', e);
+        return new Response(
+          JSON.stringify({ success: true, data: [], permission_error: true }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     return new Response(
