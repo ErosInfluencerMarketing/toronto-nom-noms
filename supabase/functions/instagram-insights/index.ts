@@ -11,6 +11,8 @@ Deno.serve(async (req) => {
   try {
     const accessToken = Deno.env.get('META_ACCESS_TOKEN');
     const igAccountId = Deno.env.get('INSTAGRAM_BUSINESS_ACCOUNT_ID');
+    console.log('Token prefix:', accessToken?.substring(0, 10), '| Length:', accessToken?.length);
+    console.log('IG Account ID:', igAccountId);
 
     if (!accessToken || !igAccountId) {
       return new Response(
