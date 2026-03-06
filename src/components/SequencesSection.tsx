@@ -67,6 +67,8 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   });
 
   const [leadPlatformFilter, setLeadPlatformFilter] = useState<Platform | 'all'>('all');
+  const [leadCityFilter, setLeadCityFilter] = useState('');
+  const [leadEmailSearch, setLeadEmailSearch] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -78,9 +80,15 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
 
   const emailTemplates = templates.filter((t) => t.channel === 'email');
   const leadsWithEmail = leads.filter((l) => !!l.email);
-  const filteredLeads = leadsWithEmail.filter(
-    (l) => leadPlatformFilter === 'all' || l.platform === leadPlatformFilter
-  );
+
+  const uniqueCities = Array.from(new Set(leadsWithEmail.map((l) => l.city).filter(Boolean))).sort() as string[];
+
+  const filteredLeads = leadsWithEmail.filter((l) => {
+    if (leadPlatformFilter !== 'all' && l.platform !== leadPlatformFilter) return false;
+    if (leadCityFilter && l.city !== leadCityFilter) return false;
+    if (leadEmailSearch && !l.email?.toLowerCase().includes(leadEmailSearch.toLowerCase())) return false;
+    return true;
+  });
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
@@ -322,7 +330,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
 
             <div className="space-y-2">
               <Label>Leads ({formData.lead_ids.length} selected)</Label>
-              <div className="flex gap-1 mb-2">
+              <div className="flex gap-1 mb-2 flex-wrap">
                 {(['all', 'eros', 'noms'] as const).map((p) => (
                   <Button
                     key={p}
@@ -339,6 +347,24 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
                     {p === 'all' ? 'All' : p.charAt(0).toUpperCase() + p.slice(1)}
                   </Button>
                 ))}
+              </div>
+              <div className="flex gap-2 mb-2">
+                <select
+                  value={leadCityFilter}
+                  onChange={(e) => setLeadCityFilter(e.target.value)}
+                  className="h-8 text-xs rounded-md border border-border bg-secondary px-2 text-foreground flex-1"
+                >
+                  <option value="">All Cities</option>
+                  {uniqueCities.map((city) => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+                <Input
+                  placeholder="Filter by email..."
+                  value={leadEmailSearch}
+                  onChange={(e) => setLeadEmailSearch(e.target.value)}
+                  className="h-8 text-xs bg-secondary border-border flex-1"
+                />
               </div>
               <div className="border border-border rounded-lg bg-secondary">
                 <label className="flex items-center gap-2 p-2 border-b border-border cursor-pointer hover:bg-background/50 text-sm font-medium">
