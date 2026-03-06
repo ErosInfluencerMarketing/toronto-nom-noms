@@ -27,4 +27,6 @@ export const PLACEHOLDERS = [
   { key: '[Owner Name]', description: 'The owner\'s name' },
   { key: '[Example Restaurant]', description: 'An example restaurant reference' },
   { key: '[Instagram Handle]', description: 'The business Instagram handle' },
+  { key: '[City]', description: 'The city of the business' },
+  { key: '[Category]', description: 'The business category/cuisine type' },
 ];
