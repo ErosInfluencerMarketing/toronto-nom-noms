@@ -14,7 +14,9 @@ function fillPlaceholders(message: string, lead: any): string {
     .replace(
       /\[Instagram Handle\]/g,
       lead.instagram_handle ? `@${lead.instagram_handle}` : "Instagram"
-    );
+    )
+    .replace(/\[City\]/g, lead.city || "")
+    .replace(/\[Category\]/g, lead.category || "");
 }
 
 function isValidEmail(email: string): boolean {
