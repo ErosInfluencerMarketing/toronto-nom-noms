@@ -95,12 +95,7 @@ export function LeadImport({ onImport, isLoading }: LeadImportProps) {
           normalizedRow[normalizeHeader(key)] = value;
         });
 
-        const businessName = normalizedRow.business_name || normalizedRow.businessname || normalizedRow.name;
-        
-        if (!businessName || String(businessName).trim() === '') {
-          parseErrors.push(`Row ${index + 2}: Missing business name`);
-          return;
-        }
+        const businessName = normalizedRow.business_name || normalizedRow.businessname || normalizedRow.name || '';
 
         const platformRaw = String(normalizedRow.platform || 'eros').toLowerCase().trim();
         const platform: Platform = VALID_PLATFORMS.includes(platformRaw as Platform) 
