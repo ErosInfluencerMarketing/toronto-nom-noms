@@ -353,6 +353,24 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
                   </Button>
                 ))}
               </div>
+              <div className="flex gap-1 mb-2 flex-wrap">
+                {(['all', 'new', 'contacted', 'demo_booked', 'onboarded'] as const).map((s) => (
+                  <Button
+                    key={s}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setLeadStatusFilter(s)}
+                    className={cn(
+                      'text-xs',
+                      leadStatusFilter === s
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {s === 'all' ? 'All Status' : s === 'demo_booked' ? 'Demo Booked' : s.charAt(0).toUpperCase() + s.slice(1)}
+                  </Button>
+                ))}
+              </div>
               <div className="flex gap-2 mb-2">
                 <select
                   value={leadCityFilter}
@@ -364,6 +382,18 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
                     <option key={city} value={city}>{city}</option>
                   ))}
                 </select>
+                <select
+                  value={leadCategoryFilter}
+                  onChange={(e) => setLeadCategoryFilter(e.target.value)}
+                  className="h-8 text-xs rounded-md border border-border bg-secondary px-2 text-foreground flex-1"
+                >
+                  <option value="">All Categories</option>
+                  {uniqueCategories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-2 mb-2">
                 <Input
                   placeholder="Filter by email..."
                   value={leadEmailSearch}
