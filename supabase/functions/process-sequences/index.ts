@@ -191,9 +191,16 @@ Deno.serve(async (req) => {
           })
           .eq("id", seq.id);
 
+        // Update last outreach date and auto-set status to contacted if still "new"
+        const leadUpdate: Record<string, any> = {
+          last_outreach_date: new Date().toISOString().split("T")[0],
+        };
+        if (lead.status === "new") {
+          leadUpdate.status = "contacted";
+        }
         await supabase
           .from("leads")
-          .update({ last_outreach_date: new Date().toISOString().split("T")[0] })
+          .update(leadUpdate)
           .eq("id", seq.lead_id);
 
         processed++;
