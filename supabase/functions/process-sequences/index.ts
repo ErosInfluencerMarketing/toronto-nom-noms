@@ -46,13 +46,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    const BATCH_SIZE = 20; // Process at most 20 per invocation to avoid timeouts
+    // Process a larger batch each run to reduce backlog latency.
+    const BATCH_SIZE = 40;
     const now = new Date().toISOString();
     const { data: sequences, error: seqErr } = await supabase
       .from("sequences")
       .select("*")
       .eq("status", "active")
       .lte("next_send_at", now)
+      .order("current_step", { ascending: true })
       .order("next_send_at", { ascending: true })
       .limit(BATCH_SIZE);
 
