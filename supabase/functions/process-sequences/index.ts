@@ -73,8 +73,8 @@ Deno.serve(async (req) => {
     for (let i = 0; i < sequences.length; i++) {
       const seq = sequences[i];
       try {
-        // Rate limit: Resend allows max 2 req/sec, so wait 600ms between sends
-        if (i > 0) await sleep(600);
+        // Rate limit pacing for Resend (targeting ~2 requests/second)
+        if (i > 0) await sleep(500);
 
         const { data: steps } = await supabase
           .from("sequence_steps")
