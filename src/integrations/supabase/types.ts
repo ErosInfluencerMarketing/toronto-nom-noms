@@ -38,7 +38,7 @@ export type Database = {
         Insert: {
           address?: string | null
           assigned_user_id?: string | null
-          business_name: string
+          business_name?: string
           category?: string | null
           city?: string | null
           created_at?: string
