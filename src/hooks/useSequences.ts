@@ -169,11 +169,22 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
         results.push(data);
       }
 
+      // Auto-update leads with status "new" to "contacted" when added to a sequence
+      const newLeadIds = formData.lead_ids;
+      if (newLeadIds.length > 0) {
+        await supabase
+          .from('leads')
+          .update({ status: 'contacted' } as any)
+          .in('id', newLeadIds)
+          .eq('status', 'new');
+      }
+
       return results;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sequences'] });
       queryClient.invalidateQueries({ queryKey: ['sequences-counts'] });
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Sequence started');
     },
     onError: (error) => {

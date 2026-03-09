@@ -142,12 +142,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update last outreach date
+    // Update last outreach date and status to contacted
     const userId = claimsData.claims.sub;
+    const anySuccess = Object.values(results).some((r: any) => r.success);
     if (lead.id) {
+      const updateData: Record<string, any> = {
+        last_outreach_date: new Date().toISOString().split("T")[0],
+      };
+      // Auto-set status to contacted if currently "new" and message was sent successfully
+      if (anySuccess && lead.status === "new") {
+        updateData.status = "contacted";
+      }
       await supabase
         .from("leads")
-        .update({ last_outreach_date: new Date().toISOString().split("T")[0] })
+        .update(updateData)
         .eq("id", lead.id)
         .eq("user_id", userId);
     }
