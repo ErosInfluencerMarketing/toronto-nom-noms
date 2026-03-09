@@ -69,6 +69,8 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   const [leadPlatformFilter, setLeadPlatformFilter] = useState<Platform | 'all'>('all');
   const [leadCityFilter, setLeadCityFilter] = useState('');
   const [leadEmailSearch, setLeadEmailSearch] = useState('');
+  const [leadStatusFilter, setLeadStatusFilter] = useState<string>('all');
+  const [leadCategoryFilter, setLeadCategoryFilter] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
