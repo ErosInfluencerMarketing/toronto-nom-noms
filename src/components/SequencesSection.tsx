@@ -84,11 +84,14 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   const leadsWithEmail = leads.filter((l) => !!l.email);
 
   const uniqueCities = Array.from(new Set(leadsWithEmail.map((l) => l.city).filter(Boolean))).sort() as string[];
+  const uniqueCategories = Array.from(new Set(leadsWithEmail.map((l) => l.category).filter(Boolean))).sort() as string[];
 
   const filteredLeads = leadsWithEmail.filter((l) => {
     if (leadPlatformFilter !== 'all' && l.platform !== leadPlatformFilter) return false;
     if (leadCityFilter && l.city !== leadCityFilter) return false;
     if (leadEmailSearch && !l.email?.toLowerCase().includes(leadEmailSearch.toLowerCase())) return false;
+    if (leadStatusFilter !== 'all' && l.status !== leadStatusFilter) return false;
+    if (leadCategoryFilter && l.category !== leadCategoryFilter) return false;
     return true;
   });
 
