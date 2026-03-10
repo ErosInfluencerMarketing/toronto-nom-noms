@@ -18,10 +18,11 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
       // If searching by lead name, first find matching lead IDs
       let matchingLeadIds: string[] | null = null;
       if (leadSearch.trim()) {
+        const searchTerm = `%${leadSearch.trim()}%`;
         const { data: matchingLeads } = await supabase
           .from('leads')
           .select('id')
-          .ilike('business_name', `%${leadSearch.trim()}%`);
+          .or(`business_name.ilike.${searchTerm},email.ilike.${searchTerm}`);
         matchingLeadIds = (matchingLeads || []).map((l: any) => l.id);
         if (matchingLeadIds.length === 0) {
           return { sequences: [], totalCount: 0 };
