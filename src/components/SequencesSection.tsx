@@ -178,7 +178,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
-            placeholder="Search by lead..."
+            placeholder="Search by lead or email..."
             value={leadSearch}
             onChange={(e) => setLeadSearch(e.target.value)}
             className="h-8 w-48 pl-8 text-xs bg-secondary border-border"
