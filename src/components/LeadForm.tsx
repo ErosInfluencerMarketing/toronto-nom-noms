@@ -106,6 +106,8 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
       email: formData.email || undefined,
       owner_name: formData.owner_name || undefined,
       instagram_handle: formData.instagram_handle || undefined,
+      city: formData.city || undefined,
+      category: formData.category || undefined,
       next_outreach_date: formData.next_outreach_date || undefined,
       notes: formData.notes || undefined,
     };
