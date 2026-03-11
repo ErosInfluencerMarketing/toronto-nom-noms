@@ -26,6 +26,8 @@ const leadSchema = z.object({
   instagram_handle: z.string().max(50).optional(),
   platform: z.enum(['eros', 'noms']),
   status: z.enum(['new', 'contacted', 'demo_booked', 'onboarded']),
+  city: z.string().max(100).optional(),
+  category: z.string().max(100).optional(),
   next_outreach_date: z.string().optional(),
   notes: z.string().max(1000).optional(),
 });
@@ -44,6 +46,8 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
     owner_name: '',
     email: '',
     instagram_handle: '',
+    city: '',
+    category: '',
     platform: 'eros',
     status: 'new',
     next_outreach_date: '',
@@ -58,6 +62,8 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
         owner_name: lead.owner_name || '',
         email: lead.email || '',
         instagram_handle: lead.instagram_handle || '',
+        city: lead.city || '',
+        category: lead.category || '',
         platform: lead.platform,
         status: lead.status,
         next_outreach_date: lead.next_outreach_date || '',
@@ -69,6 +75,8 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
         owner_name: '',
         email: '',
         instagram_handle: '',
+        city: '',
+        category: '',
         platform: 'eros',
         status: 'new',
         next_outreach_date: '',
@@ -98,6 +106,8 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
       email: formData.email || undefined,
       owner_name: formData.owner_name || undefined,
       instagram_handle: formData.instagram_handle || undefined,
+      city: formData.city || undefined,
+      category: formData.category || undefined,
       next_outreach_date: formData.next_outreach_date || undefined,
       notes: formData.notes || undefined,
     };
@@ -164,6 +174,30 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
                 onChange={(e) => setFormData({ ...formData, instagram_handle: e.target.value.replace('@', '') })}
                 className="bg-secondary border-border"
                 placeholder="@handle"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                className="bg-secondary border-border"
+                placeholder="Enter city"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="bg-secondary border-border"
+                placeholder="Enter category"
               />
             </div>
           </div>
