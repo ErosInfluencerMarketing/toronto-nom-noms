@@ -50,6 +50,9 @@ export function LeadFilters({
   categoryFilter,
   onCategoryFilterChange,
   categories,
+  cityFilter,
+  onCityFilterChange,
+  cities,
 }: LeadFiltersProps) {
   return (
     <div className="space-y-4">
