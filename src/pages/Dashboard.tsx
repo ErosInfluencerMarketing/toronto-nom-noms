@@ -153,7 +153,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, platformFilter, categoryFilter]);
+  }, [search, statusFilter, platformFilter, categoryFilter, cityFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
   const paginatedLeads = useMemo(() => {
