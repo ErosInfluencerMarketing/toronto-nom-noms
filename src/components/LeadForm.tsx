@@ -46,6 +46,8 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
     owner_name: '',
     email: '',
     instagram_handle: '',
+    city: '',
+    category: '',
     platform: 'eros',
     status: 'new',
     next_outreach_date: '',
