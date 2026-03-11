@@ -53,10 +53,16 @@ export function LeadCard({ lead, onEdit, onDelete, onViewDetails }: LeadCardProp
                   </span>
                 )}
                 {lead.instagram_handle && (
-                  <span className="flex items-center gap-1.5">
+                  <a
+                    href={`https://instagram.com/${lead.instagram_handle.replace(/^@/, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Instagram className="h-3.5 w-3.5" />
                     @{lead.instagram_handle}
-                  </span>
+                  </a>
                 )}
               </div>
               
