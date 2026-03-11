@@ -109,6 +109,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [cityFilter, setCityFilter] = useState('all');
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -124,6 +125,14 @@ export default function Dashboard() {
     return Array.from(cats).sort();
   }, [leads]);
 
+  const cities = useMemo(() => {
+    const set = new Set<string>();
+    leads.forEach((lead) => {
+      if (lead.city) set.add(lead.city);
+    });
+    return Array.from(set).sort();
+  }, [leads]);
+
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
       const s = search.toLowerCase();
@@ -136,14 +145,15 @@ export default function Dashboard() {
       const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
       const matchesPlatform = platformFilter === 'all' || lead.platform === platformFilter;
       const matchesCategory = categoryFilter === 'all' || lead.category === categoryFilter;
+      const matchesCity = cityFilter === 'all' || lead.city === cityFilter;
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory;
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity;
     });
-  }, [leads, search, statusFilter, platformFilter, categoryFilter]);
+  }, [leads, search, statusFilter, platformFilter, categoryFilter, cityFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, platformFilter, categoryFilter]);
+  }, [search, statusFilter, platformFilter, categoryFilter, cityFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
   const paginatedLeads = useMemo(() => {
@@ -297,6 +307,9 @@ export default function Dashboard() {
             categoryFilter={categoryFilter}
             onCategoryFilterChange={setCategoryFilter}
             categories={categories}
+            cityFilter={cityFilter}
+            onCityFilterChange={setCityFilter}
+            cities={cities}
           />
           
           <div className="flex items-center gap-3 flex-wrap">
