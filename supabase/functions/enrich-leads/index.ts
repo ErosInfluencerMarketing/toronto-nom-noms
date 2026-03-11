@@ -102,15 +102,22 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Strategy 2: If no email found from website, try search with targeted query
-    if (!extractedData.email) {
-      const searchQueries = [
-        `"${lead.business_name}" Toronto email contact`,
-        `"${lead.business_name}" Toronto "@" site:instagram.com OR site:facebook.com OR site:yelp.com`,
-      ];
+    // Strategy 2: Search for missing email or instagram handle
+    if (!extractedData.email || !extractedData.instagram_handle) {
+      const searchQueries: string[] = [];
+      if (!extractedData.email && !lead.email) {
+        searchQueries.push(`"${lead.business_name}" Toronto email contact`);
+      }
+      if (!extractedData.instagram_handle && !lead.instagram_handle) {
+        searchQueries.push(`"${lead.business_name}" Toronto "@" site:instagram.com OR site:facebook.com OR site:yelp.com`);
+      }
+      // Also add a general query if we still need both
+      if (searchQueries.length === 0) {
+        searchQueries.push(`"${lead.business_name}" Toronto email contact instagram`);
+      }
 
       for (const searchQuery of searchQueries) {
-        if (extractedData.email) break;
+        if (extractedData.email && extractedData.instagram_handle) break;
         
         console.log(`Strategy 2: Searching "${searchQuery}"`);
         try {
