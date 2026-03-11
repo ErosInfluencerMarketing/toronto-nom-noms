@@ -150,9 +150,9 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
                 href={`https://instagram.com/${lead.instagram_handle.replace(/^@/, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground hover:text-primary transition-colors"
+                className="text-foreground hover:text-primary transition-colors underline decoration-dotted underline-offset-2"
               >
-                @{lead.instagram_handle}
+                @{lead.instagram_handle.replace(/^@/, '')}
               </a>
             </div>
           )}
