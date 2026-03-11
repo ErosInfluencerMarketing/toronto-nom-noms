@@ -307,6 +307,9 @@ export default function Dashboard() {
             categoryFilter={categoryFilter}
             onCategoryFilterChange={setCategoryFilter}
             categories={categories}
+            cityFilter={cityFilter}
+            onCityFilterChange={setCityFilter}
+            cities={cities}
           />
           
           <div className="flex items-center gap-3 flex-wrap">
