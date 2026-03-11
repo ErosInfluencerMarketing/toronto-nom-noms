@@ -21,6 +21,9 @@ interface LeadFiltersProps {
   categoryFilter: string;
   onCategoryFilterChange: (value: string) => void;
   categories: string[];
+  cityFilter: string;
+  onCityFilterChange: (value: string) => void;
+  cities: string[];
 }
 
 const statusOptions: { value: LeadStatus | 'all'; label: string }[] = [
