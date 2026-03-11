@@ -125,6 +125,14 @@ export default function Dashboard() {
     return Array.from(cats).sort();
   }, [leads]);
 
+  const cities = useMemo(() => {
+    const set = new Set<string>();
+    leads.forEach((lead) => {
+      if (lead.city) set.add(lead.city);
+    });
+    return Array.from(set).sort();
+  }, [leads]);
+
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
       const s = search.toLowerCase();
