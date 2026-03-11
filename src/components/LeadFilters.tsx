@@ -135,6 +135,25 @@ export function LeadFilters({
             </Select>
           </>
         )}
+
+        {cities.length > 0 && (
+          <>
+            <div className="w-px h-6 bg-border self-center mx-2" />
+            <Select value={cityFilter} onValueChange={onCityFilterChange}>
+              <SelectTrigger className="w-[160px] h-8 text-xs bg-secondary border-border">
+                <SelectValue placeholder="All Cities" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border z-50">
+                <SelectItem value="all">All Cities</SelectItem>
+                {cities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        )}
       </div>
     </div>
   );
