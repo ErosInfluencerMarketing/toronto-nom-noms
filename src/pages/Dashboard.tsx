@@ -145,10 +145,11 @@ export default function Dashboard() {
       const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
       const matchesPlatform = platformFilter === 'all' || lead.platform === platformFilter;
       const matchesCategory = categoryFilter === 'all' || lead.category === categoryFilter;
+      const matchesCity = cityFilter === 'all' || lead.city === cityFilter;
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory;
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity;
     });
-  }, [leads, search, statusFilter, platformFilter, categoryFilter]);
+  }, [leads, search, statusFilter, platformFilter, categoryFilter, cityFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
