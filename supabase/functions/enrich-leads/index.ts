@@ -54,12 +54,12 @@ Deno.serve(async (req) => {
 
     if (leadsError) throw leadsError;
 
-    // Filter to leads missing email specifically (primary goal)
+    // Filter to leads missing email OR instagram handle
     const leadsToEnrich = leads?.filter((l: any) =>
-      !l.email && !skipIds.includes(l.id)
+      (!l.email || !l.instagram_handle) && !skipIds.includes(l.id)
     ) || [];
 
-    console.log(`Found ${leadsToEnrich.length} leads needing email (skipping ${skipIds.length})`);
+    console.log(`Found ${leadsToEnrich.length} leads needing enrichment (skipping ${skipIds.length})`);
 
     if (leadsToEnrich.length === 0) {
       return new Response(
