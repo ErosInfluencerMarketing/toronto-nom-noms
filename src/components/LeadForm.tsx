@@ -177,6 +177,30 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
               />
             </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                className="bg-secondary border-border"
+                placeholder="Enter city"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="bg-secondary border-border"
+                placeholder="Enter category"
+              />
+            </div>
+          </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
