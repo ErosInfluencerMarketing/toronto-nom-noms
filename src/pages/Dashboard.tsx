@@ -109,6 +109,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [cityFilter, setCityFilter] = useState('all');
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
