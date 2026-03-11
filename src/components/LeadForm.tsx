@@ -26,6 +26,8 @@ const leadSchema = z.object({
   instagram_handle: z.string().max(50).optional(),
   platform: z.enum(['eros', 'noms']),
   status: z.enum(['new', 'contacted', 'demo_booked', 'onboarded']),
+  city: z.string().max(100).optional(),
+  category: z.string().max(100).optional(),
   next_outreach_date: z.string().optional(),
   notes: z.string().max(1000).optional(),
 });
