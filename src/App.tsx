@@ -27,6 +27,7 @@ const App = () => (
             <Route path="/instagram" element={<InstagramInsights />} />
             <Route path="/influencers" element={<Influencers />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
