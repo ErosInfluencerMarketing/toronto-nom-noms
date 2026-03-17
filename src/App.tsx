@@ -9,6 +9,7 @@ import AdminPanel from "./pages/AdminPanel";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import InstagramInsights from "./pages/InstagramInsights";
+import Influencers from "./pages/Influencers";
 
 const queryClient = new QueryClient();
 
