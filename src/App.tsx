@@ -10,6 +10,7 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import InstagramInsights from "./pages/InstagramInsights";
 import Influencers from "./pages/Influencers";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/instagram" element={<InstagramInsights />} />
             <Route path="/influencers" element={<Influencers />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
