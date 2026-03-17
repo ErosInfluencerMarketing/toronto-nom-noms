@@ -9,6 +9,7 @@ import AdminPanel from "./pages/AdminPanel";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import InstagramInsights from "./pages/InstagramInsights";
+import Influencers from "./pages/Influencers";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/instagram" element={<InstagramInsights />} />
+            <Route path="/influencers" element={<Influencers />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
