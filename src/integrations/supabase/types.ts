@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      influencers: {
+        Row: {
+          avg_comments: number | null
+          avg_likes: number | null
+          bio: string | null
+          city: string | null
+          contact_method: string | null
+          content_type: string | null
+          created_at: string
+          email: string | null
+          engagement_rate: number | null
+          followers_count: number | null
+          following_count: number | null
+          full_name: string | null
+          id: string
+          niche: string | null
+          notes: string | null
+          platform: string
+          posts_count: number | null
+          profile_image_url: string | null
+          profile_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          username: string
+          website: string | null
+        }
+        Insert: {
+          avg_comments?: number | null
+          avg_likes?: number | null
+          bio?: string | null
+          city?: string | null
+          contact_method?: string | null
+          content_type?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_rate?: number | null
+          followers_count?: number | null
+          following_count?: number | null
+          full_name?: string | null
+          id?: string
+          niche?: string | null
+          notes?: string | null
+          platform?: string
+          posts_count?: number | null
+          profile_image_url?: string | null
+          profile_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          username: string
+          website?: string | null
+        }
+        Update: {
+          avg_comments?: number | null
+          avg_likes?: number | null
+          bio?: string | null
+          city?: string | null
+          contact_method?: string | null
+          content_type?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_rate?: number | null
+          followers_count?: number | null
+          following_count?: number | null
+          full_name?: string | null
+          id?: string
+          niche?: string | null
+          notes?: string | null
+          platform?: string
+          posts_count?: number | null
+          profile_image_url?: string | null
+          profile_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           address: string | null
