@@ -338,7 +338,9 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
           },
         },
       });
-      searchCafes(map);
+      if (!hasCachedCafes.current) {
+        searchCafes(map);
+      }
     },
     [searchCafes]
   );
