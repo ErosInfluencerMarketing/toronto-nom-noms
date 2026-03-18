@@ -8,6 +8,7 @@ export interface Lead {
   business_name: string;
   owner_name: string | null;
   email: string | null;
+  phone: string | null;
   instagram_handle: string | null;
   website: string | null;
   address: string | null;
@@ -26,6 +27,7 @@ export interface LeadFormData {
   business_name: string;
   owner_name?: string;
   email?: string;
+  phone?: string;
   instagram_handle?: string;
   website?: string;
   address?: string;

@@ -10,6 +10,7 @@ import { Loader2, Coffee, MapPin, Search, ArrowLeft, Download, CheckSquare, Squa
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useLeads } from '@/hooks/useLeads';
+import { supabase } from '@/integrations/supabase/client';
 import { LeadFormData } from '@/types/lead';
 
 const SYDNEY_CENTER = { lat: -33.8688, lng: 151.2093 };
@@ -100,6 +101,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
   const [progress, setProgress] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
+  const [enrichProgress, setEnrichProgress] = useState('');
   const mapRef = useRef<google.maps.Map | null>(null);
   const serviceRef = useRef<google.maps.places.PlacesService | null>(null);
   const abortRef = useRef(false);
@@ -128,6 +130,68 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
     }
   };
 
+  const enrichAndImport = async (cafesToImport: CafePlace[]) => {
+    // Enrich in batches of 5
+    const BATCH_SIZE = 5;
+    const allLeads: LeadFormData[] = [];
+
+    for (let i = 0; i < cafesToImport.length; i += BATCH_SIZE) {
+      const batch = cafesToImport.slice(i, i + BATCH_SIZE);
+      setEnrichProgress(`Enriching ${i + 1}-${Math.min(i + BATCH_SIZE, cafesToImport.length)} of ${cafesToImport.length}…`);
+
+      try {
+        const { data, error } = await supabase.functions.invoke('enrich-cafes', {
+          body: {
+            cafes: batch.map(c => ({
+              placeId: c.placeId,
+              name: c.name,
+              address: c.address,
+              rating: c.rating,
+              totalRatings: c.totalRatings,
+            })),
+          },
+        });
+
+        if (error) throw error;
+
+        const enrichedCafes = data?.cafes || batch;
+        for (const ec of enrichedCafes) {
+          const original = batch.find(b => b.placeId === ec.placeId) || ec;
+          allLeads.push({
+            business_name: ec.name || original.name,
+            address: ec.address || original.address,
+            city: 'Sydney',
+            category: 'Cafe',
+            website: ec.website || original.website,
+            email: ec.email || undefined,
+            instagram_handle: ec.instagram_handle || undefined,
+            platform: 'noms',
+            status: 'new',
+            notes: [
+              `Rating: ${original.rating ?? 'N/A'}${original.totalRatings ? ` (${original.totalRatings} reviews)` : ''}`,
+              ec.phone ? `Phone: ${ec.phone}` : '',
+              `Google Place ID: ec.placeId`,
+            ].filter(Boolean).join(' | '),
+          });
+        }
+      } catch (e) {
+        console.error('Enrich batch error:', e);
+        // Fall back to non-enriched import for this batch
+        for (const cafe of batch) {
+          allLeads.push(cafeToLead(cafe));
+        }
+      }
+    }
+
+    // Insert leads in chunks of 100
+    setEnrichProgress('Saving leads…');
+    for (let i = 0; i < allLeads.length; i += 100) {
+      await bulkCreateLeads.mutateAsync(allLeads.slice(i, i + 100));
+    }
+
+    return allLeads.length;
+  };
+
   const handleImportSelected = async () => {
     const toImport = cafes.filter((c) => selectedIds.has(c.placeId));
     if (toImport.length === 0) {
@@ -137,31 +201,28 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
 
     setImporting(true);
     try {
-      const leads = toImport.map(cafeToLead);
-      // Batch in chunks of 100
-      for (let i = 0; i < leads.length; i += 100) {
-        const chunk = leads.slice(i, i + 100);
-        await bulkCreateLeads.mutateAsync(chunk);
-      }
-      toast.success(`Imported ${toImport.length} cafes as leads`);
+      const count = await enrichAndImport(toImport);
+      toast.success(`Imported ${count} cafes as enriched leads`);
       setSelectedIds(new Set());
     } catch (e: any) {
       toast.error('Import failed: ' + e.message);
     } finally {
       setImporting(false);
+      setEnrichProgress('');
     }
   };
 
   const handleImportSingle = async (cafe: CafePlace) => {
     setImporting(true);
     try {
-      await bulkCreateLeads.mutateAsync([cafeToLead(cafe)]);
-      toast.success(`Imported "${cafe.name}" as a lead`);
+      await enrichAndImport([cafe]);
+      toast.success(`Imported "${cafe.name}" as an enriched lead`);
       setSelectedCafe(null);
     } catch (e: any) {
       toast.error('Import failed: ' + e.message);
     } finally {
       setImporting(false);
+      setEnrichProgress('');
     }
   };
 
@@ -376,7 +437,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
                 ) : (
                   <Download className="h-4 w-4" />
                 )}
-                Import as Leads
+                {importing ? (enrichProgress || 'Importing…') : 'Enrich & Import as Leads'}
               </Button>
             </>
           )}
