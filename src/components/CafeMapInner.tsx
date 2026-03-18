@@ -19,6 +19,8 @@ interface CafePlace {
   rating?: number;
   totalRatings?: number;
   openNow?: boolean;
+  iconUrl?: string;
+  photoUrl?: string;
 }
 
 interface CafeMapInnerProps {
