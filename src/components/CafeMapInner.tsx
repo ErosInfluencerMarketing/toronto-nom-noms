@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
-import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from '@react-google-maps/api';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { GoogleMap, useJsApiLoader, InfoWindowF } from '@react-google-maps/api';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
@@ -81,7 +82,8 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
   const mapRef = useRef<google.maps.Map | null>(null);
   const serviceRef = useRef<google.maps.places.PlacesService | null>(null);
   const abortRef = useRef(false);
-
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const clustererRef = useRef<MarkerClusterer | null>(null);
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey,
     libraries: LIBRARIES,
@@ -168,10 +170,60 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
     (map: google.maps.Map) => {
       mapRef.current = map;
       serviceRef.current = new google.maps.places.PlacesService(map);
+      clustererRef.current = new MarkerClusterer({
+        map,
+        markers: [],
+        renderer: {
+          render: ({ count, position }) => {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50">
+              <circle cx="25" cy="25" r="24" fill="%2314b8a6" stroke="white" stroke-width="2" opacity="0.9"/>
+              <text x="25" y="30" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="sans-serif">${count}</text>
+            </svg>`;
+            return new google.maps.Marker({
+              position,
+              icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+                scaledSize: new google.maps.Size(50, 50),
+              },
+              label: { text: ' ', color: 'transparent' },
+              zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count,
+            });
+          },
+        },
+      });
       searchCafes(map);
     },
     [searchCafes]
   );
+  // Sync markers with clusterer
+  useEffect(() => {
+    if (!mapRef.current || !clustererRef.current) return;
+
+    // Clear old markers
+    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current = [];
+
+    const defaultIcon = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="%2314b8a6" stroke="white" stroke-width="2"/><g transform="translate(4,4) scale(0.67)"><path d="M17 8h1a4 4 0 1 1 0 8h-1" fill="white" stroke="white"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" fill="white" stroke="white"/><line x1="6" x2="6" y1="2" y2="4" stroke="white"/><line x1="10" x2="10" y1="2" y2="4" stroke="white"/><line x1="14" x2="14" y1="2" y2="4" stroke="white"/></g></svg>`
+    );
+
+    const newMarkers = cafes.map((cafe) => {
+      const marker = new google.maps.Marker({
+        position: { lat: cafe.lat, lng: cafe.lng },
+        icon: {
+          url: cafe.photoUrl || defaultIcon,
+          scaledSize: new google.maps.Size(44, 44),
+        },
+      });
+      marker.addListener('click', () => setSelectedCafe(cafe));
+      return marker;
+    });
+
+    markersRef.current = newMarkers;
+    clustererRef.current.clearMarkers();
+    clustererRef.current.addMarkers(newMarkers);
+  }, [cafes]);
+
 
   const handleStop = () => {
     abortRef.current = true;
@@ -254,22 +306,6 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
             fullscreenControl: true,
           }}
         >
-          {cafes.map((cafe) => (
-            <MarkerF
-              key={cafe.placeId}
-              position={{ lat: cafe.lat, lng: cafe.lng }}
-              onClick={() => setSelectedCafe(cafe)}
-              icon={cafe.photoUrl ? {
-                url: cafe.photoUrl,
-                scaledSize: new google.maps.Size(44, 44),
-              } : {
-                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
-                  `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="%2314b8a6" stroke="white" stroke-width="2"/><g transform="translate(4,4) scale(0.67)"><path d="M17 8h1a4 4 0 1 1 0 8h-1" fill="white" stroke="white"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" fill="white" stroke="white"/><line x1="6" x2="6" y1="2" y2="4" stroke="white"/><line x1="10" x2="10" y1="2" y2="4" stroke="white"/><line x1="14" x2="14" y1="2" y2="4" stroke="white"/></g></svg>`
-                ),
-                scaledSize: new google.maps.Size(44, 44),
-              }}
-            />
-          ))}
 
           {selectedCafe && (
             <InfoWindowF
