@@ -10,6 +10,7 @@ import { Loader2, Coffee, MapPin, Search, ArrowLeft, Download, CheckSquare, Squa
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useLeads } from '@/hooks/useLeads';
+import { supabase } from '@/integrations/supabase/client';
 import { LeadFormData } from '@/types/lead';
 
 const SYDNEY_CENTER = { lat: -33.8688, lng: 151.2093 };
