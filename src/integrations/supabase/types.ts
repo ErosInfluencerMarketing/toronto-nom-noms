@@ -110,6 +110,7 @@ export type Database = {
           next_outreach_date: string | null
           notes: string | null
           owner_name: string | null
+          phone: string | null
           platform: Database["public"]["Enums"]["platform_type"]
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
@@ -130,6 +131,7 @@ export type Database = {
           next_outreach_date?: string | null
           notes?: string | null
           owner_name?: string | null
+          phone?: string | null
           platform?: Database["public"]["Enums"]["platform_type"]
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
@@ -150,6 +152,7 @@ export type Database = {
           next_outreach_date?: string | null
           notes?: string | null
           owner_name?: string | null
+          phone?: string | null
           platform?: Database["public"]["Enums"]["platform_type"]
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
