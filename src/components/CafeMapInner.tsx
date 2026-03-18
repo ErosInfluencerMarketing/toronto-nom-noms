@@ -195,6 +195,35 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
     },
     [searchCafes]
   );
+  // Sync markers with clusterer
+  useEffect(() => {
+    if (!mapRef.current || !clustererRef.current) return;
+
+    // Clear old markers
+    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current = [];
+
+    const defaultIcon = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="%2314b8a6" stroke="white" stroke-width="2"/><g transform="translate(4,4) scale(0.67)"><path d="M17 8h1a4 4 0 1 1 0 8h-1" fill="white" stroke="white"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" fill="white" stroke="white"/><line x1="6" x2="6" y1="2" y2="4" stroke="white"/><line x1="10" x2="10" y1="2" y2="4" stroke="white"/><line x1="14" x2="14" y1="2" y2="4" stroke="white"/></g></svg>`
+    );
+
+    const newMarkers = cafes.map((cafe) => {
+      const marker = new google.maps.Marker({
+        position: { lat: cafe.lat, lng: cafe.lng },
+        icon: {
+          url: cafe.photoUrl || defaultIcon,
+          scaledSize: new google.maps.Size(44, 44),
+        },
+      });
+      marker.addListener('click', () => setSelectedCafe(cafe));
+      return marker;
+    });
+
+    markersRef.current = newMarkers;
+    clustererRef.current.clearMarkers();
+    clustererRef.current.addMarkers(newMarkers);
+  }, [cafes]);
+
 
   const handleStop = () => {
     abortRef.current = true;
