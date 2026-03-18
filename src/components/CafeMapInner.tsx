@@ -437,7 +437,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
                 ) : (
                   <Download className="h-4 w-4" />
                 )}
-                Import as Leads
+                {importing ? (enrichProgress || 'Importing…') : 'Enrich & Import as Leads'}
               </Button>
             </>
           )}
