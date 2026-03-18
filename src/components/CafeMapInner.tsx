@@ -19,6 +19,8 @@ interface CafePlace {
   rating?: number;
   totalRatings?: number;
   openNow?: boolean;
+  iconUrl?: string;
+  photoUrl?: string;
 }
 
 interface CafeMapInnerProps {
@@ -54,10 +56,32 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
       type: 'cafe',
     };
 
-    service.textSearch(request, (results, status) => {
-      setSearching(false);
+    const allResults: google.maps.places.PlaceResult[] = [];
+
+    const handlePage = (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus, pagination: google.maps.places.PlaceSearchPagination | null) => {
       if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-        const mapped: CafePlace[] = results.map((r) => ({
+        allResults.push(...results);
+        if (pagination && pagination.hasNextPage) {
+          setTimeout(() => pagination.nextPage(), 300);
+        } else {
+          finalize(allResults);
+        }
+      } else if (allResults.length > 0) {
+        finalize(allResults);
+      } else {
+        setSearching(false);
+        toast.error('No cafes found. Try a different search.');
+        setCafes([]);
+      }
+    };
+
+    const finalize = (results: google.maps.places.PlaceResult[]) => {
+      const mapped: CafePlace[] = results.map((r) => {
+        let photoUrl: string | undefined;
+        if (r.photos && r.photos.length > 0) {
+          photoUrl = r.photos[0].getUrl({ maxWidth: 48, maxHeight: 48 });
+        }
+        return {
           placeId: r.place_id || '',
           name: r.name || 'Unknown',
           address: r.formatted_address || '',
@@ -66,14 +90,16 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
           rating: r.rating,
           totalRatings: r.user_ratings_total,
           openNow: r.opening_hours?.isOpen?.(),
-        }));
-        setCafes(mapped);
-        toast.success(`Found ${mapped.length} cafes`);
-      } else {
-        toast.error('No cafes found. Try a different search.');
-        setCafes([]);
-      }
-    });
+          iconUrl: r.icon,
+          photoUrl,
+        };
+      });
+      setCafes(mapped);
+      setSearching(false);
+      toast.success(`Found ${mapped.length} cafes`);
+    };
+
+    service.textSearch(request, handlePage);
   }, [searchQuery]);
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
@@ -147,12 +173,16 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
               key={cafe.placeId}
               position={{ lat: cafe.lat, lng: cafe.lng }}
               onClick={() => setSelectedCafe(cafe)}
-              icon={{
+              icon={cafe.photoUrl ? {
+                url: cafe.photoUrl,
+                scaledSize: new google.maps.Size(44, 44),
+              } : {
                 url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
-                  `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="%2314b8a6" stroke="%230f172a" stroke-width="1.5"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>`
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="%2314b8a6" stroke="%23ffffff" stroke-width="1.5"><circle cx="12" cy="12" r="12" fill="%2314b8a6" stroke="white" stroke-width="2"/><g transform="translate(4,4) scale(0.67)"><path d="M17 8h1a4 4 0 1 1 0 8h-1" fill="white" stroke="white"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" fill="white" stroke="white"/><line x1="6" x2="6" y1="2" y2="4" stroke="white"/><line x1="10" x2="10" y1="2" y2="4" stroke="white"/><line x1="14" x2="14" y1="2" y2="4" stroke="white"/></g></svg>`
                 ),
-                scaledSize: new google.maps.Size(36, 36),
+                scaledSize: new google.maps.Size(44, 44),
               }}
+              animation={google.maps.Animation.DROP}
             />
           ))}
 
