@@ -131,13 +131,16 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
   };
 
   const enrichAndImport = async (cafesToImport: CafePlace[]) => {
-    // Enrich in batches of 5
-    const BATCH_SIZE = 5;
-    const allLeads: LeadFormData[] = [];
+    // Larger batches since cafes are now enriched in parallel within the edge function
+    const BATCH_SIZE = 10;
+    let totalImported = 0;
 
     for (let i = 0; i < cafesToImport.length; i += BATCH_SIZE) {
       const batch = cafesToImport.slice(i, i + BATCH_SIZE);
-      setEnrichProgress(`Enriching ${i + 1}-${Math.min(i + BATCH_SIZE, cafesToImport.length)} of ${cafesToImport.length}…`);
+      const batchEnd = Math.min(i + BATCH_SIZE, cafesToImport.length);
+      setEnrichProgress(`Enriching & saving ${i + 1}-${batchEnd} of ${cafesToImport.length}…`);
+
+      const batchLeads: LeadFormData[] = [];
 
       try {
         const { data, error } = await supabase.functions.invoke('enrich-cafes', {
@@ -157,7 +160,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
         const enrichedCafes = data?.cafes || batch;
         for (const ec of enrichedCafes) {
           const original = batch.find(b => b.placeId === ec.placeId) || ec;
-          allLeads.push({
+          batchLeads.push({
             business_name: ec.name || original.name,
             address: ec.address || original.address,
             city: 'Sydney',
@@ -165,31 +168,31 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
             website: ec.website || original.website,
             email: ec.email || undefined,
             instagram_handle: ec.instagram_handle || undefined,
+            phone: ec.phone || undefined,
             platform: 'noms',
             status: 'new',
             notes: [
               `Rating: ${original.rating ?? 'N/A'}${original.totalRatings ? ` (${original.totalRatings} reviews)` : ''}`,
-              ec.phone ? `Phone: ${ec.phone}` : '',
               `Google Place ID: ${ec.placeId}`,
             ].filter(Boolean).join(' | '),
           });
         }
       } catch (e) {
         console.error('Enrich batch error:', e);
-        // Fall back to non-enriched import for this batch
         for (const cafe of batch) {
-          allLeads.push(cafeToLead(cafe));
+          batchLeads.push(cafeToLead(cafe));
         }
+      }
+
+      // Save this batch immediately
+      if (batchLeads.length > 0) {
+        await bulkCreateLeads.mutateAsync(batchLeads);
+        totalImported += batchLeads.length;
+        toast.success(`Saved batch ${Math.floor(i / BATCH_SIZE) + 1}: ${batchLeads.length} leads`);
       }
     }
 
-    // Insert leads in chunks of 100
-    setEnrichProgress('Saving leads…');
-    for (let i = 0; i < allLeads.length; i += 100) {
-      await bulkCreateLeads.mutateAsync(allLeads.slice(i, i + 100));
-    }
-
-    return allLeads.length;
+    return totalImported;
   };
 
   const handleImportSelected = async () => {

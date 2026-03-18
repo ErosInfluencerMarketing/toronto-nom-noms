@@ -22,6 +22,126 @@ interface EnrichedCafe extends CafeInput {
   instagram_handle?: string;
 }
 
+async function enrichSingleCafe(
+  cafe: CafeInput,
+  googleMapsKey: string,
+  firecrawlKey: string | undefined,
+  lovableKey: string | undefined
+): Promise<EnrichedCafe> {
+  const result: EnrichedCafe = { ...cafe };
+
+  // Step 1: Google Place Details for website & phone
+  try {
+    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(cafe.placeId)}&fields=website,formatted_phone_number,international_phone_number&key=${googleMapsKey}`;
+    const detailsRes = await fetch(detailsUrl);
+    const detailsData = await detailsRes.json();
+    if (detailsData.result) {
+      result.website = detailsData.result.website || undefined;
+      result.phone = detailsData.result.formatted_phone_number || detailsData.result.international_phone_number || undefined;
+    }
+  } catch (e) {
+    console.error(`Place Details error for ${cafe.name}:`, e);
+  }
+
+  // Step 2: Scrape website for email & Instagram
+  if (result.website && firecrawlKey && lovableKey) {
+    const skipDomains = ['instagram.com', 'facebook.com', 'yelp.com', 'tripadvisor.com', 'google.com'];
+    const isSkipDomain = skipDomains.some(d => result.website!.includes(d));
+
+    if (!isSkipDomain) {
+      try {
+        const scrapeRes = await fetch('https://api.firecrawl.dev/v1/scrape', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${firecrawlKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: result.website,
+            formats: ['markdown'],
+            onlyMainContent: false,
+          }),
+        });
+
+        if (scrapeRes.ok) {
+          const scrapeData = await scrapeRes.json();
+          const content = (scrapeData.data?.markdown || scrapeData.markdown || '').slice(0, 4000);
+          if (content.length > 100) {
+            const extracted = await extractWithAI(lovableKey, cafe.name, content);
+            if (extracted.email) result.email = extracted.email;
+            if (extracted.instagram_handle) result.instagram_handle = extracted.instagram_handle;
+          }
+        }
+      } catch (e) {
+        console.error(`Scrape error for ${cafe.name}:`, e);
+      }
+    }
+  }
+
+  // Step 3: Search fallback for missing email/instagram
+  if ((!result.email || !result.instagram_handle) && firecrawlKey && lovableKey) {
+    try {
+      const searchQuery = `"${cafe.name}" Sydney ${!result.email ? 'email contact' : ''} ${!result.instagram_handle ? 'instagram' : ''}`.trim();
+      const searchRes = await fetch('https://api.firecrawl.dev/v1/search', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: searchQuery, limit: 3 }),
+      });
+
+      if (searchRes.ok) {
+        const searchData = await searchRes.json();
+        const results = searchData.data || [];
+        if (results.length > 0) {
+          const content = results.map((r: any) =>
+            `${r.title || ''} | ${r.url || ''} | ${r.description || ''}`
+          ).join('\n');
+          const extracted = await extractWithAI(lovableKey, cafe.name, content);
+          if (!result.email && extracted.email) result.email = extracted.email;
+          if (!result.instagram_handle && extracted.instagram_handle) result.instagram_handle = extracted.instagram_handle;
+        }
+      }
+    } catch (e) {
+      console.error(`Search error for ${cafe.name}:`, e);
+    }
+  }
+
+  return result;
+}
+
+async function extractWithAI(apiKey: string, businessName: string, content: string): Promise<Record<string, string>> {
+  try {
+    const aiResponse = await fetch(AI_GATEWAY_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [
+          {
+            role: 'user',
+            content: `Extract contact info for "${businessName}" from this content. Look for email addresses (@ symbols, "mailto:", "contact", "email" sections) and Instagram handles (@username patterns, instagram.com/ links). Return ONLY a JSON object: {"email":"","instagram_handle":""}. For instagram_handle, return just the username without @. Use empty string if not found.\n\n${content}`
+          }
+        ],
+        temperature: 0,
+      }),
+    });
+
+    if (!aiResponse.ok) return {};
+    const aiData = await aiResponse.json();
+    const aiContent = aiData.choices?.[0]?.message?.content || '{}';
+    const cleaned = aiContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    return JSON.parse(cleaned);
+  } catch (e) {
+    console.error('AI extraction error:', e);
+    return {};
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -56,112 +176,25 @@ Deno.serve(async (req) => {
     }
 
     const googleMapsKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
-    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
-    const lovableKey = Deno.env.get('LOVABLE_API_KEY');
-
     if (!googleMapsKey) {
       return new Response(JSON.stringify({ error: 'Google Maps API key not configured' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const enriched: EnrichedCafe[] = [];
+    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+    const lovableKey = Deno.env.get('LOVABLE_API_KEY');
 
-    for (const cafe of cafes) {
-      const result: EnrichedCafe = { ...cafe };
+    // Process ALL cafes in the batch concurrently
+    const enrichedResults = await Promise.allSettled(
+      cafes.map(cafe => enrichSingleCafe(cafe, googleMapsKey, firecrawlKey, lovableKey))
+    );
 
-      // Step 1: Google Place Details for website & phone
-      try {
-        const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(cafe.placeId)}&fields=website,formatted_phone_number,international_phone_number&key=${googleMapsKey}`;
-        const detailsRes = await fetch(detailsUrl);
-        const detailsData = await detailsRes.json();
-
-        if (detailsData.result) {
-          result.website = detailsData.result.website || undefined;
-          result.phone = detailsData.result.formatted_phone_number || detailsData.result.international_phone_number || undefined;
-        }
-      } catch (e) {
-        console.error(`Place Details error for ${cafe.name}:`, e);
-      }
-
-      // Step 2: If we have a website + Firecrawl + AI, scrape for email & Instagram
-      if (result.website && firecrawlKey && lovableKey) {
-        // Skip social media / aggregator sites
-        const skipDomains = ['instagram.com', 'facebook.com', 'yelp.com', 'tripadvisor.com', 'google.com'];
-        const isSkipDomain = skipDomains.some(d => result.website!.includes(d));
-
-        if (!isSkipDomain) {
-          try {
-            console.log(`Scraping ${result.website} for ${cafe.name}`);
-            const scrapeRes = await fetch('https://api.firecrawl.dev/v1/scrape', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${firecrawlKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                url: result.website,
-                formats: ['markdown'],
-                onlyMainContent: false,
-              }),
-            });
-
-            if (scrapeRes.ok) {
-              const scrapeData = await scrapeRes.json();
-              const content = (scrapeData.data?.markdown || scrapeData.markdown || '').slice(0, 4000);
-
-              if (content.length > 100) {
-                const extracted = await extractWithAI(lovableKey, cafe.name, content);
-                if (extracted.email) result.email = extracted.email;
-                if (extracted.instagram_handle) result.instagram_handle = extracted.instagram_handle;
-              }
-            }
-          } catch (e) {
-            console.error(`Scrape error for ${cafe.name}:`, e);
-          }
-        }
-      }
-
-      // Step 3: If still missing email/instagram, try a search
-      if ((!result.email || !result.instagram_handle) && firecrawlKey && lovableKey) {
-        try {
-          const searchQuery = `"${cafe.name}" Sydney ${!result.email ? 'email contact' : ''} ${!result.instagram_handle ? 'instagram' : ''}`.trim();
-          console.log(`Searching: ${searchQuery}`);
-
-          const searchRes = await fetch('https://api.firecrawl.dev/v1/search', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${firecrawlKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ query: searchQuery, limit: 3 }),
-          });
-
-          if (searchRes.ok) {
-            const searchData = await searchRes.json();
-            const results = searchData.data || [];
-            if (results.length > 0) {
-              const content = results.map((r: any) =>
-                `${r.title || ''} | ${r.url || ''} | ${r.description || ''}`
-              ).join('\n');
-
-              const extracted = await extractWithAI(lovableKey, cafe.name, content);
-              if (!result.email && extracted.email) result.email = extracted.email;
-              if (!result.instagram_handle && extracted.instagram_handle) result.instagram_handle = extracted.instagram_handle;
-            }
-          }
-        } catch (e) {
-          console.error(`Search error for ${cafe.name}:`, e);
-        }
-      }
-
-      enriched.push(result);
-
-      // Small delay between cafes to avoid rate limits
-      if (cafes.length > 1) {
-        await new Promise(r => setTimeout(r, 500));
-      }
-    }
+    const enriched: EnrichedCafe[] = enrichedResults.map((result, i) => {
+      if (result.status === 'fulfilled') return result.value;
+      console.error(`Failed to enrich ${cafes[i].name}:`, result.reason);
+      return { ...cafes[i] }; // fallback to unenriched
+    });
 
     return new Response(
       JSON.stringify({ success: true, cafes: enriched }),
@@ -175,40 +208,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-
-async function extractWithAI(apiKey: string, businessName: string, content: string): Promise<Record<string, string>> {
-  try {
-    const aiResponse = await fetch(AI_GATEWAY_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
-        messages: [
-          {
-            role: 'user',
-            content: `Extract contact info for "${businessName}" from this content. Look for email addresses (@ symbols, "mailto:", "contact", "email" sections) and Instagram handles (@username patterns, instagram.com/ links). Return ONLY a JSON object: {"email":"","instagram_handle":""}. For instagram_handle, return just the username without @. Use empty string if not found.\n\n${content}`
-          }
-        ],
-        temperature: 0,
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      console.error('AI error:', aiResponse.status);
-      return {};
-    }
-
-    const aiData = await aiResponse.json();
-    const aiContent = aiData.choices?.[0]?.message?.content || '{}';
-    const cleaned = aiContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const extracted = JSON.parse(cleaned);
-    console.log(`AI extracted for ${businessName}:`, JSON.stringify(extracted));
-    return extracted;
-  } catch (e) {
-    console.error('AI extraction error:', e);
-    return {};
-  }
-}
