@@ -56,10 +56,32 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
       type: 'cafe',
     };
 
-    service.textSearch(request, (results, status) => {
-      setSearching(false);
+    const allResults: google.maps.places.PlaceResult[] = [];
+
+    const handlePage = (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus, pagination: google.maps.places.PlaceSearchPagination | null) => {
       if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-        const mapped: CafePlace[] = results.map((r) => ({
+        allResults.push(...results);
+        if (pagination && pagination.hasNextPage) {
+          setTimeout(() => pagination.nextPage(), 300);
+        } else {
+          finalize(allResults);
+        }
+      } else if (allResults.length > 0) {
+        finalize(allResults);
+      } else {
+        setSearching(false);
+        toast.error('No cafes found. Try a different search.');
+        setCafes([]);
+      }
+    };
+
+    const finalize = (results: google.maps.places.PlaceResult[]) => {
+      const mapped: CafePlace[] = results.map((r) => {
+        let photoUrl: string | undefined;
+        if (r.photos && r.photos.length > 0) {
+          photoUrl = r.photos[0].getUrl({ maxWidth: 48, maxHeight: 48 });
+        }
+        return {
           placeId: r.place_id || '',
           name: r.name || 'Unknown',
           address: r.formatted_address || '',
@@ -68,14 +90,16 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
           rating: r.rating,
           totalRatings: r.user_ratings_total,
           openNow: r.opening_hours?.isOpen?.(),
-        }));
-        setCafes(mapped);
-        toast.success(`Found ${mapped.length} cafes`);
-      } else {
-        toast.error('No cafes found. Try a different search.');
-        setCafes([]);
-      }
-    });
+          iconUrl: r.icon,
+          photoUrl,
+        };
+      });
+      setCafes(mapped);
+      setSearching(false);
+      toast.success(`Found ${mapped.length} cafes`);
+    };
+
+    service.textSearch(request, handlePage);
   }, [searchQuery]);
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
