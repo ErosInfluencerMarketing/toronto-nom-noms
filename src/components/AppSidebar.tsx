@@ -8,6 +8,7 @@ import {
   Shield,
   Instagram,
   Star,
+  Coffee,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -70,6 +71,15 @@ export function AppSidebar({ activeSection }: AppSidebarProps) {
                 >
                   <Star className="h-4 w-4" />
                   <span>Influencers</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => navigate('/cafe-map')}
+                  tooltip="Sydney Cafe Map"
+                >
+                  <Coffee className="h-4 w-4" />
+                  <span>Cafe Map</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               {isAdmin && (
