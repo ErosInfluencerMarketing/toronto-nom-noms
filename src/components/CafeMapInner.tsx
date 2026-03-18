@@ -170,7 +170,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
             notes: [
               `Rating: ${original.rating ?? 'N/A'}${original.totalRatings ? ` (${original.totalRatings} reviews)` : ''}`,
               ec.phone ? `Phone: ${ec.phone}` : '',
-              `Google Place ID: ec.placeId`,
+              `Google Place ID: ${ec.placeId}`,
             ].filter(Boolean).join(' | '),
           });
         }
