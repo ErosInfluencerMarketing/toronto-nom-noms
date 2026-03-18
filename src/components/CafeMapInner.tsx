@@ -82,7 +82,8 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
   const mapRef = useRef<google.maps.Map | null>(null);
   const serviceRef = useRef<google.maps.places.PlacesService | null>(null);
   const abortRef = useRef(false);
-
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const clustererRef = useRef<MarkerClusterer | null>(null);
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey,
     libraries: LIBRARIES,
