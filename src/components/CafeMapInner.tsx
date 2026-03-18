@@ -170,6 +170,27 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
     (map: google.maps.Map) => {
       mapRef.current = map;
       serviceRef.current = new google.maps.places.PlacesService(map);
+      clustererRef.current = new MarkerClusterer({
+        map,
+        markers: [],
+        renderer: {
+          render: ({ count, position }) => {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50">
+              <circle cx="25" cy="25" r="24" fill="%2314b8a6" stroke="white" stroke-width="2" opacity="0.9"/>
+              <text x="25" y="30" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="sans-serif">${count}</text>
+            </svg>`;
+            return new google.maps.Marker({
+              position,
+              icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+                scaledSize: new google.maps.Size(50, 50),
+              },
+              label: { text: ' ', color: 'transparent' },
+              zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count,
+            });
+          },
+        },
+      });
       searchCafes(map);
     },
     [searchCafes]
