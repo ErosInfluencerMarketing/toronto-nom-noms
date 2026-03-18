@@ -8,6 +8,7 @@ import {
   Shield,
   Instagram,
   Star,
+  Coffee,
 } from 'lucide-react';
 import {
   Sidebar,
