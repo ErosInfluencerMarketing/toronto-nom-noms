@@ -101,6 +101,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
   const [progress, setProgress] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
+  const [enrichProgress, setEnrichProgress] = useState('');
   const mapRef = useRef<google.maps.Map | null>(null);
   const serviceRef = useRef<google.maps.places.PlacesService | null>(null);
   const abortRef = useRef(false);
