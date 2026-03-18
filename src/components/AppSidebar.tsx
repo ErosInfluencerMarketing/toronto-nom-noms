@@ -73,6 +73,14 @@ export function AppSidebar({ activeSection }: AppSidebarProps) {
                   <span>Influencers</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => navigate('/cafe-map')}
+                  tooltip="Sydney Cafe Map"
+                >
+                  <Coffee className="h-4 w-4" />
+                  <span>Cafe Map</span>
+                </SidebarMenuButton>
               {isAdmin && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
