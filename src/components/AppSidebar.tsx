@@ -81,6 +81,7 @@ export function AppSidebar({ activeSection }: AppSidebarProps) {
                   <Coffee className="h-4 w-4" />
                   <span>Cafe Map</span>
                 </SidebarMenuButton>
+              </SidebarMenuItem>
               {isAdmin && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
