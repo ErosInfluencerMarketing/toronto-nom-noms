@@ -4,15 +4,18 @@ import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Coffee, MapPin, Search, ArrowLeft } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Coffee, MapPin, Search, ArrowLeft, Download, CheckSquare, Square } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useLeads } from '@/hooks/useLeads';
+import { LeadFormData } from '@/types/lead';
 
 const SYDNEY_CENTER = { lat: -33.8688, lng: 151.2093 };
 const MAP_CONTAINER = { width: '100%', height: '100%' };
 const LIBRARIES: ('places')[] = ['places'];
 
-// Sydney bounding box approx
 const SYDNEY_BOUNDS = {
   north: -33.65,
   south: -34.05,
@@ -33,6 +36,7 @@ interface CafePlace {
   totalRatings?: number;
   openNow?: boolean;
   photoUrl?: string;
+  website?: string;
 }
 
 interface CafeMapInnerProps {
@@ -69,25 +73,97 @@ function parsePlaceResult(r: google.maps.places.PlaceResult): CafePlace {
     totalRatings: r.user_ratings_total,
     openNow: r.opening_hours?.isOpen?.(),
     photoUrl,
+    website: r.website,
+  };
+}
+
+function cafeToLead(cafe: CafePlace): LeadFormData {
+  return {
+    business_name: cafe.name,
+    address: cafe.address,
+    city: 'Sydney',
+    category: 'Cafe',
+    website: cafe.website,
+    platform: 'noms',
+    status: 'new',
+    notes: `Rating: ${cafe.rating ?? 'N/A'}${cafe.totalRatings ? ` (${cafe.totalRatings} reviews)` : ''} | Google Place ID: ${cafe.placeId}`,
   };
 }
 
 export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
   const navigate = useNavigate();
+  const { bulkCreateLeads } = useLeads();
   const [cafes, setCafes] = useState<CafePlace[]>([]);
   const [selectedCafe, setSelectedCafe] = useState<CafePlace | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [progress, setProgress] = useState(0);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [importing, setImporting] = useState(false);
   const mapRef = useRef<google.maps.Map | null>(null);
   const serviceRef = useRef<google.maps.places.PlacesService | null>(null);
   const abortRef = useRef(false);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const clustererRef = useRef<MarkerClusterer | null>(null);
+
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey,
     libraries: LIBRARIES,
   });
+
+  const toggleSelect = (placeId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(placeId)) next.delete(placeId);
+      else next.add(placeId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === cafes.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(cafes.map((c) => c.placeId)));
+    }
+  };
+
+  const handleImportSelected = async () => {
+    const toImport = cafes.filter((c) => selectedIds.has(c.placeId));
+    if (toImport.length === 0) {
+      toast.error('No cafes selected');
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const leads = toImport.map(cafeToLead);
+      // Batch in chunks of 100
+      for (let i = 0; i < leads.length; i += 100) {
+        const chunk = leads.slice(i, i + 100);
+        await bulkCreateLeads.mutateAsync(chunk);
+      }
+      toast.success(`Imported ${toImport.length} cafes as leads`);
+      setSelectedIds(new Set());
+    } catch (e: any) {
+      toast.error('Import failed: ' + e.message);
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleImportSingle = async (cafe: CafePlace) => {
+    setImporting(true);
+    try {
+      await bulkCreateLeads.mutateAsync([cafeToLead(cafe)]);
+      toast.success(`Imported "${cafe.name}" as a lead`);
+      setSelectedCafe(null);
+    } catch (e: any) {
+      toast.error('Import failed: ' + e.message);
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const searchAllPages = useCallback(
     (service: google.maps.places.PlacesService, request: google.maps.places.TextSearchRequest): Promise<google.maps.places.PlaceResult[]> => {
@@ -124,6 +200,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
       abortRef.current = false;
       setSearching(true);
       setSelectedCafe(null);
+      setSelectedIds(new Set());
       setProgress(0);
 
       const queryBase = searchQuery ? `${searchQuery} cafe` : 'cafe';
@@ -153,7 +230,6 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
         setProgress(Math.round((completed / gridCenters.length) * 100));
         setCafes(Array.from(seen.values()));
 
-        // Small delay between grid cells to avoid rate limits
         await new Promise((res) => setTimeout(res, 200));
       }
 
@@ -195,11 +271,10 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
     },
     [searchCafes]
   );
-  // Sync markers with clusterer
+
   useEffect(() => {
     if (!mapRef.current || !clustererRef.current) return;
 
-    // Clear old markers
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
 
@@ -224,7 +299,6 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
     clustererRef.current.addMarkers(newMarkers);
   }, [cafes]);
 
-
   const handleStop = () => {
     abortRef.current = true;
   };
@@ -241,7 +315,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
-      <div className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
+      <div className="border-b border-border bg-card px-4 py-3 flex items-center gap-3 flex-wrap">
         <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -270,6 +344,44 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
           {cafes.length} cafe{cafes.length !== 1 ? 's' : ''}
         </span>
       </div>
+
+      {/* Selection / Import bar */}
+      {cafes.length > 0 && !searching && (
+        <div className="border-b border-border bg-card/80 px-4 py-2 flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleSelectAll}
+            className="gap-1.5"
+          >
+            {selectedIds.size === cafes.length ? (
+              <CheckSquare className="h-4 w-4" />
+            ) : (
+              <Square className="h-4 w-4" />
+            )}
+            {selectedIds.size === cafes.length ? 'Deselect All' : 'Select All'}
+          </Button>
+
+          {selectedIds.size > 0 && (
+            <>
+              <Badge variant="secondary">{selectedIds.size} selected</Badge>
+              <Button
+                size="sm"
+                onClick={handleImportSelected}
+                disabled={importing}
+                className="gap-1.5"
+              >
+                {importing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                Import as Leads
+              </Button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Progress bar */}
       {searching && (
@@ -306,14 +418,20 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
             fullscreenControl: true,
           }}
         >
-
           {selectedCafe && (
             <InfoWindowF
               position={{ lat: selectedCafe.lat, lng: selectedCafe.lng }}
               onCloseClick={() => setSelectedCafe(null)}
             >
-              <div className="p-1 max-w-[220px]" style={{ color: '#1a1a2e' }}>
-                <h3 className="font-semibold text-sm mb-1">{selectedCafe.name}</h3>
+              <div className="p-1 max-w-[240px]" style={{ color: '#1a1a2e' }}>
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <h3 className="font-semibold text-sm">{selectedCafe.name}</h3>
+                  <Checkbox
+                    checked={selectedIds.has(selectedCafe.placeId)}
+                    onCheckedChange={() => toggleSelect(selectedCafe.placeId)}
+                    className="mt-0.5"
+                  />
+                </div>
                 <p className="text-xs mb-1 flex items-center gap-1" style={{ color: '#64748b' }}>
                   <MapPin className="h-3 w-3 shrink-0" />
                   {selectedCafe.address}
@@ -328,6 +446,13 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
                     {selectedCafe.openNow ? 'Open now' : 'Closed'}
                   </p>
                 )}
+                <button
+                  onClick={() => handleImportSingle(selectedCafe)}
+                  disabled={importing}
+                  className="mt-2 w-full text-xs font-medium py-1.5 px-3 rounded bg-[#14b8a6] text-white hover:bg-[#0d9488] transition-colors disabled:opacity-50"
+                >
+                  {importing ? 'Importing…' : 'Import as Lead'}
+                </button>
               </div>
             </InfoWindowF>
           )}
