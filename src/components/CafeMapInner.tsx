@@ -94,11 +94,17 @@ function cafeToLead(cafe: CafePlace): LeadFormData {
 export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
   const navigate = useNavigate();
   const { bulkCreateLeads } = useLeads();
-  const [cafes, setCafes] = useState<CafePlace[]>([]);
+  const [cafes, setCafes] = useState<CafePlace[]>(() => {
+    try {
+      const cached = localStorage.getItem('cachedCafes');
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  });
   const [selectedCafe, setSelectedCafe] = useState<CafePlace | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [progress, setProgress] = useState(0);
+  const hasCachedCafes = useRef(cafes.length > 0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
   const [enrichProgress, setEnrichProgress] = useState('');
