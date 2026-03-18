@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import InstagramInsights from "./pages/InstagramInsights";
 import Influencers from "./pages/Influencers";
 import Privacy from "./pages/Privacy";
+import CafeMap from "./pages/CafeMap";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/instagram" element={<InstagramInsights />} />
             <Route path="/influencers" element={<Influencers />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/cafe-map" element={<CafeMap />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
