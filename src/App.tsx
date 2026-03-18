@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import InstagramInsights from "./pages/InstagramInsights";
 import Influencers from "./pages/Influencers";
 import Privacy from "./pages/Privacy";
+import CafeMap from "./pages/CafeMap";
 
 const queryClient = new QueryClient();
 
