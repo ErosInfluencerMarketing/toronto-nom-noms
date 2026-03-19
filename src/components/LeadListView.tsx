@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { normalizeInstagramHandle } from '@/lib/utils';
 import { Lead, LeadStatus, Platform } from '@/types/lead';
 import { StatusBadge } from './StatusBadge';
 import { PlatformBadge } from './PlatformBadge';
@@ -201,13 +202,13 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                           <Instagram className="h-3 w-3 text-muted-foreground shrink-0" />
                           {lead.instagram_handle ? (
                             <a
-                              href={`https://instagram.com/${lead.instagram_handle.replace(/^@/, '')}`}
+                              href={`https://instagram.com/${normalizeInstagramHandle(lead.instagram_handle)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-muted-foreground hover:text-primary transition-colors underline decoration-dotted underline-offset-2"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              @{lead.instagram_handle.replace(/^@/, '')}
+                              @{normalizeInstagramHandle(lead.instagram_handle)}
                             </a>
                           ) : (
                             <InlineEditCell

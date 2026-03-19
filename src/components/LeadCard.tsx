@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { normalizeInstagramHandle } from '@/lib/utils';
 import { Lead } from '@/types/lead';
 import { StatusBadge } from './StatusBadge';
 import { PlatformBadge } from './PlatformBadge';
@@ -54,14 +55,14 @@ export function LeadCard({ lead, onEdit, onDelete, onViewDetails }: LeadCardProp
                 )}
                 {lead.instagram_handle && (
                   <a
-                    href={`https://instagram.com/${lead.instagram_handle.replace(/^@/, '')}`}
+                    href={`https://instagram.com/${normalizeInstagramHandle(lead.instagram_handle)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 hover:text-primary transition-colors underline decoration-dotted underline-offset-2"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Instagram className="h-3.5 w-3.5" />
-                    @{lead.instagram_handle.replace(/^@/, '')}
+                    @{normalizeInstagramHandle(lead.instagram_handle)}
                   </a>
                 )}
               </div>
