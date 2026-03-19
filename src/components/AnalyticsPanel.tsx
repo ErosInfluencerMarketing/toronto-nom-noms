@@ -154,19 +154,39 @@ export function AnalyticsPanel({ leads, sequences = [], sequenceStatusCounts }: 
             <BarChart3 className="h-5 w-5 text-primary" />
             Analytics
           </CardTitle>
-          <Select
-            value={platformFilter}
-            onValueChange={(value) => setPlatformFilter(value as Platform | 'all')}
-          >
-            <SelectTrigger className="w-32 h-8 text-sm bg-secondary border-border">
-              <SelectValue placeholder="Platform" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Platforms</SelectItem>
-              <SelectItem value="eros">Eros</SelectItem>
-              <SelectItem value="noms">Noms</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {TIME_RANGES.map((tr) => (
+                <Button
+                  key={tr.value}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTimeRange(tr.value)}
+                  className={cn(
+                    'text-xs h-8',
+                    timeRange === tr.value
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {tr.label}
+                </Button>
+              ))}
+            </div>
+            <Select
+              value={platformFilter}
+              onValueChange={(value) => setPlatformFilter(value as Platform | 'all')}
+            >
+              <SelectTrigger className="w-32 h-8 text-sm bg-secondary border-border">
+                <SelectValue placeholder="Platform" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Platforms</SelectItem>
+                <SelectItem value="eros">Eros</SelectItem>
+                <SelectItem value="noms">Noms</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
