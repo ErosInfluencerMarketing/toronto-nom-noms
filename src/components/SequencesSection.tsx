@@ -106,7 +106,7 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
     createSequence.mutate(formData, {
       onSuccess: () => {
         setIsFormOpen(false);
-        setFormData({ name: '', lead_ids: [], steps: [{ template_id: '', delay_days: 0 }] });
+        setFormData({ name: '', lead_ids: [], sender: 'noms', steps: [{ template_id: '', delay_days: 0 }] });
       },
     });
   };
