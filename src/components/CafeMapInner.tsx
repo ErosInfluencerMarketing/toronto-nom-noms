@@ -328,7 +328,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
       setProgress(100);
       toast.success(`Found ${final.length} cafes across ${cityConfig.label}`);
     },
-    [searchQuery, searchAllPages]
+    [searchQuery, searchAllPages, cityConfig]
   );
 
   const onMapLoad = useCallback(
