@@ -106,10 +106,18 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>(() => (localStorage.getItem('dashboard_viewMode') as ViewMode) || 'card');
   
   const [search, setSearch] = useState(() => localStorage.getItem('dashboard_search') || '');
-  const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>(() => (localStorage.getItem('dashboard_statusFilter') as LeadStatus | 'all') || 'all');
-  const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>(() => (localStorage.getItem('dashboard_platformFilter') as Platform | 'all') || 'all');
-  const [categoryFilter, setCategoryFilter] = useState(() => localStorage.getItem('dashboard_categoryFilter') || 'all');
-  const [cityFilter, setCityFilter] = useState(() => localStorage.getItem('dashboard_cityFilter') || 'all');
+  const [statusFilters, setStatusFilters] = useState<LeadStatus[]>(() => {
+    try { const v = localStorage.getItem('dashboard_statusFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
+  const [platformFilters, setPlatformFilters] = useState<Platform[]>(() => {
+    try { const v = localStorage.getItem('dashboard_platformFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
+  const [categoryFilters, setCategoryFilters] = useState<string[]>(() => {
+    try { const v = localStorage.getItem('dashboard_categoryFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
+  const [cityFilters, setCityFilters] = useState<string[]>(() => {
+    try { const v = localStorage.getItem('dashboard_cityFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
