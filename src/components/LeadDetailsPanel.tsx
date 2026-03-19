@@ -148,12 +148,12 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
             <div className="flex items-center gap-2 text-sm">
               <Instagram className="h-4 w-4 text-muted-foreground shrink-0" />
               <a
-                href={`https://instagram.com/${lead.instagram_handle.replace(/^@/, '')}`}
+                href={`https://instagram.com/${normalizeInstagramHandle(lead.instagram_handle)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-foreground hover:text-primary transition-colors underline decoration-dotted underline-offset-2"
               >
-                @{lead.instagram_handle.replace(/^@/, '')}
+                @{normalizeInstagramHandle(lead.instagram_handle)}
               </a>
             </div>
           )}
