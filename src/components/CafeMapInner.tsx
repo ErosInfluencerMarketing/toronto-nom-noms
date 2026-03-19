@@ -411,7 +411,41 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <Coffee className="h-5 w-5 text-primary" />
-        <h1 className="text-lg font-semibold text-foreground">Sydney Cafes</h1>
+        <h1 className="text-lg font-semibold text-foreground">{cityConfig.label} Cafes</h1>
+
+        {/* City switcher */}
+        <select
+          value={selectedCity}
+          onChange={(e) => {
+            const newCity = e.target.value;
+            setSelectedCity(newCity);
+            localStorage.setItem('selectedCafeCity', newCity);
+            const config = CITIES[newCity];
+            try {
+              const cached = localStorage.getItem(config.cacheKey);
+              const parsed = cached ? JSON.parse(cached) : [];
+              setCafes(parsed);
+              hasCachedCafes.current = parsed.length > 0;
+            } catch {
+              setCafes([]);
+              hasCachedCafes.current = false;
+            }
+            setSelectedCafe(null);
+            setSelectedIds(new Set());
+            if (mapRef.current) {
+              mapRef.current.panTo(config.center);
+              mapRef.current.setZoom(12);
+              if (!hasCachedCafes.current) {
+                // Will trigger on next render via effect
+              }
+            }
+          }}
+          className="h-9 rounded-md border border-border bg-card text-foreground px-3 text-sm"
+        >
+          {Object.entries(CITIES).map(([key, cfg]) => (
+            <option key={key} value={key}>{cfg.label}</option>
+          ))}
+        </select>
 
         <div className="flex-1 flex items-center gap-2 max-w-md ml-auto">
           <Input
