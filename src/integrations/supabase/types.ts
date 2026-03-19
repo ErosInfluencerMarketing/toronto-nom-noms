@@ -237,6 +237,7 @@ export type Database = {
           max_followups: number
           name: string | null
           next_send_at: string | null
+          sender: string
           status: string
           template_id: string
           updated_at: string
@@ -251,6 +252,7 @@ export type Database = {
           max_followups?: number
           name?: string | null
           next_send_at?: string | null
+          sender?: string
           status?: string
           template_id: string
           updated_at?: string
@@ -265,6 +267,7 @@ export type Database = {
           max_followups?: number
           name?: string | null
           next_send_at?: string | null
+          sender?: string
           status?: string
           template_id?: string
           updated_at?: string

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Sequence, SequenceFormData, SequenceStatus } from '@/types/sequence';
+import { Sequence, SequenceFormData, SequenceStatus, SenderIdentity } from '@/types/sequence';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -149,6 +149,7 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
             interval_days: firstDelay,
             current_step: 0,
             status: 'active',
+            sender: formData.sender,
             next_send_at: nextSend.toISOString(),
           } as any)
           .select()

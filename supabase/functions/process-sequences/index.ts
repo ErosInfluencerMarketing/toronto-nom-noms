@@ -135,6 +135,10 @@ Deno.serve(async (req) => {
           ? fillPlaceholders(template.subject, lead)
           : defaultSubject;
 
+        const fromAddress = seq.sender === "eros"
+          ? "Eros Marketing <hello@erosmarketing.io>"
+          : "The Noms Company Inc. <hello@nomspass.com>";
+
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -142,7 +146,7 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "The Noms Company Inc. <hello@nomspass.com>",
+            from: fromAddress,
             to: [lead.email],
             subject,
             html: message,

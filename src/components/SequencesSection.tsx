@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useSequences } from '@/hooks/useSequences';
 import { useTemplates } from '@/hooks/useTemplates';
 import { useLeads } from '@/hooks/useLeads';
 import { Lead, Platform } from '@/types/lead';
-import { SequenceFormData, SequenceStatus } from '@/types/sequence';
+import { SequenceFormData, SequenceStatus, SenderIdentity } from '@/types/sequence';
 import { SequenceStepForm } from '@/components/SequenceStepForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -66,6 +73,7 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
   const [formData, setFormData] = useState<SequenceFormData>({
     name: '',
     lead_ids: [],
+    sender: 'noms',
     steps: [{ template_id: '', delay_days: 0 }],
   });
 
@@ -105,7 +113,7 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
     createSequence.mutate(formData, {
       onSuccess: () => {
         setIsFormOpen(false);
-        setFormData({ name: '', lead_ids: [], steps: [{ template_id: '', delay_days: 0 }] });
+        setFormData({ name: '', lead_ids: [], sender: 'noms', steps: [{ template_id: '', delay_days: 0 }] });
       },
     });
   };
@@ -334,6 +342,22 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="bg-secondary border-border"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Send From</Label>
+              <Select
+                value={formData.sender}
+                onValueChange={(v) => setFormData({ ...formData, sender: v as SenderIdentity })}
+              >
+                <SelectTrigger className="bg-secondary border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="noms">The Noms Company — hello@nomspass.com</SelectItem>
+                  <SelectItem value="eros">Eros Marketing — hello@erosmarketing.io</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
