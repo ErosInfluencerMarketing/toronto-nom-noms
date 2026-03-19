@@ -66,6 +66,7 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
   const [formData, setFormData] = useState<SequenceFormData>({
     name: '',
     lead_ids: [],
+    sender: 'noms',
     steps: [{ template_id: '', delay_days: 0 }],
   });
 
