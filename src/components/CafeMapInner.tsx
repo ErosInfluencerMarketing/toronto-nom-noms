@@ -369,6 +369,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
     }
   }, [selectedCity, searchCafes]);
 
+  useEffect(() => {
     if (!mapRef.current || !clustererRef.current) return;
 
     markersRef.current.forEach((m) => m.setMap(null));
