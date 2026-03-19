@@ -338,6 +338,21 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
             </div>
 
             <div className="space-y-2">
+              <Label>Send From</Label>
+              <Select
+                value={formData.sender}
+                onValueChange={(v) => setFormData({ ...formData, sender: v as SenderIdentity })}
+              >
+                <SelectTrigger className="bg-secondary border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="noms">The Noms Company — hello@nomspass.com</SelectItem>
+                  <SelectItem value="eros">Eros Marketing — hello@erosmarketing.io</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
               <Label>Leads ({formData.lead_ids.length} selected)</Label>
               <div className="flex gap-1 mb-2 flex-wrap">
                 {(['all', 'eros', 'noms'] as const).map((p) => (
