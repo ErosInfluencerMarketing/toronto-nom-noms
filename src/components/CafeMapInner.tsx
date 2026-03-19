@@ -92,11 +92,11 @@ function parsePlaceResult(r: google.maps.places.PlaceResult): CafePlace {
   };
 }
 
-function cafeToLead(cafe: CafePlace): LeadFormData {
+function cafeToLead(cafe: CafePlace, cityLabel: string): LeadFormData {
   return {
     business_name: cafe.name,
     address: cafe.address,
-    city: 'Sydney',
+    city: cityLabel,
     category: 'Cafe',
     website: cafe.website,
     platform: 'noms',
