@@ -13,19 +13,33 @@ import { useLeads } from '@/hooks/useLeads';
 import { supabase } from '@/integrations/supabase/client';
 import { LeadFormData } from '@/types/lead';
 
-const SYDNEY_CENTER = { lat: -33.8688, lng: 151.2093 };
 const MAP_CONTAINER = { width: '100%', height: '100%' };
 const LIBRARIES: ('places')[] = ['places'];
 
-const SYDNEY_BOUNDS = {
-  north: -33.65,
-  south: -34.05,
-  west: 150.95,
-  east: 151.35,
-};
-
 const GRID_COLS = 6;
 const GRID_ROWS = 5;
+
+interface CityConfig {
+  label: string;
+  center: { lat: number; lng: number };
+  bounds: { north: number; south: number; west: number; east: number };
+  cacheKey: string;
+}
+
+const CITIES: Record<string, CityConfig> = {
+  sydney: {
+    label: 'Sydney',
+    center: { lat: -33.8688, lng: 151.2093 },
+    bounds: { north: -33.65, south: -34.05, west: 150.95, east: 151.35 },
+    cacheKey: 'cachedCafes_sydney',
+  },
+  toronto: {
+    label: 'Toronto',
+    center: { lat: 43.6532, lng: -79.3832 },
+    bounds: { north: 43.75, south: 43.58, west: -79.55, east: -79.20 },
+    cacheKey: 'cachedCafes_toronto',
+  },
+};
 
 interface CafePlace {
   placeId: string;
