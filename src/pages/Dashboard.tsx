@@ -118,6 +118,9 @@ export default function Dashboard() {
   const [cityFilters, setCityFilters] = useState<string[]>(() => {
     try { const v = localStorage.getItem('dashboard_cityFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
+  const [contactFilters, setContactFilters] = useState<import('@/components/LeadFilters').ContactFilter[]>(() => {
+    try { const v = localStorage.getItem('dashboard_contactFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -154,10 +157,23 @@ export default function Dashboard() {
       const matchesPlatform = platformFilters.length === 0 || platformFilters.includes(lead.platform);
       const matchesCategory = categoryFilters.length === 0 || (lead.category && categoryFilters.includes(lead.category));
       const matchesCity = cityFilters.length === 0 || (lead.city && cityFilters.includes(lead.city));
+
+      let matchesContact = true;
+      if (contactFilters.length > 0) {
+        const hasEmail = !!lead.email;
+        const hasIg = !!lead.instagram_handle;
+        matchesContact = contactFilters.some((f) => {
+          if (f === 'both') return hasEmail && hasIg;
+          if (f === 'email_only') return hasEmail && !hasIg;
+          if (f === 'instagram_only') return !hasEmail && hasIg;
+          if (f === 'neither') return !hasEmail && !hasIg;
+          return false;
+        });
+      }
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity;
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact;
     });
-  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
@@ -166,13 +182,14 @@ export default function Dashboard() {
   useEffect(() => { localStorage.setItem('dashboard_platformFilters', JSON.stringify(platformFilters)); }, [platformFilters]);
   useEffect(() => { localStorage.setItem('dashboard_categoryFilters', JSON.stringify(categoryFilters)); }, [categoryFilters]);
   useEffect(() => { localStorage.setItem('dashboard_cityFilters', JSON.stringify(cityFilters)); }, [cityFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_contactFilters', JSON.stringify(contactFilters)); }, [contactFilters]);
   useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
   useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
 
   useEffect(() => {
     setCurrentPage(1);
     localStorage.setItem('dashboard_page', '1');
-  }, [search, statusFilters, platformFilters, categoryFilters, cityFilters]);
+  }, [search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters]);
 
   const handleResetFilters = () => {
     setSearch('');
@@ -180,6 +197,7 @@ export default function Dashboard() {
     setPlatformFilters([]);
     setCategoryFilters([]);
     setCityFilters([]);
+    setContactFilters([]);
   };
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
@@ -337,6 +355,8 @@ export default function Dashboard() {
             cityFilters={cityFilters}
             onCityFiltersChange={setCityFilters}
             cities={cities}
+            contactFilters={contactFilters}
+            onContactFiltersChange={setContactFilters}
             onReset={handleResetFilters}
           />
           

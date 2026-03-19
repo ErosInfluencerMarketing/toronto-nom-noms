@@ -18,6 +18,8 @@ import {
 import { Search, X, RotateCcw, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+export type ContactFilter = 'both' | 'email_only' | 'instagram_only' | 'neither';
+
 interface LeadFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
@@ -31,6 +33,8 @@ interface LeadFiltersProps {
   cityFilters: string[];
   onCityFiltersChange: (value: string[]) => void;
   cities: string[];
+  contactFilters: ContactFilter[];
+  onContactFiltersChange: (value: ContactFilter[]) => void;
   onReset: () => void;
 }
 
@@ -39,6 +43,13 @@ const statusOptions: { value: LeadStatus; label: string }[] = [
   { value: 'contacted', label: 'Contacted' },
   { value: 'demo_booked', label: 'Demo Booked' },
   { value: 'onboarded', label: 'Onboarded' },
+];
+
+const contactOptions: { value: ContactFilter; label: string }[] = [
+  { value: 'both', label: 'Email & Instagram' },
+  { value: 'email_only', label: 'Email Only' },
+  { value: 'instagram_only', label: 'Instagram Only' },
+  { value: 'neither', label: 'No Contact Info' },
 ];
 
 const platformOptions: { value: Platform; label: string }[] = [
@@ -124,6 +135,8 @@ export function LeadFilters({
   cityFilters,
   onCityFiltersChange,
   cities,
+  contactFilters,
+  onContactFiltersChange,
   onReset,
 }: LeadFiltersProps) {
   const hasActiveFilters =
@@ -131,7 +144,8 @@ export function LeadFilters({
     statusFilters.length > 0 ||
     platformFilters.length > 0 ||
     categoryFilters.length > 0 ||
-    cityFilters.length > 0;
+    cityFilters.length > 0 ||
+    contactFilters.length > 0;
 
   const categoryOptions = categories.map((c) => ({ value: c, label: c }));
   const cityOptions = cities.map((c) => ({ value: c, label: c }));
@@ -171,6 +185,13 @@ export function LeadFilters({
           options={platformOptions}
           selected={platformFilters}
           onChange={onPlatformFiltersChange}
+        />
+
+        <MultiSelectPopover
+          label="Contact Info"
+          options={contactOptions}
+          selected={contactFilters}
+          onChange={onContactFiltersChange}
         />
 
         {categories.length > 0 && (
