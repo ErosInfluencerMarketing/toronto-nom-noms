@@ -158,6 +158,20 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
             </div>
           </div>
 
+          {/* Sender selection */}
+          <div className="space-y-2">
+            <Label>Send from</Label>
+            <Select value={sender} onValueChange={setSender}>
+              <SelectTrigger className="bg-secondary border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="noms">hello@nomspass.com</SelectItem>
+                <SelectItem value="eros">hello@erosmarketing.io</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Template selector */}
           <div className="space-y-2">
             <Label>Template</Label>

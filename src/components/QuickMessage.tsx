@@ -142,6 +142,22 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Sender selection */}
+          {sendEmail && (
+            <div className="space-y-2">
+              <Label>Send from</Label>
+              <Select value={sender} onValueChange={setSender}>
+                <SelectTrigger className="bg-secondary border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="noms">hello@nomspass.com</SelectItem>
+                  <SelectItem value="eros">hello@erosmarketing.io</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Available channels */}
           <div className="space-y-2">
             <Label>Send via</Label>

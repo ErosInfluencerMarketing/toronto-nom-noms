@@ -63,7 +63,9 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "The Noms Company Inc. <hello@nomspass.com>",
+              from: sender === "eros"
+                ? "Eros Marketing <hello@erosmarketing.io>"
+                : "The Noms Company Inc. <hello@nomspass.com>",
               to: [lead.email],
               subject: subject || `Hey ${lead.business_name}!`,
               html: message.replace(/\n/g, '<br>'),
