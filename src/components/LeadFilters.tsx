@@ -135,6 +135,8 @@ export function LeadFilters({
   cityFilters,
   onCityFiltersChange,
   cities,
+  contactFilters,
+  onContactFiltersChange,
   onReset,
 }: LeadFiltersProps) {
   const hasActiveFilters =
@@ -142,7 +144,8 @@ export function LeadFilters({
     statusFilters.length > 0 ||
     platformFilters.length > 0 ||
     categoryFilters.length > 0 ||
-    cityFilters.length > 0;
+    cityFilters.length > 0 ||
+    contactFilters.length > 0;
 
   const categoryOptions = categories.map((c) => ({ value: c, label: c }));
   const cityOptions = cities.map((c) => ({ value: c, label: c }));
