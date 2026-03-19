@@ -103,19 +103,19 @@ export default function Dashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('card');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => (localStorage.getItem('dashboard_viewMode') as ViewMode) || 'card');
   
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
-  const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [cityFilter, setCityFilter] = useState('all');
+  const [search, setSearch] = useState(() => localStorage.getItem('dashboard_search') || '');
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>(() => (localStorage.getItem('dashboard_statusFilter') as LeadStatus | 'all') || 'all');
+  const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>(() => (localStorage.getItem('dashboard_platformFilter') as Platform | 'all') || 'all');
+  const [categoryFilter, setCategoryFilter] = useState(() => localStorage.getItem('dashboard_categoryFilter') || 'all');
+  const [cityFilter, setCityFilter] = useState(() => localStorage.getItem('dashboard_cityFilter') || 'all');
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(100);
+  const [currentPage, setCurrentPage] = useState(() => Number(localStorage.getItem('dashboard_page')) || 1);
+  const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem('dashboard_pageSize')) || 100);
 
   const categories = useMemo(() => {
     const cats = new Set<string>();
