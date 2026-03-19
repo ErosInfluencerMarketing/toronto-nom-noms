@@ -71,6 +71,7 @@ export function useLeads() {
       
       const leadsWithUserId = leadsData.map(lead => ({
         ...lead,
+        instagram_handle: normalizeInstagramHandle(lead.instagram_handle) || undefined,
         user_id: user.id,
         assigned_user_id: user.id,
       }));
