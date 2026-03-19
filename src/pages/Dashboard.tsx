@@ -186,10 +186,15 @@ export default function Dashboard() {
   useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
   useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
 
+  const filterKey = JSON.stringify([search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters]);
+  const prevFilterKey = useRef(filterKey);
   useEffect(() => {
-    setCurrentPage(1);
-    localStorage.setItem('dashboard_page', '1');
-  }, [search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters]);
+    if (prevFilterKey.current !== filterKey) {
+      prevFilterKey.current = filterKey;
+      setCurrentPage(1);
+      localStorage.setItem('dashboard_page', '1');
+    }
+  }, [filterKey]);
 
   const handleResetFilters = () => {
     setSearch('');
