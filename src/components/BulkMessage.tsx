@@ -49,6 +49,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [messageTemplate, setMessageTemplate] = useState('');
   const [subjectTemplate, setSubjectTemplate] = useState('Hey [Business Name]!');
+  const [sender, setSender] = useState<string>('noms');
   const [isSending, setIsSending] = useState(false);
   const [progress, setProgress] = useState({ sent: 0, failed: 0, total: 0 });
 
