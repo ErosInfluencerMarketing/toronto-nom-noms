@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { normalizeInstagramHandle } from '@/lib/utils';
 import { Lead, LeadFormData, Platform, LeadStatus } from '@/types/lead';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
