@@ -106,10 +106,18 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>(() => (localStorage.getItem('dashboard_viewMode') as ViewMode) || 'card');
   
   const [search, setSearch] = useState(() => localStorage.getItem('dashboard_search') || '');
-  const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>(() => (localStorage.getItem('dashboard_statusFilter') as LeadStatus | 'all') || 'all');
-  const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>(() => (localStorage.getItem('dashboard_platformFilter') as Platform | 'all') || 'all');
-  const [categoryFilter, setCategoryFilter] = useState(() => localStorage.getItem('dashboard_categoryFilter') || 'all');
-  const [cityFilter, setCityFilter] = useState(() => localStorage.getItem('dashboard_cityFilter') || 'all');
+  const [statusFilters, setStatusFilters] = useState<LeadStatus[]>(() => {
+    try { const v = localStorage.getItem('dashboard_statusFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
+  const [platformFilters, setPlatformFilters] = useState<Platform[]>(() => {
+    try { const v = localStorage.getItem('dashboard_platformFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
+  const [categoryFilters, setCategoryFilters] = useState<string[]>(() => {
+    try { const v = localStorage.getItem('dashboard_categoryFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
+  const [cityFilters, setCityFilters] = useState<string[]>(() => {
+    try { const v = localStorage.getItem('dashboard_cityFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -142,29 +150,37 @@ export default function Dashboard() {
         (lead.instagram_handle && lead.instagram_handle.toLowerCase().includes(s)) ||
         (lead.email && lead.email.toLowerCase().includes(s));
       
-      const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
-      const matchesPlatform = platformFilter === 'all' || lead.platform === platformFilter;
-      const matchesCategory = categoryFilter === 'all' || lead.category === categoryFilter;
-      const matchesCity = cityFilter === 'all' || lead.city === cityFilter;
+      const matchesStatus = statusFilters.length === 0 || statusFilters.includes(lead.status);
+      const matchesPlatform = platformFilters.length === 0 || platformFilters.includes(lead.platform);
+      const matchesCategory = categoryFilters.length === 0 || (lead.category && categoryFilters.includes(lead.category));
+      const matchesCity = cityFilters.length === 0 || (lead.city && cityFilters.includes(lead.city));
       
       return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity;
     });
-  }, [leads, search, statusFilter, platformFilter, categoryFilter, cityFilter]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
   useEffect(() => { localStorage.setItem('dashboard_search', search); }, [search]);
-  useEffect(() => { localStorage.setItem('dashboard_statusFilter', statusFilter); }, [statusFilter]);
-  useEffect(() => { localStorage.setItem('dashboard_platformFilter', platformFilter); }, [platformFilter]);
-  useEffect(() => { localStorage.setItem('dashboard_categoryFilter', categoryFilter); }, [categoryFilter]);
-  useEffect(() => { localStorage.setItem('dashboard_cityFilter', cityFilter); }, [cityFilter]);
+  useEffect(() => { localStorage.setItem('dashboard_statusFilters', JSON.stringify(statusFilters)); }, [statusFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_platformFilters', JSON.stringify(platformFilters)); }, [platformFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_categoryFilters', JSON.stringify(categoryFilters)); }, [categoryFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_cityFilters', JSON.stringify(cityFilters)); }, [cityFilters]);
   useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
   useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
 
   useEffect(() => {
     setCurrentPage(1);
     localStorage.setItem('dashboard_page', '1');
-  }, [search, statusFilter, platformFilter, categoryFilter, cityFilter]);
+  }, [search, statusFilters, platformFilters, categoryFilters, cityFilters]);
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setStatusFilters([]);
+    setPlatformFilters([]);
+    setCategoryFilters([]);
+    setCityFilters([]);
+  };
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
   const paginatedLeads = useMemo(() => {
@@ -311,16 +327,17 @@ export default function Dashboard() {
           <LeadFilters
             search={search}
             onSearchChange={setSearch}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            platformFilter={platformFilter}
-            onPlatformFilterChange={setPlatformFilter}
-            categoryFilter={categoryFilter}
-            onCategoryFilterChange={setCategoryFilter}
+            statusFilters={statusFilters}
+            onStatusFiltersChange={setStatusFilters}
+            platformFilters={platformFilters}
+            onPlatformFiltersChange={setPlatformFilters}
+            categoryFilters={categoryFilters}
+            onCategoryFiltersChange={setCategoryFilters}
             categories={categories}
-            cityFilter={cityFilter}
-            onCityFilterChange={setCityFilter}
+            cityFilters={cityFilters}
+            onCityFiltersChange={setCityFilters}
             cities={cities}
+            onReset={handleResetFilters}
           />
           
           <div className="flex items-center gap-3 flex-wrap">
@@ -411,11 +428,11 @@ export default function Dashboard() {
             </div>
             <h3 className="text-lg font-medium text-foreground mb-1">No leads found</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              {search || statusFilter !== 'all' || platformFilter !== 'all'
+               {search || statusFilters.length > 0 || platformFilters.length > 0
                 ? 'Try adjusting your filters'
                 : 'Get started by adding your first lead'}
             </p>
-            {!search && statusFilter === 'all' && platformFilter === 'all' && (
+            {!search && statusFilters.length === 0 && platformFilters.length === 0 && (
               <Button onClick={() => setIsFormOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Your First Lead

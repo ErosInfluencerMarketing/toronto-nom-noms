@@ -1,6 +1,7 @@
 import { Platform, LeadStatus } from '@/types/lead';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -8,54 +9,135 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Search, X, RotateCcw, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LeadFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
-  statusFilter: LeadStatus | 'all';
-  onStatusFilterChange: (value: LeadStatus | 'all') => void;
-  platformFilter: Platform | 'all';
-  onPlatformFilterChange: (value: Platform | 'all') => void;
-  categoryFilter: string;
-  onCategoryFilterChange: (value: string) => void;
+  statusFilters: LeadStatus[];
+  onStatusFiltersChange: (value: LeadStatus[]) => void;
+  platformFilters: Platform[];
+  onPlatformFiltersChange: (value: Platform[]) => void;
+  categoryFilters: string[];
+  onCategoryFiltersChange: (value: string[]) => void;
   categories: string[];
-  cityFilter: string;
-  onCityFilterChange: (value: string) => void;
+  cityFilters: string[];
+  onCityFiltersChange: (value: string[]) => void;
   cities: string[];
+  onReset: () => void;
 }
 
-const statusOptions: { value: LeadStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Status' },
+const statusOptions: { value: LeadStatus; label: string }[] = [
   { value: 'new', label: 'New' },
   { value: 'contacted', label: 'Contacted' },
   { value: 'demo_booked', label: 'Demo Booked' },
   { value: 'onboarded', label: 'Onboarded' },
 ];
 
-const platformOptions: { value: Platform | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Platforms' },
+const platformOptions: { value: Platform; label: string }[] = [
   { value: 'eros', label: 'Eros' },
   { value: 'noms', label: 'Noms' },
 ];
 
+function toggleValue<T>(arr: T[], val: T): T[] {
+  return arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val];
+}
+
+function MultiSelectPopover<T extends string>({
+  label,
+  options,
+  selected,
+  onChange,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  selected: T[];
+  onChange: (val: T[]) => void;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            'text-xs gap-1 h-8 border-border bg-secondary',
+            selected.length > 0 && 'border-primary/50 bg-primary/10 text-primary'
+          )}
+        >
+          {label}
+          {selected.length > 0 && (
+            <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px] bg-primary/20 text-primary">
+              {selected.length}
+            </Badge>
+          )}
+          <ChevronDown className="h-3 w-3 ml-0.5 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-44 p-2 bg-popover border-border z-50" align="start">
+        <div className="space-y-1">
+          {options.map((opt) => (
+            <label
+              key={opt.value}
+              className="flex items-center gap-2 px-2 py-1.5 rounded text-sm cursor-pointer hover:bg-accent"
+            >
+              <Checkbox
+                checked={selected.includes(opt.value)}
+                onCheckedChange={() => onChange(toggleValue(selected, opt.value))}
+              />
+              <span className="text-foreground">{opt.label}</span>
+            </label>
+          ))}
+          {selected.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs text-muted-foreground mt-1"
+              onClick={() => onChange([])}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function LeadFilters({
   search,
   onSearchChange,
-  statusFilter,
-  onStatusFilterChange,
-  platformFilter,
-  onPlatformFilterChange,
-  categoryFilter,
-  onCategoryFilterChange,
+  statusFilters,
+  onStatusFiltersChange,
+  platformFilters,
+  onPlatformFiltersChange,
+  categoryFilters,
+  onCategoryFiltersChange,
   categories,
-  cityFilter,
-  onCityFilterChange,
+  cityFilters,
+  onCityFiltersChange,
   cities,
+  onReset,
 }: LeadFiltersProps) {
+  const hasActiveFilters =
+    search !== '' ||
+    statusFilters.length > 0 ||
+    platformFilters.length > 0 ||
+    categoryFilters.length > 0 ||
+    cityFilters.length > 0;
+
+  const categoryOptions = categories.map((c) => ({ value: c, label: c }));
+  const cityOptions = cities.map((c) => ({ value: c, label: c }));
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -75,83 +157,52 @@ export function LeadFilters({
           </Button>
         )}
       </div>
-      
+
       <div className="flex flex-wrap gap-2 items-center">
-        <div className="flex flex-wrap gap-1">
-          {statusOptions.map((option) => (
-            <Button
-              key={option.value}
-              variant="ghost"
-              size="sm"
-              onClick={() => onStatusFilterChange(option.value)}
-              className={cn(
-                'text-xs',
-                statusFilter === option.value
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {option.label}
-            </Button>
-          ))}
-        </div>
-        
-        <div className="w-px h-6 bg-border self-center mx-2" />
-        
-        <div className="flex flex-wrap gap-1">
-          {platformOptions.map((option) => (
-            <Button
-              key={option.value}
-              variant="ghost"
-              size="sm"
-              onClick={() => onPlatformFilterChange(option.value)}
-              className={cn(
-                'text-xs',
-                platformFilter === option.value
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {option.label}
-            </Button>
-          ))}
-        </div>
+        <MultiSelectPopover
+          label="Status"
+          options={statusOptions}
+          selected={statusFilters}
+          onChange={onStatusFiltersChange}
+        />
+
+        <MultiSelectPopover
+          label="Platform"
+          options={platformOptions}
+          selected={platformFilters}
+          onChange={onPlatformFiltersChange}
+        />
 
         {categories.length > 0 && (
-          <>
-            <div className="w-px h-6 bg-border self-center mx-2" />
-            <Select value={categoryFilter} onValueChange={onCategoryFilterChange}>
-              <SelectTrigger className="w-[160px] h-8 text-xs bg-secondary border-border">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border-border z-50">
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </>
+          <MultiSelectPopover
+            label="Category"
+            options={categoryOptions}
+            selected={categoryFilters}
+            onChange={onCategoryFiltersChange}
+          />
         )}
 
         {cities.length > 0 && (
+          <MultiSelectPopover
+            label="City"
+            options={cityOptions}
+            selected={cityFilters}
+            onChange={onCityFiltersChange}
+          />
+        )}
+
+        {hasActiveFilters && (
           <>
-            <div className="w-px h-6 bg-border self-center mx-2" />
-            <Select value={cityFilter} onValueChange={onCityFilterChange}>
-              <SelectTrigger className="w-[160px] h-8 text-xs bg-secondary border-border">
-                <SelectValue placeholder="All Cities" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border-border z-50">
-                <SelectItem value="all">All Cities</SelectItem>
-                {cities.map((city) => (
-                  <SelectItem key={city} value={city}>
-                    {city}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="w-px h-6 bg-border self-center mx-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="text-xs text-muted-foreground hover:text-foreground gap-1.5 h-8"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Reset Filters
+            </Button>
           </>
         )}
       </div>
