@@ -18,6 +18,8 @@ import {
 import { Search, X, RotateCcw, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+export type ContactFilter = 'both' | 'email_only' | 'instagram_only' | 'neither';
+
 interface LeadFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
@@ -31,6 +33,8 @@ interface LeadFiltersProps {
   cityFilters: string[];
   onCityFiltersChange: (value: string[]) => void;
   cities: string[];
+  contactFilters: ContactFilter[];
+  onContactFiltersChange: (value: ContactFilter[]) => void;
   onReset: () => void;
 }
 
