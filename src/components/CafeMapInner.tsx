@@ -524,7 +524,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
       <div className="flex-1 relative">
         <GoogleMap
           mapContainerStyle={MAP_CONTAINER}
-          center={SYDNEY_CENTER}
+          center={cityConfig.center}
           zoom={12}
           onLoad={onMapLoad}
           options={{
