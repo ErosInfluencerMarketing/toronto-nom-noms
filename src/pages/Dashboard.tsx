@@ -327,16 +327,17 @@ export default function Dashboard() {
           <LeadFilters
             search={search}
             onSearchChange={setSearch}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            platformFilter={platformFilter}
-            onPlatformFilterChange={setPlatformFilter}
-            categoryFilter={categoryFilter}
-            onCategoryFilterChange={setCategoryFilter}
+            statusFilters={statusFilters}
+            onStatusFiltersChange={setStatusFilters}
+            platformFilters={platformFilters}
+            onPlatformFiltersChange={setPlatformFilters}
+            categoryFilters={categoryFilters}
+            onCategoryFiltersChange={setCategoryFilters}
             categories={categories}
-            cityFilter={cityFilter}
-            onCityFilterChange={setCityFilter}
+            cityFilters={cityFilters}
+            onCityFiltersChange={setCityFilters}
             cities={cities}
+            onReset={handleResetFilters}
           />
           
           <div className="flex items-center gap-3 flex-wrap">
