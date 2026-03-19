@@ -204,7 +204,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
       } catch (e) {
         console.error('Enrich batch error:', e);
         for (const cafe of batch) {
-          batchLeads.push(cafeToLead(cafe));
+          batchLeads.push(cafeToLead(cafe, cityConfig.label));
         }
       }
 
