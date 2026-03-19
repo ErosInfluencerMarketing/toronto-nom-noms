@@ -189,7 +189,7 @@ export default function Dashboard() {
   useEffect(() => {
     setCurrentPage(1);
     localStorage.setItem('dashboard_page', '1');
-  }, [search, statusFilters, platformFilters, categoryFilters, cityFilters]);
+  }, [search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters]);
 
   const handleResetFilters = () => {
     setSearch('');
