@@ -168,9 +168,9 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                         <Checkbox checked={isSelected} onCheckedChange={() => toggleOne(lead.id)} />
                       </TableCell>
                     )}
-                    <TableCell className="font-medium text-foreground">
+                    <TableCell className="font-medium text-foreground truncate">
                       <span
-                        className="cursor-pointer hover:text-primary transition-colors"
+                        className="cursor-pointer hover:text-primary transition-colors block truncate"
                         onClick={() => onViewDetails?.(lead)}
                       >
                         <InlineEditCell
