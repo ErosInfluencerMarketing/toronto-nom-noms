@@ -112,7 +112,7 @@ export function LeadImport({ onImport, isLoading }: LeadImportProps) {
           owner_name: normalizedRow.owner_name ? String(normalizedRow.owner_name).trim() : undefined,
           email: normalizedRow.email ? String(normalizedRow.email).trim() : undefined,
           instagram_handle: normalizedRow.instagram_handle || normalizedRow.instagram 
-            ? String(normalizedRow.instagram_handle || normalizedRow.instagram).trim() 
+            ? normalizeInstagramHandle(String(normalizedRow.instagram_handle || normalizedRow.instagram))
             : undefined,
           platform,
           status,

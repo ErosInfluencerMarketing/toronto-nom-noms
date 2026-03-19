@@ -171,7 +171,10 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
               <Input
                 id="instagram_handle"
                 value={formData.instagram_handle}
-                onChange={(e) => setFormData({ ...formData, instagram_handle: e.target.value.replace('@', '') })}
+                onChange={(e) => {
+                  const { normalizeInstagramHandle } = require('@/lib/utils');
+                  setFormData({ ...formData, instagram_handle: normalizeInstagramHandle(e.target.value) });
+                }}
                 className="bg-secondary border-border"
                 placeholder="@handle"
               />
