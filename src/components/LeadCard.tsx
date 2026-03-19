@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { normalizeInstagramHandle } from '@/lib/utils';
 import { Lead } from '@/types/lead';
 import { StatusBadge } from './StatusBadge';
 import { PlatformBadge } from './PlatformBadge';
