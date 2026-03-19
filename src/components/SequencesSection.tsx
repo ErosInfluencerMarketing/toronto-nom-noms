@@ -360,6 +360,7 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
               </Select>
             </div>
 
+            <div className="space-y-2">
               <Label>Leads ({formData.lead_ids.length} selected)</Label>
               <div className="flex gap-1 mb-2 flex-wrap">
                 {(['all', 'eros', 'noms'] as const).map((p) => (
