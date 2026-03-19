@@ -323,10 +323,10 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
 
       const final = Array.from(seen.values());
       setCafes(final);
-      try { localStorage.setItem('cachedCafes', JSON.stringify(final)); } catch {}
+      try { localStorage.setItem(cityConfig.cacheKey, JSON.stringify(final)); } catch {}
       setSearching(false);
       setProgress(100);
-      toast.success(`Found ${final.length} cafes across Sydney`);
+      toast.success(`Found ${final.length} cafes across ${cityConfig.label}`);
     },
     [searchQuery, searchAllPages]
   );
