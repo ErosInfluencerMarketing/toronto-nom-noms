@@ -58,15 +58,15 @@ interface CafeMapInnerProps {
   apiKey: string;
 }
 
-function generateGridCenters() {
+function generateGridCenters(bounds: CityConfig['bounds']) {
   const centers: { lat: number; lng: number }[] = [];
-  const latStep = (SYDNEY_BOUNDS.north - SYDNEY_BOUNDS.south) / GRID_ROWS;
-  const lngStep = (SYDNEY_BOUNDS.east - SYDNEY_BOUNDS.west) / GRID_COLS;
+  const latStep = (bounds.north - bounds.south) / GRID_ROWS;
+  const lngStep = (bounds.east - bounds.west) / GRID_COLS;
   for (let r = 0; r < GRID_ROWS; r++) {
     for (let c = 0; c < GRID_COLS; c++) {
       centers.push({
-        lat: SYDNEY_BOUNDS.south + latStep * (r + 0.5),
-        lng: SYDNEY_BOUNDS.west + lngStep * (c + 0.5),
+        lat: bounds.south + latStep * (r + 0.5),
+        lng: bounds.west + lngStep * (c + 0.5),
       });
     }
   }
