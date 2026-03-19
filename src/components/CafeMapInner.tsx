@@ -187,7 +187,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
           batchLeads.push({
             business_name: ec.name || original.name,
             address: ec.address || original.address,
-            city: 'Sydney',
+            city: cityConfig.label,
             category: 'Cafe',
             website: ec.website || original.website,
             email: ec.email || undefined,
