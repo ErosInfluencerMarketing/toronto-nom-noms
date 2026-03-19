@@ -349,7 +349,7 @@ export default function Dashboard() {
           </div>
 
           {/* Filters and Actions */}
-          <div id="leads" className="scroll-mt-20 flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+          <div id="leads" className="scroll-mt-20 flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 w-full">
           <LeadFilters
             search={search}
             onSearchChange={setSearch}
