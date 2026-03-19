@@ -146,7 +146,6 @@ export default function Dashboard() {
 
   const filteredLeads = useMemo(() => {
     const s = search.trim().toLowerCase();
-    console.log('[DEBUG] search filter running, search:', JSON.stringify(search), 'leads count:', leads.length);
     return leads.filter((lead) => {
       const matchesSearch =
         s === '' ||
