@@ -3,7 +3,7 @@ import { useSequences } from '@/hooks/useSequences';
 import { useTemplates } from '@/hooks/useTemplates';
 import { useLeads } from '@/hooks/useLeads';
 import { Lead, Platform } from '@/types/lead';
-import { SequenceFormData, SequenceStatus } from '@/types/sequence';
+import { SequenceFormData, SequenceStatus, SenderIdentity } from '@/types/sequence';
 import { SequenceStepForm } from '@/components/SequenceStepForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
