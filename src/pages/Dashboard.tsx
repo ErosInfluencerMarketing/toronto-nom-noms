@@ -162,17 +162,25 @@ export default function Dashboard() {
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
   useEffect(() => { localStorage.setItem('dashboard_search', search); }, [search]);
-  useEffect(() => { localStorage.setItem('dashboard_statusFilter', statusFilter); }, [statusFilter]);
-  useEffect(() => { localStorage.setItem('dashboard_platformFilter', platformFilter); }, [platformFilter]);
-  useEffect(() => { localStorage.setItem('dashboard_categoryFilter', categoryFilter); }, [categoryFilter]);
-  useEffect(() => { localStorage.setItem('dashboard_cityFilter', cityFilter); }, [cityFilter]);
+  useEffect(() => { localStorage.setItem('dashboard_statusFilters', JSON.stringify(statusFilters)); }, [statusFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_platformFilters', JSON.stringify(platformFilters)); }, [platformFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_categoryFilters', JSON.stringify(categoryFilters)); }, [categoryFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_cityFilters', JSON.stringify(cityFilters)); }, [cityFilters]);
   useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
   useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
 
   useEffect(() => {
     setCurrentPage(1);
     localStorage.setItem('dashboard_page', '1');
-  }, [search, statusFilter, platformFilter, categoryFilter, cityFilter]);
+  }, [search, statusFilters, platformFilters, categoryFilters, cityFilters]);
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setStatusFilters([]);
+    setPlatformFilters([]);
+    setCategoryFilters([]);
+    setCityFilters([]);
+  };
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
   const paginatedLeads = useMemo(() => {
