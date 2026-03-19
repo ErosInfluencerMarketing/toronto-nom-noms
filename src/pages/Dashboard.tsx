@@ -151,8 +151,19 @@ export default function Dashboard() {
     });
   }, [leads, search, statusFilter, platformFilter, categoryFilter, cityFilter]);
 
+  // Persist filter state to localStorage
+  useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
+  useEffect(() => { localStorage.setItem('dashboard_search', search); }, [search]);
+  useEffect(() => { localStorage.setItem('dashboard_statusFilter', statusFilter); }, [statusFilter]);
+  useEffect(() => { localStorage.setItem('dashboard_platformFilter', platformFilter); }, [platformFilter]);
+  useEffect(() => { localStorage.setItem('dashboard_categoryFilter', categoryFilter); }, [categoryFilter]);
+  useEffect(() => { localStorage.setItem('dashboard_cityFilter', cityFilter); }, [cityFilter]);
+  useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
+  useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
+
   useEffect(() => {
     setCurrentPage(1);
+    localStorage.setItem('dashboard_page', '1');
   }, [search, statusFilter, platformFilter, categoryFilter, cityFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
