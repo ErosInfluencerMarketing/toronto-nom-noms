@@ -150,14 +150,14 @@ export default function Dashboard() {
         (lead.instagram_handle && lead.instagram_handle.toLowerCase().includes(s)) ||
         (lead.email && lead.email.toLowerCase().includes(s));
       
-      const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
-      const matchesPlatform = platformFilter === 'all' || lead.platform === platformFilter;
-      const matchesCategory = categoryFilter === 'all' || lead.category === categoryFilter;
-      const matchesCity = cityFilter === 'all' || lead.city === cityFilter;
+      const matchesStatus = statusFilters.length === 0 || statusFilters.includes(lead.status);
+      const matchesPlatform = platformFilters.length === 0 || platformFilters.includes(lead.platform);
+      const matchesCategory = categoryFilters.length === 0 || (lead.category && categoryFilters.includes(lead.category));
+      const matchesCity = cityFilters.length === 0 || (lead.city && cityFilters.includes(lead.city));
       
       return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity;
     });
-  }, [leads, search, statusFilter, platformFilter, categoryFilter, cityFilter]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
