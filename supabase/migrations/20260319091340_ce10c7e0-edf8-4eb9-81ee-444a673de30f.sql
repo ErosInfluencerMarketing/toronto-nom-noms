@@ -1,0 +1,1 @@
+DELETE FROM public.leads WHERE business_name = '' AND created_at = '2026-03-19 08:49:36.956074+00'
