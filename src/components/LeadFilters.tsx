@@ -45,6 +45,13 @@ const statusOptions: { value: LeadStatus; label: string }[] = [
   { value: 'onboarded', label: 'Onboarded' },
 ];
 
+const contactOptions: { value: ContactFilter; label: string }[] = [
+  { value: 'both', label: 'Email & Instagram' },
+  { value: 'email_only', label: 'Email Only' },
+  { value: 'instagram_only', label: 'Instagram Only' },
+  { value: 'neither', label: 'No Contact Info' },
+];
+
 const platformOptions: { value: Platform; label: string }[] = [
   { value: 'eros', label: 'Eros' },
   { value: 'noms', label: 'Noms' },
