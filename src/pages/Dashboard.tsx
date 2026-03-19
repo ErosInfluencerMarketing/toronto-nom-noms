@@ -105,7 +105,7 @@ export default function Dashboard() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => (localStorage.getItem('dashboard_viewMode') as ViewMode) || 'card');
   
-  const [search, setSearch] = useState(() => localStorage.getItem('dashboard_search') || '');
+  const [search, setSearch] = useState('');
   const [statusFilters, setStatusFilters] = useState<LeadStatus[]>(() => {
     try { const v = localStorage.getItem('dashboard_statusFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
@@ -146,12 +146,15 @@ export default function Dashboard() {
 
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
-      const s = search.toLowerCase();
+      const s = search.trim().toLowerCase();
       const matchesSearch =
-        search === '' ||
-        lead.business_name.toLowerCase().includes(s) ||
+        s === '' ||
+        (lead.business_name && lead.business_name.toLowerCase().includes(s)) ||
+        (lead.owner_name && lead.owner_name.toLowerCase().includes(s)) ||
         (lead.instagram_handle && lead.instagram_handle.toLowerCase().includes(s)) ||
-        (lead.email && lead.email.toLowerCase().includes(s));
+        (lead.email && lead.email.toLowerCase().includes(s)) ||
+        (lead.category && lead.category.toLowerCase().includes(s)) ||
+        (lead.city && lead.city.toLowerCase().includes(s));
       
       const matchesStatus = statusFilters.length === 0 || statusFilters.includes(lead.status);
       const matchesPlatform = platformFilters.length === 0 || platformFilters.includes(lead.platform);
@@ -177,7 +180,7 @@ export default function Dashboard() {
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
-  useEffect(() => { localStorage.setItem('dashboard_search', search); }, [search]);
+  // Search is intentionally not persisted to localStorage to avoid stale filter state
   useEffect(() => { localStorage.setItem('dashboard_statusFilters', JSON.stringify(statusFilters)); }, [statusFilters]);
   useEffect(() => { localStorage.setItem('dashboard_platformFilters', JSON.stringify(platformFilters)); }, [platformFilters]);
   useEffect(() => { localStorage.setItem('dashboard_categoryFilters', JSON.stringify(categoryFilters)); }, [categoryFilters]);
@@ -346,7 +349,7 @@ export default function Dashboard() {
           </div>
 
           {/* Filters and Actions */}
-          <div id="leads" className="scroll-mt-20 flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+          <div id="leads" className="scroll-mt-20 flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 w-full">
           <LeadFilters
             search={search}
             onSearchChange={setSearch}
