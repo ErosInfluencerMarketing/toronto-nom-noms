@@ -13,19 +13,33 @@ import { useLeads } from '@/hooks/useLeads';
 import { supabase } from '@/integrations/supabase/client';
 import { LeadFormData } from '@/types/lead';
 
-const SYDNEY_CENTER = { lat: -33.8688, lng: 151.2093 };
 const MAP_CONTAINER = { width: '100%', height: '100%' };
 const LIBRARIES: ('places')[] = ['places'];
 
-const SYDNEY_BOUNDS = {
-  north: -33.65,
-  south: -34.05,
-  west: 150.95,
-  east: 151.35,
-};
-
 const GRID_COLS = 6;
 const GRID_ROWS = 5;
+
+interface CityConfig {
+  label: string;
+  center: { lat: number; lng: number };
+  bounds: { north: number; south: number; west: number; east: number };
+  cacheKey: string;
+}
+
+const CITIES: Record<string, CityConfig> = {
+  sydney: {
+    label: 'Sydney',
+    center: { lat: -33.8688, lng: 151.2093 },
+    bounds: { north: -33.65, south: -34.05, west: 150.95, east: 151.35 },
+    cacheKey: 'cachedCafes_sydney',
+  },
+  toronto: {
+    label: 'Toronto',
+    center: { lat: 43.6532, lng: -79.3832 },
+    bounds: { north: 43.75, south: 43.58, west: -79.55, east: -79.20 },
+    cacheKey: 'cachedCafes_toronto',
+  },
+};
 
 interface CafePlace {
   placeId: string;
@@ -44,15 +58,15 @@ interface CafeMapInnerProps {
   apiKey: string;
 }
 
-function generateGridCenters() {
+function generateGridCenters(bounds: CityConfig['bounds']) {
   const centers: { lat: number; lng: number }[] = [];
-  const latStep = (SYDNEY_BOUNDS.north - SYDNEY_BOUNDS.south) / GRID_ROWS;
-  const lngStep = (SYDNEY_BOUNDS.east - SYDNEY_BOUNDS.west) / GRID_COLS;
+  const latStep = (bounds.north - bounds.south) / GRID_ROWS;
+  const lngStep = (bounds.east - bounds.west) / GRID_COLS;
   for (let r = 0; r < GRID_ROWS; r++) {
     for (let c = 0; c < GRID_COLS; c++) {
       centers.push({
-        lat: SYDNEY_BOUNDS.south + latStep * (r + 0.5),
-        lng: SYDNEY_BOUNDS.west + lngStep * (c + 0.5),
+        lat: bounds.south + latStep * (r + 0.5),
+        lng: bounds.west + lngStep * (c + 0.5),
       });
     }
   }
@@ -78,11 +92,11 @@ function parsePlaceResult(r: google.maps.places.PlaceResult): CafePlace {
   };
 }
 
-function cafeToLead(cafe: CafePlace): LeadFormData {
+function cafeToLead(cafe: CafePlace, cityLabel: string): LeadFormData {
   return {
     business_name: cafe.name,
     address: cafe.address,
-    city: 'Sydney',
+    city: cityLabel,
     category: 'Cafe',
     website: cafe.website,
     platform: 'noms',
@@ -94,9 +108,13 @@ function cafeToLead(cafe: CafePlace): LeadFormData {
 export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
   const navigate = useNavigate();
   const { bulkCreateLeads } = useLeads();
+  const [selectedCity, setSelectedCity] = useState<string>(() => {
+    return localStorage.getItem('selectedCafeCity') || 'sydney';
+  });
+  const cityConfig = CITIES[selectedCity];
   const [cafes, setCafes] = useState<CafePlace[]>(() => {
     try {
-      const cached = localStorage.getItem('cachedCafes');
+      const cached = localStorage.getItem(cityConfig.cacheKey);
       return cached ? JSON.parse(cached) : [];
     } catch { return []; }
   });
@@ -169,7 +187,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
           batchLeads.push({
             business_name: ec.name || original.name,
             address: ec.address || original.address,
-            city: 'Sydney',
+            city: cityConfig.label,
             category: 'Cafe',
             website: ec.website || original.website,
             email: ec.email || undefined,
@@ -186,7 +204,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
       } catch (e) {
         console.error('Enrich batch error:', e);
         for (const cafe of batch) {
-          batchLeads.push(cafeToLead(cafe));
+          batchLeads.push(cafeToLead(cafe, cityConfig.label));
         }
       }
 
@@ -274,7 +292,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
       setProgress(0);
 
       const queryBase = searchQuery ? `${searchQuery} cafe` : 'cafe';
-      const gridCenters = generateGridCenters();
+      const gridCenters = generateGridCenters(cityConfig.bounds);
       const seen = new Map<string, CafePlace>();
       let completed = 0;
 
@@ -305,12 +323,12 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
 
       const final = Array.from(seen.values());
       setCafes(final);
-      try { localStorage.setItem('cachedCafes', JSON.stringify(final)); } catch {}
+      try { localStorage.setItem(cityConfig.cacheKey, JSON.stringify(final)); } catch {}
       setSearching(false);
       setProgress(100);
-      toast.success(`Found ${final.length} cafes across Sydney`);
+      toast.success(`Found ${final.length} cafes across ${cityConfig.label}`);
     },
-    [searchQuery, searchAllPages]
+    [searchQuery, searchAllPages, cityConfig]
   );
 
   const onMapLoad = useCallback(
@@ -344,6 +362,12 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
     },
     [searchCafes]
   );
+  // Auto-scan when city changes and no cache exists
+  useEffect(() => {
+    if (mapRef.current && !hasCachedCafes.current && cafes.length === 0 && !searching) {
+      searchCafes(mapRef.current);
+    }
+  }, [selectedCity, searchCafes]);
 
   useEffect(() => {
     if (!mapRef.current || !clustererRef.current) return;
@@ -393,7 +417,41 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <Coffee className="h-5 w-5 text-primary" />
-        <h1 className="text-lg font-semibold text-foreground">Sydney Cafes</h1>
+        <h1 className="text-lg font-semibold text-foreground">{cityConfig.label} Cafes</h1>
+
+        {/* City switcher */}
+        <select
+          value={selectedCity}
+          onChange={(e) => {
+            const newCity = e.target.value;
+            setSelectedCity(newCity);
+            localStorage.setItem('selectedCafeCity', newCity);
+            const config = CITIES[newCity];
+            try {
+              const cached = localStorage.getItem(config.cacheKey);
+              const parsed = cached ? JSON.parse(cached) : [];
+              setCafes(parsed);
+              hasCachedCafes.current = parsed.length > 0;
+            } catch {
+              setCafes([]);
+              hasCachedCafes.current = false;
+            }
+            setSelectedCafe(null);
+            setSelectedIds(new Set());
+            if (mapRef.current) {
+              mapRef.current.panTo(config.center);
+              mapRef.current.setZoom(12);
+              if (!hasCachedCafes.current) {
+                // Will trigger on next render via effect
+              }
+            }
+          }}
+          className="h-9 rounded-md border border-border bg-card text-foreground px-3 text-sm"
+        >
+          {Object.entries(CITIES).map(([key, cfg]) => (
+            <option key={key} value={key}>{cfg.label}</option>
+          ))}
+        </select>
 
         <div className="flex-1 flex items-center gap-2 max-w-md ml-auto">
           <Input
@@ -472,7 +530,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
       <div className="flex-1 relative">
         <GoogleMap
           mapContainerStyle={MAP_CONTAINER}
-          center={SYDNEY_CENTER}
+          center={cityConfig.center}
           zoom={12}
           onLoad={onMapLoad}
           options={{
