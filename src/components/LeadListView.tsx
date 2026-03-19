@@ -194,7 +194,7 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                             value={lead.email || ''}
                             onSave={(v) => handleFieldUpdate(lead, 'email', v)}
                             placeholder="Add email"
-                            className="text-muted-foreground truncate max-w-[150px]"
+                            className="text-muted-foreground truncate"
                           />
                         </div>
                         <div className="flex items-center gap-1.5 text-sm">
