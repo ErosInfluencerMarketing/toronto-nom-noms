@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSequences } from '@/hooks/useSequences';
 import { useTemplates } from '@/hooks/useTemplates';
+import { useLeads } from '@/hooks/useLeads';
 import { Lead, Platform } from '@/types/lead';
 import { SequenceFormData, SequenceStatus } from '@/types/sequence';
 import { SequenceStepForm } from '@/components/SequenceStepForm';
@@ -39,7 +40,7 @@ import { Plus, Repeat, Pause, Play, CheckCircle, MessageCircle, Trash2, ChevronL
 import { format } from 'date-fns';
 
 interface SequencesSectionProps {
-  leads: Lead[];
+  leads?: Lead[];
 }
 
 const STATUS_TABS: { value: SequenceStatus | 'all'; label: string }[] = [
@@ -50,7 +51,9 @@ const STATUS_TABS: { value: SequenceStatus | 'all'; label: string }[] = [
   { value: 'replied', label: 'Replied' },
 ];
 
-export function SequencesSection({ leads }: SequencesSectionProps) {
+export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
+  const { leads: allLeads } = useLeads();
+  const leads = propLeads || allLeads;
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<SequenceStatus | 'all'>('all');
   const [leadSearch, setLeadSearch] = useState('');
@@ -81,7 +84,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   }, [leadSearch]);
 
   const emailTemplates = templates.filter((t) => t.channel === 'email');
-  const leadsWithEmail = leads.filter((l) => !!l.email);
+  const leadsWithEmail = leads.filter((l) => !!l.email && l.status !== 'onboarded');
 
   const uniqueCities = Array.from(new Set(leadsWithEmail.map((l) => l.city).filter(Boolean))).sort() as string[];
   const uniqueCategories = Array.from(new Set(leadsWithEmail.map((l) => l.category).filter(Boolean))).sort() as string[];
@@ -354,7 +357,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
                 ))}
               </div>
               <div className="flex gap-1 mb-2 flex-wrap">
-                {(['all', 'new', 'contacted', 'demo_booked', 'onboarded'] as const).map((s) => (
+                {(['all', 'new', 'contacted', 'demo_booked'] as const).map((s) => (
                   <Button
                     key={s}
                     variant="ghost"
