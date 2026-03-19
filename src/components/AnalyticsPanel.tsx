@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Lead, Platform, LeadStatus } from '@/types/lead';
 import { Sequence } from '@/types/sequence';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -10,6 +11,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BarChart3, Users, Phone, MessageSquare, Calendar, CheckCircle, TrendingUp, Mail, Send, Zap } from 'lucide-react';
+import { subDays, subMonths, subYears, parseISO, isAfter } from 'date-fns';
+import { cn } from '@/lib/utils';
+
+type TimeRange = 'week' | 'month' | 'year' | 'all';
 
 interface AnalyticsPanelProps {
   leads: Lead[];
@@ -25,13 +30,38 @@ interface StatItem {
   percentage?: number;
 }
 
+const TIME_RANGES: { value: TimeRange; label: string }[] = [
+  { value: 'week', label: 'This Week' },
+  { value: 'month', label: 'This Month' },
+  { value: 'year', label: 'This Year' },
+  { value: 'all', label: 'All Time' },
+];
+
+function getTimeRangeCutoff(range: TimeRange): Date | null {
+  const now = new Date();
+  switch (range) {
+    case 'week': return subDays(now, 7);
+    case 'month': return subMonths(now, 1);
+    case 'year': return subYears(now, 1);
+    case 'all': return null;
+  }
+}
+
 export function AnalyticsPanel({ leads, sequences = [], sequenceStatusCounts }: AnalyticsPanelProps) {
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
   const filteredLeads = useMemo(() => {
-    if (platformFilter === 'all') return leads;
-    return leads.filter((lead) => lead.platform === platformFilter);
-  }, [leads, platformFilter]);
+    let filtered = leads;
+    if (platformFilter !== 'all') {
+      filtered = filtered.filter((lead) => lead.platform === platformFilter);
+    }
+    const cutoff = getTimeRangeCutoff(timeRange);
+    if (cutoff) {
+      filtered = filtered.filter((lead) => isAfter(parseISO(lead.created_at), cutoff));
+    }
+    return filtered;
+  }, [leads, platformFilter, timeRange]);
 
   const stats = useMemo((): StatItem[] => {
     const total = filteredLeads.length;
@@ -124,19 +154,39 @@ export function AnalyticsPanel({ leads, sequences = [], sequenceStatusCounts }: 
             <BarChart3 className="h-5 w-5 text-primary" />
             Analytics
           </CardTitle>
-          <Select
-            value={platformFilter}
-            onValueChange={(value) => setPlatformFilter(value as Platform | 'all')}
-          >
-            <SelectTrigger className="w-32 h-8 text-sm bg-secondary border-border">
-              <SelectValue placeholder="Platform" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Platforms</SelectItem>
-              <SelectItem value="eros">Eros</SelectItem>
-              <SelectItem value="noms">Noms</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {TIME_RANGES.map((tr) => (
+                <Button
+                  key={tr.value}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTimeRange(tr.value)}
+                  className={cn(
+                    'text-xs h-8',
+                    timeRange === tr.value
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {tr.label}
+                </Button>
+              ))}
+            </div>
+            <Select
+              value={platformFilter}
+              onValueChange={(value) => setPlatformFilter(value as Platform | 'all')}
+            >
+              <SelectTrigger className="w-32 h-8 text-sm bg-secondary border-border">
+                <SelectValue placeholder="Platform" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Platforms</SelectItem>
+                <SelectItem value="eros">Eros</SelectItem>
+                <SelectItem value="noms">Noms</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
