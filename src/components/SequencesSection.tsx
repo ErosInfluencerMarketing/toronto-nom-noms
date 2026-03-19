@@ -51,7 +51,9 @@ const STATUS_TABS: { value: SequenceStatus | 'all'; label: string }[] = [
   { value: 'replied', label: 'Replied' },
 ];
 
-export function SequencesSection({ leads }: SequencesSectionProps) {
+export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
+  const { leads: allLeads } = useLeads();
+  const leads = propLeads || allLeads;
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<SequenceStatus | 'all'>('all');
   const [leadSearch, setLeadSearch] = useState('');
@@ -82,7 +84,7 @@ export function SequencesSection({ leads }: SequencesSectionProps) {
   }, [leadSearch]);
 
   const emailTemplates = templates.filter((t) => t.channel === 'email');
-  const leadsWithEmail = leads.filter((l) => !!l.email);
+  const leadsWithEmail = leads.filter((l) => !!l.email && l.status !== 'onboarded');
 
   const uniqueCities = Array.from(new Set(leadsWithEmail.map((l) => l.city).filter(Boolean))).sort() as string[];
   const uniqueCategories = Array.from(new Set(leadsWithEmail.map((l) => l.category).filter(Boolean))).sort() as string[];
