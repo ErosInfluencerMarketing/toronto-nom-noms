@@ -105,7 +105,7 @@ export default function Dashboard() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => (localStorage.getItem('dashboard_viewMode') as ViewMode) || 'card');
   
-  const [search, setSearch] = useState(() => localStorage.getItem('dashboard_search') || '');
+  const [search, setSearch] = useState('');
   const [statusFilters, setStatusFilters] = useState<LeadStatus[]>(() => {
     try { const v = localStorage.getItem('dashboard_statusFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
