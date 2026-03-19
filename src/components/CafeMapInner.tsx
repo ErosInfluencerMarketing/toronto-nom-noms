@@ -427,23 +427,18 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
             setSelectedCity(newCity);
             localStorage.setItem('selectedCafeCity', newCity);
             const config = CITIES[newCity];
+            let cachedList: CafePlace[] = [];
             try {
-              const cached = localStorage.getItem(config.cacheKey);
-              const parsed = cached ? JSON.parse(cached) : [];
-              setCafes(parsed);
-              hasCachedCafes.current = parsed.length > 0;
-            } catch {
-              setCafes([]);
-              hasCachedCafes.current = false;
-            }
+              const raw = localStorage.getItem(config.cacheKey);
+              cachedList = raw ? JSON.parse(raw) : [];
+            } catch { /* empty */ }
+            setCafes(cachedList);
+            hasCachedCafes.current = cachedList.length > 0;
             setSelectedCafe(null);
             setSelectedIds(new Set());
             if (mapRef.current) {
               mapRef.current.panTo(config.center);
               mapRef.current.setZoom(12);
-              if (!hasCachedCafes.current) {
-                // Will trigger on next render via effect
-              }
             }
           }}
           className="h-9 rounded-md border border-border bg-card text-foreground px-3 text-sm"
