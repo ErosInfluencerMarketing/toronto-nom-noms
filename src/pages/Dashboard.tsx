@@ -182,6 +182,7 @@ export default function Dashboard() {
   useEffect(() => { localStorage.setItem('dashboard_platformFilters', JSON.stringify(platformFilters)); }, [platformFilters]);
   useEffect(() => { localStorage.setItem('dashboard_categoryFilters', JSON.stringify(categoryFilters)); }, [categoryFilters]);
   useEffect(() => { localStorage.setItem('dashboard_cityFilters', JSON.stringify(cityFilters)); }, [cityFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_contactFilters', JSON.stringify(contactFilters)); }, [contactFilters]);
   useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
   useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
 
