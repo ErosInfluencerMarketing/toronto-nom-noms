@@ -49,6 +49,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [messageTemplate, setMessageTemplate] = useState('');
   const [subjectTemplate, setSubjectTemplate] = useState('Hey [Business Name]!');
+  const [sender, setSender] = useState<string>('noms');
   const [isSending, setIsSending] = useState(false);
   const [progress, setProgress] = useState({ sent: 0, failed: 0, total: 0 });
 
@@ -97,6 +98,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
             },
             message: personalizedMessage.trim(),
             subject: personalizedSubject.trim(),
+            sender,
           },
         });
 
@@ -154,6 +156,20 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
                 </Badge>
               )}
             </div>
+          </div>
+
+          {/* Sender selection */}
+          <div className="space-y-2">
+            <Label>Send from</Label>
+            <Select value={sender} onValueChange={setSender}>
+              <SelectTrigger className="bg-secondary border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="noms">hello@nomspass.com</SelectItem>
+                <SelectItem value="eros">hello@erosmarketing.io</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Template selector */}

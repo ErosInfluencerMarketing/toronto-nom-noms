@@ -51,6 +51,7 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
   const [subject, setSubject] = useState(`Hey ${lead.business_name}!`);
   const [sendEmail, setSendEmail] = useState(!!lead.email);
   const [sendInstagram, setSendInstagram] = useState(!!lead.instagram_handle);
+  const [sender, setSender] = useState<string>(lead.platform === 'eros' ? 'eros' : 'noms');
   const [isSending, setIsSending] = useState(false);
 
   const hasEmail = !!lead.email;
@@ -94,6 +95,7 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
           },
           message: message.trim(),
           subject: subject.trim(),
+          sender,
         },
       });
 
@@ -140,6 +142,22 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Sender selection */}
+          {sendEmail && (
+            <div className="space-y-2">
+              <Label>Send from</Label>
+              <Select value={sender} onValueChange={setSender}>
+                <SelectTrigger className="bg-secondary border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="noms">hello@nomspass.com</SelectItem>
+                  <SelectItem value="eros">hello@erosmarketing.io</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Available channels */}
           <div className="space-y-2">
             <Label>Send via</Label>

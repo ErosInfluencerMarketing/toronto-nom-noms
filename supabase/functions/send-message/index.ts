@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { channels, lead, message, subject } = await req.json();
+    const { channels, lead, message, subject, sender } = await req.json();
 
     if (!channels || !lead || !message) {
       return new Response(
@@ -63,7 +63,9 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "The Noms Company Inc. <hello@nomspass.com>",
+              from: sender === "eros"
+                ? "Eros Marketing <hello@erosmarketing.io>"
+                : "The Noms Company Inc. <hello@nomspass.com>",
               to: [lead.email],
               subject: subject || `Hey ${lead.business_name}!`,
               html: message.replace(/\n/g, '<br>'),
