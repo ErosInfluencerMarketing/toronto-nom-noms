@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Lead, LeadFormData } from '@/types/lead';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { normalizeInstagramHandle } from '@/lib/utils';
 
 export function useLeads() {
   const { user } = useAuth();
