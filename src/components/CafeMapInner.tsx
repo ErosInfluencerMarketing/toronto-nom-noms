@@ -292,7 +292,7 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
       setProgress(0);
 
       const queryBase = searchQuery ? `${searchQuery} cafe` : 'cafe';
-      const gridCenters = generateGridCenters();
+      const gridCenters = generateGridCenters(cityConfig.bounds);
       const seen = new Map<string, CafePlace>();
       let completed = 0;
 
