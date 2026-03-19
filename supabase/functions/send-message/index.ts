@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { channels, lead, message, subject } = await req.json();
+    const { channels, lead, message, subject, sender } = await req.json();
 
     if (!channels || !lead || !message) {
       return new Response(
