@@ -100,9 +100,9 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
     return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
   };
 
-  const SortableHead = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+  const SortableHead = ({ field, children, className: headClass }: { field: SortField; children: React.ReactNode; className?: string }) => (
     <TableHead
-      className="text-muted-foreground font-medium cursor-pointer select-none hover:text-foreground transition-colors"
+      className={cn("text-muted-foreground font-medium cursor-pointer select-none hover:text-foreground transition-colors", headClass)}
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center">
@@ -129,8 +129,7 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
   return (
     <>
       <div className="rounded-lg border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
+        <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow className="bg-secondary/50 hover:bg-secondary/50">
                 {selectable && (
@@ -141,18 +140,18 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                     />
                   </TableHead>
                 )}
-                <SortableHead field="business_name">Business</SortableHead>
-                <SortableHead field="owner_name">Owner</SortableHead>
-                <SortableHead field="email">Contact</SortableHead>
-                <SortableHead field="category">Category</SortableHead>
-                <SortableHead field="city">City</SortableHead>
-                <SortableHead field="platform">Platform</SortableHead>
-                <SortableHead field="status">Status</SortableHead>
-                <SortableHead field="assigned_user_id">Assigned To</SortableHead>
-                <SortableHead field="next_outreach_date">Next Outreach</SortableHead>
-                <SortableHead field="last_outreach_date">Last Outreach</SortableHead>
-                <SortableHead field="created_at">Created</SortableHead>
-                <TableHead className="text-muted-foreground font-medium text-right">Actions</TableHead>
+                <SortableHead field="business_name" className="w-[12%]">Business</SortableHead>
+                <SortableHead field="owner_name" className="w-[8%]">Owner</SortableHead>
+                <SortableHead field="email" className="w-[14%]">Contact</SortableHead>
+                <SortableHead field="category" className="w-[8%]">Category</SortableHead>
+                <SortableHead field="city" className="w-[7%]">City</SortableHead>
+                <SortableHead field="platform" className="w-[6%]">Platform</SortableHead>
+                <SortableHead field="status" className="w-[8%]">Status</SortableHead>
+                <SortableHead field="assigned_user_id" className="w-[9%]">Assigned</SortableHead>
+                <SortableHead field="next_outreach_date" className="w-[8%]">Next</SortableHead>
+                <SortableHead field="last_outreach_date" className="w-[8%]">Last</SortableHead>
+                <SortableHead field="created_at" className="w-[7%]">Created</SortableHead>
+                <TableHead className="text-muted-foreground font-medium text-right w-[5%]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -169,9 +168,9 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                         <Checkbox checked={isSelected} onCheckedChange={() => toggleOne(lead.id)} />
                       </TableCell>
                     )}
-                    <TableCell className="font-medium text-foreground">
+                    <TableCell className="font-medium text-foreground truncate">
                       <span
-                        className="cursor-pointer hover:text-primary transition-colors"
+                        className="cursor-pointer hover:text-primary transition-colors block truncate"
                         onClick={() => onViewDetails?.(lead)}
                       >
                         <InlineEditCell
@@ -195,7 +194,7 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                             value={lead.email || ''}
                             onSave={(v) => handleFieldUpdate(lead, 'email', v)}
                             placeholder="Add email"
-                            className="text-muted-foreground truncate max-w-[150px]"
+                            className="text-muted-foreground truncate"
                           />
                         </div>
                         <div className="flex items-center gap-1.5 text-sm">
@@ -362,7 +361,6 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
               })}
             </TableBody>
           </Table>
-        </div>
       </div>
 
       {messageLead && (
