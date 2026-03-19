@@ -187,6 +187,13 @@ export function LeadFilters({
           onChange={onPlatformFiltersChange}
         />
 
+        <MultiSelectPopover
+          label="Contact Info"
+          options={contactOptions}
+          selected={contactFilters}
+          onChange={onContactFiltersChange}
+        />
+
         {categories.length > 0 && (
           <MultiSelectPopover
             label="Category"

@@ -355,6 +355,8 @@ export default function Dashboard() {
             cityFilters={cityFilters}
             onCityFiltersChange={setCityFilters}
             cities={cities}
+            contactFilters={contactFilters}
+            onContactFiltersChange={setContactFilters}
             onReset={handleResetFilters}
           />
           
