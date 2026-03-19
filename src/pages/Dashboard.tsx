@@ -145,8 +145,9 @@ export default function Dashboard() {
   }, [leads]);
 
   const filteredLeads = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    console.log('[DEBUG] search filter running, search:', JSON.stringify(search), 'leads count:', leads.length);
     return leads.filter((lead) => {
-      const s = search.trim().toLowerCase();
       const matchesSearch =
         s === '' ||
         (lead.business_name && lead.business_name.toLowerCase().includes(s)) ||
