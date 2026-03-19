@@ -440,13 +440,6 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
               mapRef.current.panTo(config.center);
               mapRef.current.setZoom(12);
             }
-            if (cachedList.length === 0) {
-              setTimeout(() => {
-                if (mapRef.current && serviceRef.current) {
-                  searchCafes(mapRef.current);
-                }
-              }, 200);
-            }
           }}
           className="h-9 rounded-md border border-border bg-card text-foreground px-3 text-sm"
         >
