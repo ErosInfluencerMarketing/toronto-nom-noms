@@ -100,9 +100,9 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
     return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
   };
 
-  const SortableHead = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+  const SortableHead = ({ field, children, className: headClass }: { field: SortField; children: React.ReactNode; className?: string }) => (
     <TableHead
-      className="text-muted-foreground font-medium cursor-pointer select-none hover:text-foreground transition-colors"
+      className={cn("text-muted-foreground font-medium cursor-pointer select-none hover:text-foreground transition-colors", headClass)}
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center">
