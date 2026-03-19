@@ -51,6 +51,7 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
   const [subject, setSubject] = useState(`Hey ${lead.business_name}!`);
   const [sendEmail, setSendEmail] = useState(!!lead.email);
   const [sendInstagram, setSendInstagram] = useState(!!lead.instagram_handle);
+  const [sender, setSender] = useState<string>(lead.platform === 'eros' ? 'eros' : 'noms');
   const [isSending, setIsSending] = useState(false);
 
   const hasEmail = !!lead.email;
