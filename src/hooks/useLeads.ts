@@ -42,13 +42,15 @@ export function useLeads() {
     mutationFn: async (leadData: LeadFormData) => {
       if (!user) throw new Error('Not authenticated');
       
+      const normalized = {
+        ...leadData,
+        instagram_handle: normalizeInstagramHandle(leadData.instagram_handle) || undefined,
+        user_id: user.id,
+        assigned_user_id: user.id,
+      };
       const { data, error } = await supabase
         .from('leads')
-        .insert({
-          ...leadData,
-          user_id: user.id,
-          assigned_user_id: user.id,
-        } as any)
+        .insert(normalized as any)
         .select()
         .single();
       
