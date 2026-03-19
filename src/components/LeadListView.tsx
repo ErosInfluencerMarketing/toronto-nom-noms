@@ -361,7 +361,6 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
               })}
             </TableBody>
           </Table>
-        </div>
       </div>
 
       {messageLead && (
