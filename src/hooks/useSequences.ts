@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Sequence, SequenceFormData, SequenceStatus } from '@/types/sequence';
+import { Sequence, SequenceFormData, SequenceStatus, SenderIdentity } from '@/types/sequence';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
