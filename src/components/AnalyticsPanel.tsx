@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Lead, Platform, LeadStatus } from '@/types/lead';
 import { Sequence } from '@/types/sequence';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -10,6 +11,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BarChart3, Users, Phone, MessageSquare, Calendar, CheckCircle, TrendingUp, Mail, Send, Zap } from 'lucide-react';
+import { subDays, subMonths, subYears, parseISO, isAfter } from 'date-fns';
+import { cn } from '@/lib/utils';
+
+type TimeRange = 'week' | 'month' | 'year' | 'all';
 
 interface AnalyticsPanelProps {
   leads: Lead[];
@@ -25,13 +30,38 @@ interface StatItem {
   percentage?: number;
 }
 
+const TIME_RANGES: { value: TimeRange; label: string }[] = [
+  { value: 'week', label: 'This Week' },
+  { value: 'month', label: 'This Month' },
+  { value: 'year', label: 'This Year' },
+  { value: 'all', label: 'All Time' },
+];
+
+function getTimeRangeCutoff(range: TimeRange): Date | null {
+  const now = new Date();
+  switch (range) {
+    case 'week': return subDays(now, 7);
+    case 'month': return subMonths(now, 1);
+    case 'year': return subYears(now, 1);
+    case 'all': return null;
+  }
+}
+
 export function AnalyticsPanel({ leads, sequences = [], sequenceStatusCounts }: AnalyticsPanelProps) {
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
   const filteredLeads = useMemo(() => {
-    if (platformFilter === 'all') return leads;
-    return leads.filter((lead) => lead.platform === platformFilter);
-  }, [leads, platformFilter]);
+    let filtered = leads;
+    if (platformFilter !== 'all') {
+      filtered = filtered.filter((lead) => lead.platform === platformFilter);
+    }
+    const cutoff = getTimeRangeCutoff(timeRange);
+    if (cutoff) {
+      filtered = filtered.filter((lead) => isAfter(parseISO(lead.created_at), cutoff));
+    }
+    return filtered;
+  }, [leads, platformFilter, timeRange]);
 
   const stats = useMemo((): StatItem[] => {
     const total = filteredLeads.length;
