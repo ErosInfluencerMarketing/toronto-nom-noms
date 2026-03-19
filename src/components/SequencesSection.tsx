@@ -357,7 +357,7 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
                 ))}
               </div>
               <div className="flex gap-1 mb-2 flex-wrap">
-                {(['all', 'new', 'contacted', 'demo_booked', 'onboarded'] as const).map((s) => (
+                {(['all', 'new', 'contacted', 'demo_booked'] as const).map((s) => (
                   <Button
                     key={s}
                     variant="ghost"
