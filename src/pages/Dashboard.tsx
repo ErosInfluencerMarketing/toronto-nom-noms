@@ -197,6 +197,7 @@ export default function Dashboard() {
     setPlatformFilters([]);
     setCategoryFilters([]);
     setCityFilters([]);
+    setContactFilters([]);
   };
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
