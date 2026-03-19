@@ -118,6 +118,9 @@ export default function Dashboard() {
   const [cityFilters, setCityFilters] = useState<string[]>(() => {
     try { const v = localStorage.getItem('dashboard_cityFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
+  const [contactFilters, setContactFilters] = useState<import('@/components/LeadFilters').ContactFilter[]>(() => {
+    try { const v = localStorage.getItem('dashboard_contactFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
