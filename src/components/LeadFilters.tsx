@@ -95,16 +95,17 @@ function MultiSelectPopover<T extends string>({
       <PopoverContent className="w-44 p-2 bg-popover border-border z-50" align="start">
         <div className="space-y-1">
           {options.map((opt) => (
-            <label
+            <div
               key={opt.value}
               className="flex items-center gap-2 px-2 py-1.5 rounded text-sm cursor-pointer hover:bg-accent"
+              onClick={() => onChange(toggleValue(selected, opt.value))}
             >
               <Checkbox
                 checked={selected.includes(opt.value)}
                 onCheckedChange={() => onChange(toggleValue(selected, opt.value))}
               />
               <span className="text-foreground">{opt.label}</span>
-            </label>
+            </div>
           ))}
           {selected.length > 0 && (
             <Button
