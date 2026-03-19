@@ -149,6 +149,7 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
             interval_days: firstDelay,
             current_step: 0,
             status: 'active',
+            sender: formData.sender,
             next_send_at: nextSend.toISOString(),
           } as any)
           .select()

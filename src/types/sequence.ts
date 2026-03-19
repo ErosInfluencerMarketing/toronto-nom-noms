@@ -29,5 +29,6 @@ export interface Sequence {
 export interface SequenceFormData {
   name: string;
   lead_ids: string[];
+  sender: SenderIdentity;
   steps: { template_id: string; delay_days: number }[];
 }
