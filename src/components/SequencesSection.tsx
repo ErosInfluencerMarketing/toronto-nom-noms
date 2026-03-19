@@ -40,7 +40,7 @@ import { Plus, Repeat, Pause, Play, CheckCircle, MessageCircle, Trash2, ChevronL
 import { format } from 'date-fns';
 
 interface SequencesSectionProps {
-  leads: Lead[];
+  leads?: Lead[];
 }
 
 const STATUS_TABS: { value: SequenceStatus | 'all'; label: string }[] = [
