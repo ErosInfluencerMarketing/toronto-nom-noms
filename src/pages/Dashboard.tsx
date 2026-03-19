@@ -157,10 +157,23 @@ export default function Dashboard() {
       const matchesPlatform = platformFilters.length === 0 || platformFilters.includes(lead.platform);
       const matchesCategory = categoryFilters.length === 0 || (lead.category && categoryFilters.includes(lead.category));
       const matchesCity = cityFilters.length === 0 || (lead.city && cityFilters.includes(lead.city));
+
+      let matchesContact = true;
+      if (contactFilters.length > 0) {
+        const hasEmail = !!lead.email;
+        const hasIg = !!lead.instagram_handle;
+        matchesContact = contactFilters.some((f) => {
+          if (f === 'both') return hasEmail && hasIg;
+          if (f === 'email_only') return hasEmail && !hasIg;
+          if (f === 'instagram_only') return !hasEmail && hasIg;
+          if (f === 'neither') return !hasEmail && !hasIg;
+          return false;
+        });
+      }
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity;
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact;
     });
-  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
