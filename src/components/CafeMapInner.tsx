@@ -108,9 +108,13 @@ function cafeToLead(cafe: CafePlace, cityLabel: string): LeadFormData {
 export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
   const navigate = useNavigate();
   const { bulkCreateLeads } = useLeads();
+  const [selectedCity, setSelectedCity] = useState<string>(() => {
+    return localStorage.getItem('selectedCafeCity') || 'sydney';
+  });
+  const cityConfig = CITIES[selectedCity];
   const [cafes, setCafes] = useState<CafePlace[]>(() => {
     try {
-      const cached = localStorage.getItem('cachedCafes');
+      const cached = localStorage.getItem(cityConfig.cacheKey);
       return cached ? JSON.parse(cached) : [];
     } catch { return []; }
   });
