@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSequences } from '@/hooks/useSequences';
 import { useTemplates } from '@/hooks/useTemplates';
+import { useLeads } from '@/hooks/useLeads';
 import { Lead, Platform } from '@/types/lead';
 import { SequenceFormData, SequenceStatus } from '@/types/sequence';
 import { SequenceStepForm } from '@/components/SequenceStepForm';
