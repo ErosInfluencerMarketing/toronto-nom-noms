@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Lead, LeadFormData } from '@/types/lead';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { normalizeInstagramHandle } from '@/lib/utils';
 
 export function useLeads() {
   const { user } = useAuth();
@@ -41,13 +42,15 @@ export function useLeads() {
     mutationFn: async (leadData: LeadFormData) => {
       if (!user) throw new Error('Not authenticated');
       
+      const normalized = {
+        ...leadData,
+        instagram_handle: normalizeInstagramHandle(leadData.instagram_handle) || undefined,
+        user_id: user.id,
+        assigned_user_id: user.id,
+      };
       const { data, error } = await supabase
         .from('leads')
-        .insert({
-          ...leadData,
-          user_id: user.id,
-          assigned_user_id: user.id,
-        } as any)
+        .insert(normalized as any)
         .select()
         .single();
       
@@ -68,6 +71,7 @@ export function useLeads() {
       
       const leadsWithUserId = leadsData.map(lead => ({
         ...lead,
+        instagram_handle: normalizeInstagramHandle(lead.instagram_handle) || undefined,
         user_id: user.id,
         assigned_user_id: user.id,
       }));

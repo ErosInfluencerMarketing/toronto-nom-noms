@@ -319,7 +319,14 @@ ${content}`
     // ── Apply updates ──
     const updates: Record<string, string> = {};
     if (!lead.email && foundEmail) updates.email = foundEmail;
-    if (!lead.instagram_handle && foundInstagram) updates.instagram_handle = foundInstagram.replace(/^@/, '');
+    if (!lead.instagram_handle && foundInstagram) {
+      // Normalize: strip URLs, @, etc.
+      let normalized = foundInstagram.trim();
+      const urlMatch = normalized.match(/(?:https?:\/\/)?(?:www\.)?instagram\.com\/([a-zA-Z0-9._]+)\/?/);
+      if (urlMatch) normalized = urlMatch[1];
+      normalized = normalized.replace(/^@/, '').split(/[?/#]/)[0];
+      updates.instagram_handle = normalized;
+    }
     if (!lead.website && foundWebsite) updates.website = foundWebsite;
     if (!lead.address && foundAddress) updates.address = foundAddress;
     if (!lead.category && foundCategory) updates.category = foundCategory;
