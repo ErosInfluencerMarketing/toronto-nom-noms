@@ -428,11 +428,11 @@ export default function Dashboard() {
             </div>
             <h3 className="text-lg font-medium text-foreground mb-1">No leads found</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              {search || statusFilter !== 'all' || platformFilter !== 'all'
+               {search || statusFilters.length > 0 || platformFilters.length > 0
                 ? 'Try adjusting your filters'
                 : 'Get started by adding your first lead'}
             </p>
-            {!search && statusFilter === 'all' && platformFilter === 'all' && (
+            {!search && statusFilters.length === 0 && platformFilters.length === 0 && (
               <Button onClick={() => setIsFormOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Your First Lead
