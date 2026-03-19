@@ -96,7 +96,7 @@ export function LeadImport({ onImport, isLoading }: LeadImportProps) {
           normalizedRow[normalizeHeader(key)] = value;
         });
 
-        const businessName = normalizedRow.business_name || normalizedRow.businessname || normalizedRow.name || '';
+        const businessName = normalizedRow.business_name || normalizedRow.businessname || normalizedRow.name || normalizedRow.restaurant_name || normalizedRow.restaurantname || normalizedRow.cafe_name || normalizedRow.cafename || normalizedRow.company_name || normalizedRow.companyname || normalizedRow.business || normalizedRow.restaurant || normalizedRow.cafe || normalizedRow.company || normalizedRow.store_name || normalizedRow.storename || normalizedRow.shop_name || normalizedRow.shopname || normalizedRow.venue_name || normalizedRow.venuename || normalizedRow.venue || normalizedRow.establishment || '';
 
         const platformRaw = String(normalizedRow.platform || 'eros').toLowerCase().trim();
         const platform: Platform = VALID_PLATFORMS.includes(platformRaw as Platform) 
