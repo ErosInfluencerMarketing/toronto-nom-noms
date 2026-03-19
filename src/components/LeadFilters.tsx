@@ -94,19 +94,29 @@ function MultiSelectPopover<T extends string>({
       </PopoverTrigger>
       <PopoverContent className="w-44 p-2 bg-popover border-border z-50" align="start">
         <div className="space-y-1">
-          {options.map((opt) => (
-            <div
-              key={opt.value}
-              className="flex items-center gap-2 px-2 py-1.5 rounded text-sm cursor-pointer hover:bg-accent"
-              onClick={() => onChange(toggleValue(selected, opt.value))}
-            >
-              <Checkbox
-                checked={selected.includes(opt.value)}
-                onCheckedChange={() => onChange(toggleValue(selected, opt.value))}
-              />
-              <span className="text-foreground">{opt.label}</span>
-            </div>
-          ))}
+          {options.map((opt) => {
+            const toggle = () => onChange(toggleValue(selected, opt.value));
+            return (
+              <div
+                key={opt.value}
+                role="option"
+                aria-selected={selected.includes(opt.value)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded text-sm cursor-pointer hover:bg-accent"
+                onClick={(e) => {
+                  // Prevent double-toggle: only handle if click wasn't on the checkbox button
+                  if (!(e.target as HTMLElement).closest('button[role="checkbox"]')) {
+                    toggle();
+                  }
+                }}
+              >
+                <Checkbox
+                  checked={selected.includes(opt.value)}
+                  onCheckedChange={toggle}
+                />
+                <span className="text-foreground">{opt.label}</span>
+              </div>
+            );
+          })}
           {selected.length > 0 && (
             <Button
               variant="ghost"
