@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { normalizeInstagramHandle } from '@/lib/utils';
 import { Lead } from '@/types/lead';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
