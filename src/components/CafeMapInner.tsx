@@ -362,8 +362,13 @@ export default function CafeMapInner({ apiKey }: CafeMapInnerProps) {
     },
     [searchCafes]
   );
-
+  // Auto-scan when city changes and no cache exists
   useEffect(() => {
+    if (mapRef.current && !hasCachedCafes.current && cafes.length === 0 && !searching) {
+      searchCafes(mapRef.current);
+    }
+  }, [selectedCity, searchCafes]);
+
     if (!mapRef.current || !clustererRef.current) return;
 
     markersRef.current.forEach((m) => m.setMap(null));
