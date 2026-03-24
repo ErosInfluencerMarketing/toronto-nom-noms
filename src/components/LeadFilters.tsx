@@ -22,6 +22,11 @@ import { format } from 'date-fns';
 
 export type ContactFilter = 'both' | 'email_only' | 'instagram_only' | 'neither';
 
+export interface DateRange {
+  from?: Date;
+  to?: Date;
+}
+
 interface LeadFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
@@ -37,6 +42,8 @@ interface LeadFiltersProps {
   cities: string[];
   contactFilters: ContactFilter[];
   onContactFiltersChange: (value: ContactFilter[]) => void;
+  dateRange: DateRange;
+  onDateRangeChange: (value: DateRange) => void;
   onReset: () => void;
 }
 
