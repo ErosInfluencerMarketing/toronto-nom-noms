@@ -386,6 +386,32 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
 
             <div className="space-y-2">
               <Label>Leads ({formData.lead_ids.length} selected)</Label>
+              {previousSequences.length > 0 && (
+                <Select
+                  value=""
+                  onValueChange={(seqName) => {
+                    const prev = previousSequences.find((s) => s.name === seqName);
+                    if (prev) {
+                      const validIds = prev.lead_ids.filter((id) =>
+                        leadsWithEmail.some((l) => l.id === id)
+                      );
+                      const newIds = new Set([...formData.lead_ids, ...validIds]);
+                      setFormData({ ...formData, lead_ids: Array.from(newIds) });
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-xs bg-secondary border-border">
+                    <SelectValue placeholder="Copy leads from previous sequence..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {previousSequences.map((s) => (
+                      <SelectItem key={s.name} value={s.name}>
+                        {s.name} ({s.lead_ids.length} leads)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <div className="flex gap-1 mb-2 flex-wrap">
                 {(['all', 'eros', 'noms'] as const).map((p) => (
                   <Button
