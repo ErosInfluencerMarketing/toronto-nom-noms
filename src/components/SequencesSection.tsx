@@ -83,6 +83,29 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
   const [leadStatusFilter, setLeadStatusFilter] = useState<string>('all');
   const [leadCategoryFilter, setLeadCategoryFilter] = useState('');
 
+  // Fetch distinct previous sequence names with their lead IDs for "copy leads" feature
+  const [previousSequences, setPreviousSequences] = useState<{ name: string; lead_ids: string[] }[]>([]);
+  useEffect(() => {
+    if (!isFormOpen) return;
+    (async () => {
+      const { data } = await supabase
+        .from('sequences')
+        .select('name, lead_id')
+        .order('created_at', { ascending: false });
+      if (data) {
+        const grouped: Record<string, Set<string>> = {};
+        for (const row of data) {
+          const key = row.name || '(unnamed)';
+          if (!grouped[key]) grouped[key] = new Set();
+          grouped[key].add(row.lead_id);
+        }
+        setPreviousSequences(
+          Object.entries(grouped).map(([name, ids]) => ({ name, lead_ids: Array.from(ids) }))
+        );
+      }
+    })();
+  }, [isFormOpen]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(leadSearch);
