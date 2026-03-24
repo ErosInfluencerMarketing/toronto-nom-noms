@@ -222,6 +222,7 @@ export default function Dashboard() {
     setCategoryFilters([]);
     setCityFilters([]);
     setContactFilters([]);
+    setDateRange({});
   };
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
