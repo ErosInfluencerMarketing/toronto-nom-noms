@@ -295,7 +295,7 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
       ) : (
         <>
            <div className="space-y-2">
-            {groupedSequences.map((group) => {
+            {paginatedGroups.map((group) => {
               const isExpanded = expandedGroups.has(group.name);
               const activeIds = group.sequences.filter((s) => s.status === 'active').map((s) => s.id);
               const pausedIds = group.sequences.filter((s) => s.status === 'paused').map((s) => s.id);
