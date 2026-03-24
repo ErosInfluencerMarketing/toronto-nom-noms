@@ -15,8 +15,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Search, X, RotateCcw, ChevronDown } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Search, X, RotateCcw, ChevronDown, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 export type ContactFilter = 'both' | 'email_only' | 'instagram_only' | 'neither';
 
