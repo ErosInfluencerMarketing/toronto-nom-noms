@@ -382,6 +382,8 @@ export default function Dashboard() {
             cities={cities}
             contactFilters={contactFilters}
             onContactFiltersChange={setContactFilters}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
             onReset={handleResetFilters}
           />
           
