@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 import { useSequences } from '@/hooks/useSequences';
 import { useTemplates } from '@/hooks/useTemplates';
 import { useLeads } from '@/hooks/useLeads';
