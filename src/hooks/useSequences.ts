@@ -66,9 +66,10 @@ export function useSequences(statusFilter: SequenceStatus | 'all' = 'all', leadS
       // Fetch steps in batches for all sequences
       if (allSeqData.length > 0) {
         const allSeqIds = allSeqData.map((s: any) => s.id);
+        const stepBatchSize = 100;
         let allSteps: any[] = [];
-        for (let i = 0; i < allSeqIds.length; i += batchSize) {
-          const batch = allSeqIds.slice(i, i + batchSize);
+        for (let i = 0; i < allSeqIds.length; i += stepBatchSize) {
+          const batch = allSeqIds.slice(i, i + stepBatchSize);
           const { data: steps, error: stepsErr } = await supabase
             .from('sequence_steps')
             .select('*')
