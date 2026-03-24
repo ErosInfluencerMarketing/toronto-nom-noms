@@ -15,10 +15,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Search, X, RotateCcw, ChevronDown } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Search, X, RotateCcw, ChevronDown, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 export type ContactFilter = 'both' | 'email_only' | 'instagram_only' | 'neither';
+
+export interface DateRange {
+  from?: Date;
+  to?: Date;
+}
 
 interface LeadFiltersProps {
   search: string;
@@ -35,6 +42,8 @@ interface LeadFiltersProps {
   cities: string[];
   contactFilters: ContactFilter[];
   onContactFiltersChange: (value: ContactFilter[]) => void;
+  dateRange: DateRange;
+  onDateRangeChange: (value: DateRange) => void;
   onReset: () => void;
 }
 
@@ -148,6 +157,8 @@ export function LeadFilters({
   cities,
   contactFilters,
   onContactFiltersChange,
+  dateRange,
+  onDateRangeChange,
   onReset,
 }: LeadFiltersProps) {
   const hasActiveFilters =
@@ -156,10 +167,21 @@ export function LeadFilters({
     platformFilters.length > 0 ||
     categoryFilters.length > 0 ||
     cityFilters.length > 0 ||
-    contactFilters.length > 0;
+    contactFilters.length > 0 ||
+    dateRange.from !== undefined ||
+    dateRange.to !== undefined;
 
   const categoryOptions = categories.map((c) => ({ value: c, label: c }));
   const cityOptions = cities.map((c) => ({ value: c, label: c }));
+
+  const hasDateFilter = dateRange.from || dateRange.to;
+  const dateLabel = hasDateFilter
+    ? dateRange.from && dateRange.to
+      ? `${format(dateRange.from, 'MMM d')} – ${format(dateRange.to, 'MMM d')}`
+      : dateRange.from
+        ? `From ${format(dateRange.from, 'MMM d')}`
+        : `Until ${format(dateRange.to!, 'MMM d')}`
+    : 'Date Added';
 
   return (
     <div className="space-y-3 flex-1 min-w-0">
@@ -222,6 +244,44 @@ export function LeadFilters({
             onChange={onCityFiltersChange}
           />
         )}
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                'text-xs gap-1 h-8 border-border bg-secondary',
+                hasDateFilter && 'border-primary/50 bg-primary/10 text-primary'
+              )}
+            >
+              <CalendarIcon className="h-3 w-3" />
+              {dateLabel}
+              <ChevronDown className="h-3 w-3 ml-0.5 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 bg-popover border-border z-50" align="start">
+            <Calendar
+              mode="range"
+              selected={dateRange.from || dateRange.to ? { from: dateRange.from, to: dateRange.to } : undefined}
+              onSelect={(range) => onDateRangeChange({ from: range?.from, to: range?.to })}
+              numberOfMonths={2}
+              className={cn("p-3 pointer-events-auto")}
+            />
+            {hasDateFilter && (
+              <div className="px-3 pb-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-muted-foreground"
+                  onClick={() => onDateRangeChange({})}
+                >
+                  Clear dates
+                </Button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
 
         {hasActiveFilters && (
           <>

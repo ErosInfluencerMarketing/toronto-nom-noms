@@ -10,7 +10,7 @@ import { useSequences } from '@/hooks/useSequences';
 import { Lead, LeadFormData, LeadStatus, Platform } from '@/types/lead';
 import { LeadCard } from '@/components/LeadCard';
 import { LeadForm } from '@/components/LeadForm';
-import { LeadFilters } from '@/components/LeadFilters';
+import { LeadFilters, DateRange } from '@/components/LeadFilters';
 import { LeadListView } from '@/components/LeadListView';
 import { UpcomingOutreach } from '@/components/UpcomingOutreach';
 import { AnalyticsPanel } from '@/components/AnalyticsPanel';
@@ -122,6 +122,7 @@ export default function Dashboard() {
     try { const v = localStorage.getItem('dashboard_contactFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
+  const [dateRange, setDateRange] = useState<DateRange>({});
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
@@ -173,10 +174,25 @@ export default function Dashboard() {
           return false;
         });
       }
+
+      let matchesDate = true;
+      if (dateRange.from || dateRange.to) {
+        const createdAt = new Date(lead.created_at);
+        if (dateRange.from) {
+          const fromStart = new Date(dateRange.from);
+          fromStart.setHours(0, 0, 0, 0);
+          if (createdAt < fromStart) matchesDate = false;
+        }
+        if (dateRange.to) {
+          const toEnd = new Date(dateRange.to);
+          toEnd.setHours(23, 59, 59, 999);
+          if (createdAt > toEnd) matchesDate = false;
+        }
+      }
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact;
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesDate;
     });
-  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, dateRange]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
@@ -189,7 +205,7 @@ export default function Dashboard() {
   useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
   useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
 
-  const filterKey = JSON.stringify([search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters]);
+  const filterKey = JSON.stringify([search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, dateRange.from?.getTime(), dateRange.to?.getTime()]);
   const prevFilterKey = useRef(filterKey);
   useEffect(() => {
     if (prevFilterKey.current !== filterKey) {
@@ -206,6 +222,7 @@ export default function Dashboard() {
     setCategoryFilters([]);
     setCityFilters([]);
     setContactFilters([]);
+    setDateRange({});
   };
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
@@ -365,6 +382,8 @@ export default function Dashboard() {
             cities={cities}
             contactFilters={contactFilters}
             onContactFiltersChange={setContactFilters}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
             onReset={handleResetFilters}
           />
           
