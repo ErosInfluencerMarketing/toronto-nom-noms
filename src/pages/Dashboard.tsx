@@ -174,10 +174,25 @@ export default function Dashboard() {
           return false;
         });
       }
+
+      let matchesDate = true;
+      if (dateRange.from || dateRange.to) {
+        const createdAt = new Date(lead.created_at);
+        if (dateRange.from) {
+          const fromStart = new Date(dateRange.from);
+          fromStart.setHours(0, 0, 0, 0);
+          if (createdAt < fromStart) matchesDate = false;
+        }
+        if (dateRange.to) {
+          const toEnd = new Date(dateRange.to);
+          toEnd.setHours(23, 59, 59, 999);
+          if (createdAt > toEnd) matchesDate = false;
+        }
+      }
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact;
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesDate;
     });
-  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, dateRange]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
