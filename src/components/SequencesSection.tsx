@@ -49,7 +49,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Repeat, Pause, Play, CheckCircle, MessageCircle, Trash2, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Plus, Repeat, Pause, Play, CheckCircle, MessageCircle, Trash2, ChevronLeft, ChevronRight, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface SequencesSectionProps {
