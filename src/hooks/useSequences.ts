@@ -27,47 +27,72 @@ export function useSequences(statusFilter: SequenceStatus | 'all' = 'all', leadS
         }
       }
 
-      let query = supabase
-        .from('sequences')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false });
+      // Fetch all sequences in batches to avoid 1000-row limit
+      const batchSize = 1000;
+      let allSeqData: any[] = [];
+      let offset = 0;
+      let hasMore = true;
+      let totalCount = 0;
 
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+      while (hasMore) {
+        let query = supabase
+          .from('sequences')
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .range(offset, offset + batchSize - 1);
+
+        if (statusFilter !== 'all') {
+          query = query.eq('status', statusFilter);
+        }
+
+        if (matchingLeadIds) {
+          query = query.in('lead_id', matchingLeadIds);
+        }
+
+        const { data: seqData, error, count } = await query;
+        if (error) throw error;
+
+        if (offset === 0) totalCount = count || 0;
+
+        if (!seqData || seqData.length === 0) {
+          hasMore = false;
+        } else {
+          allSeqData = allSeqData.concat(seqData);
+          offset += batchSize;
+          if (seqData.length < batchSize) hasMore = false;
+        }
       }
 
-      if (matchingLeadIds) {
-        query = query.in('lead_id', matchingLeadIds);
-      }
+      // Fetch steps in batches for all sequences
+      if (allSeqData.length > 0) {
+        const allSeqIds = allSeqData.map((s: any) => s.id);
+        let allSteps: any[] = [];
+        for (let i = 0; i < allSeqIds.length; i += batchSize) {
+          const batch = allSeqIds.slice(i, i + batchSize);
+          const { data: steps, error: stepsErr } = await supabase
+            .from('sequence_steps')
+            .select('*')
+            .in('sequence_id', batch)
+            .order('step_number', { ascending: true });
+          if (stepsErr) throw stepsErr;
+          allSteps = allSteps.concat(steps || []);
+        }
 
-      const { data: seqData, error, count } = await query;
-      if (error) throw error;
-
-      // Fetch steps only for current page sequences
-      if (seqData && seqData.length > 0) {
-        const seqIds = seqData.map((s: any) => s.id);
-        const { data: steps, error: stepsErr } = await supabase
-          .from('sequence_steps')
-          .select('*')
-          .in('sequence_id', seqIds)
-          .order('step_number', { ascending: true });
-        if (stepsErr) throw stepsErr;
-
-        const stepsBySeq = (steps || []).reduce((acc: Record<string, any[]>, step: any) => {
+        const stepsBySeq = allSteps.reduce((acc: Record<string, any[]>, step: any) => {
           if (!acc[step.sequence_id]) acc[step.sequence_id] = [];
           acc[step.sequence_id].push(step);
           return acc;
         }, {});
 
-        const sequences = seqData.map((seq: any) => ({
+        const sequences = allSeqData.map((seq: any) => ({
           ...seq,
           steps: stepsBySeq[seq.id] || [],
         })) as unknown as Sequence[];
 
-        return { sequences, totalCount: count || 0 };
+        return { sequences, totalCount };
       }
 
-      return { sequences: [] as Sequence[], totalCount: count || 0 };
+      return { sequences: [] as Sequence[], totalCount };
     },
     enabled: !!user,
     placeholderData: keepPreviousData,
