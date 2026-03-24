@@ -4,14 +4,12 @@ import { Sequence, SequenceFormData, SequenceStatus, SenderIdentity } from '@/ty
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-const PAGE_SIZE = 25;
-
-export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'all', leadSearch = '') {
+export function useSequences(statusFilter: SequenceStatus | 'all' = 'all', leadSearch = '') {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['sequences', user?.id, page, statusFilter, leadSearch],
+    queryKey: ['sequences', user?.id, statusFilter, leadSearch],
     queryFn: async () => {
       if (!user) return { sequences: [], totalCount: 0 };
 
@@ -32,8 +30,7 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
       let query = supabase
         .from('sequences')
         .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+        .order('created_at', { ascending: false });
 
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
@@ -250,7 +247,6 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
     sequences: data?.sequences || [],
     totalCount: data?.totalCount || 0,
     statusCounts: statusCounts || { active: 0, paused: 0, completed: 0, replied: 0, total: 0 },
-    pageSize: PAGE_SIZE,
     isLoading,
     error,
     createSequence,

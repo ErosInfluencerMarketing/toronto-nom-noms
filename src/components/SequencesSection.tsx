@@ -71,7 +71,7 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
   const [statusFilter, setStatusFilter] = useState<SequenceStatus | 'all'>('all');
   const [leadSearch, setLeadSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const { sequences, totalCount, statusCounts, pageSize, isLoading, createSequence, updateSequenceStatus, bulkUpdateStatus, deleteSequence } = useSequences(page, statusFilter, debouncedSearch);
+  const { sequences, totalCount, statusCounts, isLoading, createSequence, updateSequenceStatus, bulkUpdateStatus, deleteSequence } = useSequences(statusFilter, debouncedSearch);
   const { templates } = useTemplates();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -136,7 +136,7 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const GROUPS_PER_PAGE = 10;
 
   const handleCreate = () => {
     if (formData.lead_ids.length === 0 || formData.steps.some((s) => !s.template_id) || !formData.name.trim()) return;
@@ -210,6 +210,9 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
     }
     return groups;
   }, [sequences]);
+
+  const totalPages = Math.max(1, Math.ceil(groupedSequences.length / GROUPS_PER_PAGE));
+  const paginatedGroups = groupedSequences.slice(page * GROUPS_PER_PAGE, (page + 1) * GROUPS_PER_PAGE);
 
   const toggleGroup = (name: string) => {
     setExpandedGroups((prev) => {
@@ -293,7 +296,7 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
       ) : (
         <>
            <div className="space-y-2">
-            {groupedSequences.map((group) => {
+            {paginatedGroups.map((group) => {
               const isExpanded = expandedGroups.has(group.name);
               const activeIds = group.sequences.filter((s) => s.status === 'active').map((s) => s.id);
               const pausedIds = group.sequences.filter((s) => s.status === 'paused').map((s) => s.id);
@@ -403,34 +406,36 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              Showing {page * pageSize + 1}–{Math.min((page + 1) * pageSize, totalCount)} of {totalCount}
-            </span>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                disabled={page === 0}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="px-2 text-xs">
-                Page {page + 1} of {totalPages}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>
+                Showing {page * GROUPS_PER_PAGE + 1}–{Math.min((page + 1) * GROUPS_PER_PAGE, groupedSequences.length)} of {groupedSequences.length} groups ({totalCount} sequences)
               </span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="px-2 text-xs">
+                  Page {page + 1} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={page >= totalPages - 1}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 
