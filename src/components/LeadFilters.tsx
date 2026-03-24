@@ -157,6 +157,8 @@ export function LeadFilters({
   cities,
   contactFilters,
   onContactFiltersChange,
+  dateRange,
+  onDateRangeChange,
   onReset,
 }: LeadFiltersProps) {
   const hasActiveFilters =
@@ -165,10 +167,21 @@ export function LeadFilters({
     platformFilters.length > 0 ||
     categoryFilters.length > 0 ||
     cityFilters.length > 0 ||
-    contactFilters.length > 0;
+    contactFilters.length > 0 ||
+    dateRange.from !== undefined ||
+    dateRange.to !== undefined;
 
   const categoryOptions = categories.map((c) => ({ value: c, label: c }));
   const cityOptions = cities.map((c) => ({ value: c, label: c }));
+
+  const hasDateFilter = dateRange.from || dateRange.to;
+  const dateLabel = hasDateFilter
+    ? dateRange.from && dateRange.to
+      ? `${format(dateRange.from, 'MMM d')} – ${format(dateRange.to, 'MMM d')}`
+      : dateRange.from
+        ? `From ${format(dateRange.from, 'MMM d')}`
+        : `Until ${format(dateRange.to!, 'MMM d')}`
+    : 'Date Added';
 
   return (
     <div className="space-y-3 flex-1 min-w-0">
