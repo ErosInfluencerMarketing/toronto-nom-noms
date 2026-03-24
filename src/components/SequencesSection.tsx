@@ -136,7 +136,9 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const GROUPS_PER_PAGE = 10;
+  const totalPages = Math.max(1, Math.ceil(groupedSequences.length / GROUPS_PER_PAGE));
+  const paginatedGroups = groupedSequences.slice(page * GROUPS_PER_PAGE, (page + 1) * GROUPS_PER_PAGE);
 
   const handleCreate = () => {
     if (formData.lead_ids.length === 0 || formData.steps.some((s) => !s.template_id) || !formData.name.trim()) return;
