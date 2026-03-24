@@ -292,61 +292,114 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
         </div>
       ) : (
         <>
-          <div className="rounded-lg border border-border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Lead</TableHead>
-                  <TableHead>Progress</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Next Send</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sequences.map((seq) => (
-                  <TableRow key={seq.id}>
-                    <TableCell className="font-medium text-foreground max-w-[180px] truncate">{seq.name || '—'}</TableCell>
-                    <TableCell className="text-foreground max-w-[180px] truncate">{getLeadName(seq.lead_id)}</TableCell>
-                    <TableCell className="text-muted-foreground">{seq.current_step}/{seq.steps?.length || seq.max_followups}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={statusColor[seq.status]}>
-                        {statusIcon[seq.status]}
-                        <span className="ml-1 capitalize">{seq.status}</span>
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {seq.next_send_at && seq.status === 'active'
-                        ? format(new Date(seq.next_send_at), 'MMM d, h:mm a')
-                        : '—'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {seq.status === 'active' && (
-                          <>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'paused' })}>
-                              <Pause className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'replied' })}>
-                              <MessageCircle className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        )}
-                        {seq.status === 'paused' && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'active' })}>
-                            <Play className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteConfirmId(seq.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
+           <div className="space-y-2">
+            {groupedSequences.map((group) => {
+              const isExpanded = expandedGroups.has(group.name);
+              const activeIds = group.sequences.filter((s) => s.status === 'active').map((s) => s.id);
+              const pausedIds = group.sequences.filter((s) => s.status === 'paused').map((s) => s.id);
+              const hasActive = activeIds.length > 0;
+              const hasPaused = pausedIds.length > 0;
+              const activeCount = activeIds.length;
+              const pausedCount = pausedIds.length;
+
+              return (
+                <div key={group.name} className="rounded-lg border border-border overflow-hidden">
+                  {/* Group header */}
+                  <div
+                    className="flex items-center justify-between px-4 py-3 bg-secondary/50 cursor-pointer hover:bg-secondary/80 transition-colors"
+                    onClick={() => toggleGroup(group.name)}
+                  >
+                    <div className="flex items-center gap-3">
+                      {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                      <span className="font-medium text-foreground">{group.name}</span>
+                      <Badge variant="outline" className="text-xs">{group.sequences.length} lead{group.sequences.length !== 1 ? 's' : ''}</Badge>
+                      {activeCount > 0 && <Badge variant="outline" className="text-xs bg-green-500/10 text-green-400 border-green-500/30">{activeCount} active</Badge>}
+                      {pausedCount > 0 && <Badge variant="outline" className="text-xs bg-yellow-500/10 text-yellow-400 border-yellow-500/30">{pausedCount} paused</Badge>}
+                    </div>
+                    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      {hasActive && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => bulkUpdateStatus.mutate({ ids: activeIds, status: 'paused' })}
+                          disabled={bulkUpdateStatus.isPending}
+                        >
+                          <Pause className="h-3 w-3" /> Pause All
                         </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      )}
+                      {hasPaused && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => bulkUpdateStatus.mutate({ ids: pausedIds, status: 'active' })}
+                          disabled={bulkUpdateStatus.isPending}
+                        >
+                          <Play className="h-3 w-3" /> Resume All
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Group rows */}
+                  {isExpanded && (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Lead</TableHead>
+                          <TableHead>Progress</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Next Send</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {group.sequences.map((seq) => (
+                          <TableRow key={seq.id}>
+                            <TableCell className="text-foreground max-w-[200px] truncate">{getLeadName(seq.lead_id)}</TableCell>
+                            <TableCell className="text-muted-foreground">{seq.current_step}/{seq.steps?.length || seq.max_followups}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={statusColor[seq.status]}>
+                                {statusIcon[seq.status]}
+                                <span className="ml-1 capitalize">{seq.status}</span>
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-xs">
+                              {seq.next_send_at && seq.status === 'active'
+                                ? format(new Date(seq.next_send_at), 'MMM d, h:mm a')
+                                : '—'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                {seq.status === 'active' && (
+                                  <>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'paused' })}>
+                                      <Pause className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'replied' })}>
+                                      <MessageCircle className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </>
+                                )}
+                                {seq.status === 'paused' && (
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateSequenceStatus.mutate({ id: seq.id, status: 'active' })}>
+                                    <Play className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteConfirmId(seq.id)}>
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Pagination */}
