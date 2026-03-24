@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 import { useSequences } from '@/hooks/useSequences';
 import { useTemplates } from '@/hooks/useTemplates';
 import { useLeads } from '@/hooks/useLeads';
@@ -82,6 +83,29 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
   const [leadEmailSearch, setLeadEmailSearch] = useState('');
   const [leadStatusFilter, setLeadStatusFilter] = useState<string>('all');
   const [leadCategoryFilter, setLeadCategoryFilter] = useState('');
+
+  // Fetch distinct previous sequence names with their lead IDs for "copy leads" feature
+  const [previousSequences, setPreviousSequences] = useState<{ name: string; lead_ids: string[] }[]>([]);
+  useEffect(() => {
+    if (!isFormOpen) return;
+    (async () => {
+      const { data } = await supabase
+        .from('sequences')
+        .select('name, lead_id')
+        .order('created_at', { ascending: false });
+      if (data) {
+        const grouped: Record<string, Set<string>> = {};
+        for (const row of data) {
+          const key = row.name || '(unnamed)';
+          if (!grouped[key]) grouped[key] = new Set();
+          grouped[key].add(row.lead_id);
+        }
+        setPreviousSequences(
+          Object.entries(grouped).map(([name, ids]) => ({ name, lead_ids: Array.from(ids) }))
+        );
+      }
+    })();
+  }, [isFormOpen]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -362,6 +386,32 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
 
             <div className="space-y-2">
               <Label>Leads ({formData.lead_ids.length} selected)</Label>
+              {previousSequences.length > 0 && (
+                <Select
+                  value=""
+                  onValueChange={(seqName) => {
+                    const prev = previousSequences.find((s) => s.name === seqName);
+                    if (prev) {
+                      const validIds = prev.lead_ids.filter((id) =>
+                        leadsWithEmail.some((l) => l.id === id)
+                      );
+                      const newIds = new Set([...formData.lead_ids, ...validIds]);
+                      setFormData({ ...formData, lead_ids: Array.from(newIds) });
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-xs bg-secondary border-border">
+                    <SelectValue placeholder="Copy leads from previous sequence..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {previousSequences.map((s) => (
+                      <SelectItem key={s.name} value={s.name}>
+                        {s.name} ({s.lead_ids.length} leads)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <div className="flex gap-1 mb-2 flex-wrap">
                 {(['all', 'eros', 'noms'] as const).map((p) => (
                   <Button
