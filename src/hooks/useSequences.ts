@@ -4,9 +4,7 @@ import { Sequence, SequenceFormData, SequenceStatus, SenderIdentity } from '@/ty
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-const PAGE_SIZE = 25;
-
-export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'all', leadSearch = '') {
+export function useSequences(statusFilter: SequenceStatus | 'all' = 'all', leadSearch = '') {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
