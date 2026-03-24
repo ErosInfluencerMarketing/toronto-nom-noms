@@ -255,6 +255,7 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
     error,
     createSequence,
     updateSequenceStatus,
+    bulkUpdateStatus,
     deleteSequence,
   };
 }
