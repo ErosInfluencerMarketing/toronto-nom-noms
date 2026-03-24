@@ -196,6 +196,30 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
     return (statusCounts as any)[status] || 0;
   };
 
+  // Group sequences by name
+  const groupedSequences = useMemo(() => {
+    const groups: { name: string; sequences: typeof sequences }[] = [];
+    const map = new Map<string, typeof sequences>();
+    for (const seq of sequences) {
+      const key = seq.name || '(unnamed)';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(seq);
+    }
+    for (const [name, seqs] of map) {
+      groups.push({ name, sequences: seqs });
+    }
+    return groups;
+  }, [sequences]);
+
+  const toggleGroup = (name: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
