@@ -245,6 +245,44 @@ export function LeadFilters({
           />
         )}
 
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                'text-xs gap-1 h-8 border-border bg-secondary',
+                hasDateFilter && 'border-primary/50 bg-primary/10 text-primary'
+              )}
+            >
+              <CalendarIcon className="h-3 w-3" />
+              {dateLabel}
+              <ChevronDown className="h-3 w-3 ml-0.5 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 bg-popover border-border z-50" align="start">
+            <Calendar
+              mode="range"
+              selected={dateRange.from || dateRange.to ? { from: dateRange.from, to: dateRange.to } : undefined}
+              onSelect={(range) => onDateRangeChange({ from: range?.from, to: range?.to })}
+              numberOfMonths={2}
+              className={cn("p-3 pointer-events-auto")}
+            />
+            {hasDateFilter && (
+              <div className="px-3 pb-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-muted-foreground"
+                  onClick={() => onDateRangeChange({})}
+                >
+                  Clear dates
+                </Button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
+
         {hasActiveFilters && (
           <>
             <div className="w-px h-6 bg-border self-center mx-1" />
