@@ -71,7 +71,7 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
   const [statusFilter, setStatusFilter] = useState<SequenceStatus | 'all'>('all');
   const [leadSearch, setLeadSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const { sequences, totalCount, statusCounts, pageSize, isLoading, createSequence, updateSequenceStatus, bulkUpdateStatus, deleteSequence } = useSequences(page, statusFilter, debouncedSearch);
+  const { sequences, totalCount, statusCounts, isLoading, createSequence, updateSequenceStatus, bulkUpdateStatus, deleteSequence } = useSequences(statusFilter, debouncedSearch);
   const { templates } = useTemplates();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
