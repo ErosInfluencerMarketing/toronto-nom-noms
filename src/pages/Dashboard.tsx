@@ -122,6 +122,7 @@ export default function Dashboard() {
     try { const v = localStorage.getItem('dashboard_contactFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
+  const [dateRange, setDateRange] = useState<DateRange>({});
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
