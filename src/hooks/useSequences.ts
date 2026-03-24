@@ -9,7 +9,7 @@ export function useSequences(statusFilter: SequenceStatus | 'all' = 'all', leadS
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['sequences', user?.id, page, statusFilter, leadSearch],
+    queryKey: ['sequences', user?.id, statusFilter, leadSearch],
     queryFn: async () => {
       if (!user) return { sequences: [], totalCount: 0 };
 
