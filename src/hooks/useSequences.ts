@@ -212,6 +212,24 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
     },
   });
 
+  const bulkUpdateStatus = useMutation({
+    mutationFn: async ({ ids, status }: { ids: string[]; status: SequenceStatus }) => {
+      const { error } = await supabase
+        .from('sequences')
+        .update({ status } as any)
+        .in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, { ids, status }) => {
+      queryClient.invalidateQueries({ queryKey: ['sequences'] });
+      queryClient.invalidateQueries({ queryKey: ['sequences-counts'] });
+      toast.success(`${ids.length} sequence(s) ${status === 'paused' ? 'paused' : status === 'active' ? 'resumed' : 'updated'}`);
+    },
+    onError: (error) => {
+      toast.error('Failed to update sequences: ' + error.message);
+    },
+  });
+
   const deleteSequence = useMutation({
     mutationFn: async (id: string) => {
       await supabase.from('sequence_steps').delete().eq('sequence_id', id);
@@ -237,6 +255,7 @@ export function useSequences(page = 0, statusFilter: SequenceStatus | 'all' = 'a
     error,
     createSequence,
     updateSequenceStatus,
+    bulkUpdateStatus,
     deleteSequence,
   };
 }
