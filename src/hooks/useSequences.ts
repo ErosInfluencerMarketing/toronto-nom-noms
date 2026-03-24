@@ -247,7 +247,6 @@ export function useSequences(statusFilter: SequenceStatus | 'all' = 'all', leadS
     sequences: data?.sequences || [],
     totalCount: data?.totalCount || 0,
     statusCounts: statusCounts || { active: 0, paused: 0, completed: 0, replied: 0, total: 0 },
-    pageSize: PAGE_SIZE,
     isLoading,
     error,
     createSequence,
