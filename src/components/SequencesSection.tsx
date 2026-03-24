@@ -211,7 +211,10 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
     return groups;
   }, [sequences]);
 
-  const toggleGroup = (name: string) => {
+  const totalPages = Math.max(1, Math.ceil(groupedSequences.length / GROUPS_PER_PAGE));
+  const paginatedGroups = groupedSequences.slice(page * GROUPS_PER_PAGE, (page + 1) * GROUPS_PER_PAGE);
+
+
     setExpandedGroups((prev) => {
       const next = new Set(prev);
       if (next.has(name)) next.delete(name);
