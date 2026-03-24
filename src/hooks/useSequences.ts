@@ -30,8 +30,7 @@ export function useSequences(statusFilter: SequenceStatus | 'all' = 'all', leadS
       let query = supabase
         .from('sequences')
         .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+        .order('created_at', { ascending: false });
 
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
