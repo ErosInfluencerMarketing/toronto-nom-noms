@@ -54,6 +54,8 @@ import { format } from 'date-fns';
 
 interface SequencesSectionProps {
   leads?: Lead[];
+  preSelectedLeadIds?: string[];
+  onPreSelectedConsumed?: () => void;
 }
 
 const STATUS_TABS: { value: SequenceStatus | 'all'; label: string }[] = [
