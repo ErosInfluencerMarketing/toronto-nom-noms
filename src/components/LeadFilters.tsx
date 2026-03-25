@@ -171,6 +171,8 @@ export function LeadFilters({
   assignedFilters,
   onAssignedFiltersChange,
   assignedOptions,
+  sequenceFilters,
+  onSequenceFiltersChange,
   dateRange,
   onDateRangeChange,
   onReset,
