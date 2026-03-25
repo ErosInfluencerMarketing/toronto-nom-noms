@@ -493,8 +493,19 @@ export default function Dashboard() {
                 <UserCheck className="h-4 w-4 mr-2" />
                 Assign to Member
               </Button>
-            )}
+             )}
             <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setSequencePreSelectedLeadIds(Array.from(selectedLeadIds));
+                setSelectedLeadIds(new Set());
+                document.getElementById('sequences')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              <Repeat className="h-4 w-4 mr-2" />
+              Create Sequence
+            </Button>
               variant="ghost"
               size="sm"
               onClick={() => setSelectedLeadIds(new Set())}
