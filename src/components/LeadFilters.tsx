@@ -160,6 +160,9 @@ export function LeadFilters({
   cities,
   contactFilters,
   onContactFiltersChange,
+  assignedFilters,
+  onAssignedFiltersChange,
+  assignedOptions,
   dateRange,
   onDateRangeChange,
   onReset,
@@ -171,6 +174,7 @@ export function LeadFilters({
     categoryFilters.length > 0 ||
     cityFilters.length > 0 ||
     contactFilters.length > 0 ||
+    assignedFilters.length > 0 ||
     dateRange.from !== undefined ||
     dateRange.to !== undefined;
 
