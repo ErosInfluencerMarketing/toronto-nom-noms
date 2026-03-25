@@ -127,6 +127,9 @@ export default function Dashboard() {
   const [assignedFilters, setAssignedFilters] = useState<string[]>(() => {
     try { const v = localStorage.getItem('dashboard_assignedFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
+  const [sequenceFilters, setSequenceFilters] = useState<SequenceFilter[]>(() => {
+    try { const v = localStorage.getItem('dashboard_sequenceFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
   const [dateRange, setDateRange] = useState<DateRange>({});
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
