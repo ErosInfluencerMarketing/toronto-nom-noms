@@ -185,6 +185,7 @@ export function LeadFilters({
     cityFilters.length > 0 ||
     contactFilters.length > 0 ||
     assignedFilters.length > 0 ||
+    sequenceFilters.length > 0 ||
     dateRange.from !== undefined ||
     dateRange.to !== undefined;
 
