@@ -134,6 +134,7 @@ export default function Dashboard() {
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
+  const [sequencePreSelectedLeadIds, setSequencePreSelectedLeadIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(() => Number(localStorage.getItem('dashboard_page')) || 1);
   const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem('dashboard_pageSize')) || 100);
 
