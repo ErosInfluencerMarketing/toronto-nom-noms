@@ -124,6 +124,9 @@ export default function Dashboard() {
     try { const v = localStorage.getItem('dashboard_contactFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
+  const [assignedFilters, setAssignedFilters] = useState<string[]>(() => {
+    try { const v = localStorage.getItem('dashboard_assignedFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
   const [dateRange, setDateRange] = useState<DateRange>({});
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
