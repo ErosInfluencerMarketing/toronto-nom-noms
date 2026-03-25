@@ -66,7 +66,7 @@ const STATUS_TABS: { value: SequenceStatus | 'all'; label: string }[] = [
   { value: 'replied', label: 'Replied' },
 ];
 
-export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
+export function SequencesSection({ leads: propLeads, preSelectedLeadIds, onPreSelectedConsumed }: SequencesSectionProps) {
   const { leads: allLeads } = useLeads();
   const leads = propLeads || allLeads;
   const [page, setPage] = useState(0);
