@@ -257,6 +257,7 @@ export default function Dashboard() {
     setCityFilters([]);
     setContactFilters([]);
     setAssignedFilters([]);
+    setSequenceFilters([]);
     setDateRange({});
   };
 
