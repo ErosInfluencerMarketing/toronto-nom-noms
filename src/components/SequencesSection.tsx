@@ -54,6 +54,8 @@ import { format } from 'date-fns';
 
 interface SequencesSectionProps {
   leads?: Lead[];
+  preSelectedLeadIds?: string[];
+  onPreSelectedConsumed?: () => void;
 }
 
 const STATUS_TABS: { value: SequenceStatus | 'all'; label: string }[] = [
@@ -64,7 +66,7 @@ const STATUS_TABS: { value: SequenceStatus | 'all'; label: string }[] = [
   { value: 'replied', label: 'Replied' },
 ];
 
-export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
+export function SequencesSection({ leads: propLeads, preSelectedLeadIds, onPreSelectedConsumed }: SequencesSectionProps) {
   const { leads: allLeads } = useLeads();
   const leads = propLeads || allLeads;
   const [page, setPage] = useState(0);
@@ -89,6 +91,15 @@ export function SequencesSection({ leads: propLeads }: SequencesSectionProps) {
   const [leadEmailSearch, setLeadEmailSearch] = useState('');
   const [leadStatusFilter, setLeadStatusFilter] = useState<string>('all');
   const [leadCategoryFilter, setLeadCategoryFilter] = useState('');
+
+  // Handle pre-selected leads from Dashboard
+  useEffect(() => {
+    if (preSelectedLeadIds && preSelectedLeadIds.length > 0) {
+      setFormData((prev) => ({ ...prev, lead_ids: preSelectedLeadIds }));
+      setIsFormOpen(true);
+      onPreSelectedConsumed?.();
+    }
+  }, [preSelectedLeadIds, onPreSelectedConsumed]);
 
   // Fetch distinct previous sequence names with their lead IDs for "copy leads" feature
   const [previousSequences, setPreviousSequences] = useState<{ name: string; lead_ids: string[] }[]>([]);

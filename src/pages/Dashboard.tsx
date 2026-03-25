@@ -37,7 +37,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -134,6 +134,7 @@ export default function Dashboard() {
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
+  const [sequencePreSelectedLeadIds, setSequencePreSelectedLeadIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(() => Number(localStorage.getItem('dashboard_page')) || 1);
   const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem('dashboard_pageSize')) || 100);
 
@@ -492,9 +493,20 @@ export default function Dashboard() {
                 <UserCheck className="h-4 w-4 mr-2" />
                 Assign to Member
               </Button>
-            )}
+             )}
             <Button
-              variant="ghost"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setSequencePreSelectedLeadIds(Array.from(selectedLeadIds));
+                setSelectedLeadIds(new Set());
+                document.getElementById('sequences')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              <Repeat className="h-4 w-4 mr-2" />
+              Create Sequence
+            </Button>
+            <Button
               size="sm"
               onClick={() => setSelectedLeadIds(new Set())}
               className="text-muted-foreground"
@@ -592,7 +604,11 @@ export default function Dashboard() {
           {/* Sequences Section */}
           <Separator className="my-8" />
           <div id="sequences" className="scroll-mt-20">
-            <SequencesSection leads={leads} />
+            <SequencesSection
+              leads={leads}
+              preSelectedLeadIds={sequencePreSelectedLeadIds}
+              onPreSelectedConsumed={() => setSequencePreSelectedLeadIds([])}
+            />
           </div>
       </main>
 
