@@ -421,6 +421,8 @@ export default function Dashboard() {
             assignedFilters={assignedFilters}
             onAssignedFiltersChange={setAssignedFilters}
             assignedOptions={assignedOptions}
+            sequenceFilters={sequenceFilters}
+            onSequenceFiltersChange={setSequenceFilters}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
             onReset={handleResetFilters}
