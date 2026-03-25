@@ -92,6 +92,15 @@ export function SequencesSection({ leads: propLeads, preSelectedLeadIds, onPreSe
   const [leadStatusFilter, setLeadStatusFilter] = useState<string>('all');
   const [leadCategoryFilter, setLeadCategoryFilter] = useState('');
 
+  // Handle pre-selected leads from Dashboard
+  useEffect(() => {
+    if (preSelectedLeadIds && preSelectedLeadIds.length > 0) {
+      setFormData((prev) => ({ ...prev, lead_ids: preSelectedLeadIds }));
+      setIsFormOpen(true);
+      onPreSelectedConsumed?.();
+    }
+  }, [preSelectedLeadIds, onPreSelectedConsumed]);
+
   // Fetch distinct previous sequence names with their lead IDs for "copy leads" feature
   const [previousSequences, setPreviousSequences] = useState<{ name: string; lead_ids: string[] }[]>([]);
   useEffect(() => {
