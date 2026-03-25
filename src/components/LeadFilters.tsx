@@ -42,6 +42,9 @@ interface LeadFiltersProps {
   cities: string[];
   contactFilters: ContactFilter[];
   onContactFiltersChange: (value: ContactFilter[]) => void;
+  assignedFilters: string[];
+  onAssignedFiltersChange: (value: string[]) => void;
+  assignedOptions: { value: string; label: string }[];
   dateRange: DateRange;
   onDateRangeChange: (value: DateRange) => void;
   onReset: () => void;
