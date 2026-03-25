@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeads } from '@/hooks/useLeads';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useSequences } from '@/hooks/useSequences';
 import { Lead, LeadFormData, LeadStatus, Platform } from '@/types/lead';
 import { LeadCard } from '@/components/LeadCard';
