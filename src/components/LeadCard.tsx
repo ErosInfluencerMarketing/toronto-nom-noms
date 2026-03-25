@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Mail, Instagram, Calendar, Edit2, Trash2, Send } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isPast, isToday } from 'date-fns';
 
 interface LeadCardProps {
   lead: Lead;
@@ -69,12 +69,23 @@ export function LeadCard({ lead, onEdit, onDelete, onViewDetails }: LeadCardProp
               
               <div className="flex items-center gap-3 mb-3">
                 <StatusBadge status={lead.status} />
-                {lead.next_outreach_date && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Calendar className="h-3.5 w-3.5" />
-                    Next: {format(parseISO(lead.next_outreach_date), 'MMM d, yyyy')}
-                  </span>
-                )}
+                {lead.next_outreach_date && (() => {
+                  const date = parseISO(lead.next_outreach_date);
+                  const overdue = isPast(date) && !isToday(date);
+                  const today = isToday(date);
+                  return (
+                    <span className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full border ${
+                      overdue
+                        ? 'bg-destructive/10 text-destructive border-destructive/20'
+                        : today
+                        ? 'bg-status-contacted/10 text-status-contacted border-status-contacted/20'
+                        : 'bg-primary/10 text-primary border-primary/20'
+                    }`}>
+                      <Calendar className="h-3.5 w-3.5" />
+                      {overdue ? 'Overdue' : today ? 'Today' : 'Next'}: {format(date, 'MMM d, yyyy')}
+                    </span>
+                  );
+                })()}
               </div>
               
               {lead.last_outreach_date && (
