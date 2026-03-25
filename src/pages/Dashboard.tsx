@@ -150,6 +150,13 @@ export default function Dashboard() {
     return Array.from(set).sort();
   }, [leads]);
 
+  const assignedOptions = useMemo(() => {
+    return members.map((m) => ({
+      value: m.id,
+      label: m.full_name || m.email || m.id.slice(0, 8),
+    }));
+  }, [members]);
+
   const filteredLeads = useMemo(() => {
     const s = search.trim().toLowerCase();
     return leads.filter((lead) => {
@@ -166,6 +173,7 @@ export default function Dashboard() {
       const matchesPlatform = platformFilters.length === 0 || platformFilters.includes(lead.platform);
       const matchesCategory = categoryFilters.length === 0 || (lead.category && categoryFilters.includes(lead.category));
       const matchesCity = cityFilters.length === 0 || (lead.city && cityFilters.includes(lead.city));
+      const matchesAssigned = assignedFilters.length === 0 || (lead.assigned_user_id && assignedFilters.includes(lead.assigned_user_id));
 
       let matchesContact = true;
       if (contactFilters.length > 0) {
@@ -195,9 +203,9 @@ export default function Dashboard() {
         }
       }
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesDate;
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate;
     });
-  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, dateRange]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, dateRange]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
