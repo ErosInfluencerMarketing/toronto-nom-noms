@@ -604,7 +604,11 @@ export default function Dashboard() {
           {/* Sequences Section */}
           <Separator className="my-8" />
           <div id="sequences" className="scroll-mt-20">
-            <SequencesSection leads={leads} />
+            <SequencesSection
+              leads={leads}
+              preSelectedLeadIds={sequencePreSelectedLeadIds}
+              onPreSelectedConsumed={() => setSequencePreSelectedLeadIds([])}
+            />
           </div>
       </main>
 
