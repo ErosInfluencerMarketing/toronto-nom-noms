@@ -160,6 +160,12 @@ export default function Dashboard() {
     }));
   }, [members]);
 
+  const leadIdsInSequence = useMemo(() => {
+    const ids = new Set<string>();
+    sequences.forEach((seq) => ids.add(seq.lead_id));
+    return ids;
+  }, [sequences]);
+
   const filteredLeads = useMemo(() => {
     const s = search.trim().toLowerCase();
     return leads.filter((lead) => {
