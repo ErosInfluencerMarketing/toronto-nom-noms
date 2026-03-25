@@ -252,6 +252,15 @@ export function LeadFilters({
           />
         )}
 
+        {assignedOptions.length > 0 && (
+          <MultiSelectPopover
+            label="Assigned To"
+            options={assignedOptions}
+            selected={assignedFilters}
+            onChange={onAssignedFiltersChange}
+          />
+        )}
+
         <Popover>
           <PopoverTrigger asChild>
             <Button
