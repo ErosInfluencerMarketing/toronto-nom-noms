@@ -144,16 +144,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update last outreach date and status to contacted
+    // Update last outreach date, status, and next outreach date
     const userId = claimsData.claims.sub;
     const anySuccess = Object.values(results).some((r: any) => r.success);
-    if (lead.id) {
+    if (lead.id && anySuccess) {
+      const today = new Date();
+      const todayStr = today.toISOString().split("T")[0];
       const updateData: Record<string, any> = {
-        last_outreach_date: new Date().toISOString().split("T")[0],
+        last_outreach_date: todayStr,
       };
-      // Auto-set status to contacted if currently "new" and message was sent successfully
-      if (anySuccess && lead.status === "new") {
+      // Auto-set status to contacted if currently "new"
+      if (lead.status === "new") {
         updateData.status = "contacted";
+      }
+      // For email sends (not sequence), set next outreach to 2 days later
+      if (channels.includes("email")) {
+        const nextOutreach = new Date(today);
+        nextOutreach.setDate(nextOutreach.getDate() + 2);
+        updateData.next_outreach_date = nextOutreach.toISOString().split("T")[0];
       }
       await supabase
         .from("leads")

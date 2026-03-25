@@ -95,6 +95,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
               id: lead.id,
               email: lead.email,
               business_name: lead.business_name,
+              status: lead.status,
             },
             message: personalizedMessage.trim(),
             subject: personalizedSubject.trim(),
