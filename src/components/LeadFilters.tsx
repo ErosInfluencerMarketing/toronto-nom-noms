@@ -67,6 +67,11 @@ const contactOptions: { value: ContactFilter; label: string }[] = [
   { value: 'neither', label: 'No Contact Info' },
 ];
 
+const sequenceOptions: { value: SequenceFilter; label: string }[] = [
+  { value: 'in_sequence', label: 'In Sequence' },
+  { value: 'not_in_sequence', label: 'Not in Sequence' },
+];
+
 const platformOptions: { value: Platform; label: string }[] = [
   { value: 'eros', label: 'Eros' },
   { value: 'noms', label: 'Noms' },
