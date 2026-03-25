@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 export type ContactFilter = 'both' | 'email_only' | 'instagram_only' | 'neither';
+export type SequenceFilter = 'in_sequence' | 'not_in_sequence';
 
 export interface DateRange {
   from?: Date;
@@ -45,6 +46,8 @@ interface LeadFiltersProps {
   assignedFilters: string[];
   onAssignedFiltersChange: (value: string[]) => void;
   assignedOptions: { value: string; label: string }[];
+  sequenceFilters: SequenceFilter[];
+  onSequenceFiltersChange: (value: SequenceFilter[]) => void;
   dateRange: DateRange;
   onDateRangeChange: (value: DateRange) => void;
   onReset: () => void;
@@ -62,6 +65,11 @@ const contactOptions: { value: ContactFilter; label: string }[] = [
   { value: 'email_only', label: 'Email Only' },
   { value: 'instagram_only', label: 'Instagram Only' },
   { value: 'neither', label: 'No Contact Info' },
+];
+
+const sequenceOptions: { value: SequenceFilter; label: string }[] = [
+  { value: 'in_sequence', label: 'In Sequence' },
+  { value: 'not_in_sequence', label: 'Not in Sequence' },
 ];
 
 const platformOptions: { value: Platform; label: string }[] = [
@@ -163,6 +171,8 @@ export function LeadFilters({
   assignedFilters,
   onAssignedFiltersChange,
   assignedOptions,
+  sequenceFilters,
+  onSequenceFiltersChange,
   dateRange,
   onDateRangeChange,
   onReset,
@@ -175,6 +185,7 @@ export function LeadFilters({
     cityFilters.length > 0 ||
     contactFilters.length > 0 ||
     assignedFilters.length > 0 ||
+    sequenceFilters.length > 0 ||
     dateRange.from !== undefined ||
     dateRange.to !== undefined;
 
@@ -260,6 +271,13 @@ export function LeadFilters({
             onChange={onAssignedFiltersChange}
           />
         )}
+
+        <MultiSelectPopover
+          label="Sequence"
+          options={sequenceOptions}
+          selected={sequenceFilters}
+          onChange={onSequenceFiltersChange}
+        />
 
         <Popover>
           <PopoverTrigger asChild>
