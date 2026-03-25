@@ -42,6 +42,9 @@ interface LeadFiltersProps {
   cities: string[];
   contactFilters: ContactFilter[];
   onContactFiltersChange: (value: ContactFilter[]) => void;
+  assignedFilters: string[];
+  onAssignedFiltersChange: (value: string[]) => void;
+  assignedOptions: { value: string; label: string }[];
   dateRange: DateRange;
   onDateRangeChange: (value: DateRange) => void;
   onReset: () => void;
@@ -157,6 +160,9 @@ export function LeadFilters({
   cities,
   contactFilters,
   onContactFiltersChange,
+  assignedFilters,
+  onAssignedFiltersChange,
+  assignedOptions,
   dateRange,
   onDateRangeChange,
   onReset,
@@ -168,6 +174,7 @@ export function LeadFilters({
     categoryFilters.length > 0 ||
     cityFilters.length > 0 ||
     contactFilters.length > 0 ||
+    assignedFilters.length > 0 ||
     dateRange.from !== undefined ||
     dateRange.to !== undefined;
 
@@ -242,6 +249,15 @@ export function LeadFilters({
             options={cityOptions}
             selected={cityFilters}
             onChange={onCityFiltersChange}
+          />
+        )}
+
+        {assignedOptions.length > 0 && (
+          <MultiSelectPopover
+            label="Assigned To"
+            options={assignedOptions}
+            selected={assignedFilters}
+            onChange={onAssignedFiltersChange}
           />
         )}
 

@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeads } from '@/hooks/useLeads';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useSequences } from '@/hooks/useSequences';
 import { Lead, LeadFormData, LeadStatus, Platform } from '@/types/lead';
 import { LeadCard } from '@/components/LeadCard';
@@ -95,6 +96,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
   const { leads, isLoading, createLead, updateLead, deleteLead, bulkCreateLeads } = useLeads();
+  const { members } = useTeamMembers();
   const { sequences, statusCounts } = useSequences();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
@@ -122,6 +124,9 @@ export default function Dashboard() {
     try { const v = localStorage.getItem('dashboard_contactFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
+  const [assignedFilters, setAssignedFilters] = useState<string[]>(() => {
+    try { const v = localStorage.getItem('dashboard_assignedFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
   const [dateRange, setDateRange] = useState<DateRange>({});
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -145,6 +150,13 @@ export default function Dashboard() {
     return Array.from(set).sort();
   }, [leads]);
 
+  const assignedOptions = useMemo(() => {
+    return members.map((m) => ({
+      value: m.id,
+      label: m.full_name || m.email || m.id.slice(0, 8),
+    }));
+  }, [members]);
+
   const filteredLeads = useMemo(() => {
     const s = search.trim().toLowerCase();
     return leads.filter((lead) => {
@@ -161,6 +173,7 @@ export default function Dashboard() {
       const matchesPlatform = platformFilters.length === 0 || platformFilters.includes(lead.platform);
       const matchesCategory = categoryFilters.length === 0 || (lead.category && categoryFilters.includes(lead.category));
       const matchesCity = cityFilters.length === 0 || (lead.city && cityFilters.includes(lead.city));
+      const matchesAssigned = assignedFilters.length === 0 || (lead.assigned_user_id && assignedFilters.includes(lead.assigned_user_id));
 
       let matchesContact = true;
       if (contactFilters.length > 0) {
@@ -190,9 +203,9 @@ export default function Dashboard() {
         }
       }
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesDate;
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate;
     });
-  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, dateRange]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, dateRange]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
@@ -202,10 +215,11 @@ export default function Dashboard() {
   useEffect(() => { localStorage.setItem('dashboard_categoryFilters', JSON.stringify(categoryFilters)); }, [categoryFilters]);
   useEffect(() => { localStorage.setItem('dashboard_cityFilters', JSON.stringify(cityFilters)); }, [cityFilters]);
   useEffect(() => { localStorage.setItem('dashboard_contactFilters', JSON.stringify(contactFilters)); }, [contactFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_assignedFilters', JSON.stringify(assignedFilters)); }, [assignedFilters]);
   useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
   useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
 
-  const filterKey = JSON.stringify([search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, dateRange.from?.getTime(), dateRange.to?.getTime()]);
+  const filterKey = JSON.stringify([search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, dateRange.from?.getTime(), dateRange.to?.getTime()]);
   const prevFilterKey = useRef(filterKey);
   useEffect(() => {
     if (prevFilterKey.current !== filterKey) {
@@ -222,6 +236,7 @@ export default function Dashboard() {
     setCategoryFilters([]);
     setCityFilters([]);
     setContactFilters([]);
+    setAssignedFilters([]);
     setDateRange({});
   };
 
@@ -382,6 +397,9 @@ export default function Dashboard() {
             cities={cities}
             contactFilters={contactFilters}
             onContactFiltersChange={setContactFilters}
+            assignedFilters={assignedFilters}
+            onAssignedFiltersChange={setAssignedFilters}
+            assignedOptions={assignedOptions}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
             onReset={handleResetFilters}
