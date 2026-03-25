@@ -212,9 +212,19 @@ export default function Dashboard() {
         }
       }
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate;
+      let matchesSequence = true;
+      if (sequenceFilters.length > 0) {
+        const inSeq = leadIdsInSequence.has(lead.id);
+        matchesSequence = sequenceFilters.some((f) => {
+          if (f === 'in_sequence') return inSeq;
+          if (f === 'not_in_sequence') return !inSeq;
+          return false;
+        });
+      }
+      
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate && matchesSequence;
     });
-  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, dateRange]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, leadIdsInSequence, dateRange]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
