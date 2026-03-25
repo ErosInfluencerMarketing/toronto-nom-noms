@@ -87,12 +87,13 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
       const { data, error } = await supabase.functions.invoke('send-message', {
         body: {
           channels,
-          lead: {
-            id: lead.id,
-            email: lead.email,
-            instagram_handle: lead.instagram_handle,
-            business_name: lead.business_name,
-          },
+            lead: {
+              id: lead.id,
+              email: lead.email,
+              instagram_handle: lead.instagram_handle,
+              business_name: lead.business_name,
+              status: lead.status,
+            },
           message: message.trim(),
           subject: subject.trim(),
           sender,
