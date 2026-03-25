@@ -506,7 +506,7 @@ export default function Dashboard() {
               <Repeat className="h-4 w-4 mr-2" />
               Create Sequence
             </Button>
-              variant="ghost"
+            <Button
               size="sm"
               onClick={() => setSelectedLeadIds(new Set())}
               className="text-muted-foreground"
