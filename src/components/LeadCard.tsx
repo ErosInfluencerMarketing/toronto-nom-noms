@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Mail, Instagram, Calendar, Edit2, Trash2, Send } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isPast, isToday } from 'date-fns';
 
 interface LeadCardProps {
   lead: Lead;
