@@ -272,6 +272,13 @@ export function LeadFilters({
           />
         )}
 
+        <MultiSelectPopover
+          label="Sequence"
+          options={sequenceOptions}
+          selected={sequenceFilters}
+          onChange={onSequenceFiltersChange}
+        />
+
         <Popover>
           <PopoverTrigger asChild>
             <Button
