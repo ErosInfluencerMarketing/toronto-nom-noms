@@ -46,6 +46,8 @@ interface LeadFiltersProps {
   assignedFilters: string[];
   onAssignedFiltersChange: (value: string[]) => void;
   assignedOptions: { value: string; label: string }[];
+  sequenceFilters: SequenceFilter[];
+  onSequenceFiltersChange: (value: SequenceFilter[]) => void;
   dateRange: DateRange;
   onDateRangeChange: (value: DateRange) => void;
   onReset: () => void;
