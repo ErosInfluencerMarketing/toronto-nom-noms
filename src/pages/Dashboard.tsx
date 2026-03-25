@@ -96,6 +96,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
   const { leads, isLoading, createLead, updateLead, deleteLead, bulkCreateLeads } = useLeads();
+  const { members } = useTeamMembers();
   const { sequences, statusCounts } = useSequences();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
