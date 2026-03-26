@@ -145,9 +145,12 @@ Deno.serve(async (req) => {
     }
 
     // Update last outreach date, status, engagement, and next outreach date
-    const userId = claimsData.claims.sub;
     const anySuccess = Object.values(results).some((r: any) => r.success);
     if (lead.id && anySuccess) {
+      const serviceClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
       const today = new Date();
       const todayStr = today.toISOString().split("T")[0];
       const updateData: Record<string, any> = {
@@ -157,21 +160,23 @@ Deno.serve(async (req) => {
       if (lead.status === "new") {
         updateData.status = "contacted";
       }
-      // Set email engagement to 'sent' if currently 'none'
-      if (channels.includes("email") && (!lead.email_engagement || lead.email_engagement === "none")) {
+      // Set email engagement to 'sent' if email was sent and engagement is none/missing
+      if (channels.includes("email") && results.email?.success && (!lead.email_engagement || lead.email_engagement === "none")) {
         updateData.email_engagement = "sent";
       }
       // For email sends (not sequence), set next outreach to 2 days later
-      if (channels.includes("email")) {
+      if (channels.includes("email") && results.email?.success) {
         const nextOutreach = new Date(today);
         nextOutreach.setDate(nextOutreach.getDate() + 2);
         updateData.next_outreach_date = nextOutreach.toISOString().split("T")[0];
       }
-      await supabase
+      const { error: updateError } = await serviceClient
         .from("leads")
         .update(updateData)
-        .eq("id", lead.id)
-        .eq("user_id", userId);
+        .eq("id", lead.id);
+      if (updateError) {
+        console.error("Failed to update lead:", updateError);
+      }
     }
 
     return new Response(JSON.stringify({ success: true, results }), {
