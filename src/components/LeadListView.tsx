@@ -148,10 +148,11 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                 <SortableHead field="category" className="w-[8%]">Category</SortableHead>
                 <SortableHead field="city" className="w-[7%]">City</SortableHead>
                 <SortableHead field="platform" className="w-[6%]">Platform</SortableHead>
-                <SortableHead field="status" className="w-[8%]">Status</SortableHead>
-                <SortableHead field="assigned_user_id" className="w-[9%]">Assigned</SortableHead>
-                <SortableHead field="next_outreach_date" className="w-[8%]">Next</SortableHead>
-                <SortableHead field="last_outreach_date" className="w-[8%]">Last</SortableHead>
+                <SortableHead field="status" className="w-[7%]">Status</SortableHead>
+                <SortableHead field="email_engagement" className="w-[7%]">Engagement</SortableHead>
+                <SortableHead field="assigned_user_id" className="w-[8%]">Assigned</SortableHead>
+                <SortableHead field="next_outreach_date" className="w-[7%]">Next</SortableHead>
+                <SortableHead field="last_outreach_date" className="w-[7%]">Last</SortableHead>
                 <SortableHead field="created_at" className="w-[7%]">Created</SortableHead>
                 <TableHead className="text-muted-foreground font-medium text-right w-[5%]">Actions</TableHead>
               </TableRow>
