@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update last outreach date, status, and next outreach date
+    // Update last outreach date, status, engagement, and next outreach date
     const userId = claimsData.claims.sub;
     const anySuccess = Object.values(results).some((r: any) => r.success);
     if (lead.id && anySuccess) {
@@ -156,6 +156,10 @@ Deno.serve(async (req) => {
       // Auto-set status to contacted if currently "new"
       if (lead.status === "new") {
         updateData.status = "contacted";
+      }
+      // Set email engagement to 'sent' if currently 'none'
+      if (channels.includes("email") && (!lead.email_engagement || lead.email_engagement === "none")) {
+        updateData.email_engagement = "sent";
       }
       // For email sends (not sequence), set next outreach to 2 days later
       if (channels.includes("email")) {
