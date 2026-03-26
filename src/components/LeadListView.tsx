@@ -254,6 +254,9 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                       />
                     </TableCell>
                     <TableCell>
+                      <EngagementBadge engagement={(lead.email_engagement || 'none') as EmailEngagement} />
+                    </TableCell>
+                    <TableCell>
                       {(() => {
                         const member = lead.assigned_user_id ? memberMap.get(lead.assigned_user_id) : null;
                         if (!member) {
