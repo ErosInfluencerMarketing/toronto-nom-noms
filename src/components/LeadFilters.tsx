@@ -1,4 +1,4 @@
-import { Platform, LeadStatus } from '@/types/lead';
+import { Platform, LeadStatus, EmailEngagement } from '@/types/lead';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
