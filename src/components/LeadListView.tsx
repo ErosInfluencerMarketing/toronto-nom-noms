@@ -24,7 +24,7 @@ import { Trash2, Calendar, Mail, Instagram, Send, ArrowUp, ArrowDown, ArrowUpDow
 import { format, parseISO, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-type SortField = 'business_name' | 'owner_name' | 'email' | 'platform' | 'status' | 'category' | 'city' | 'next_outreach_date' | 'last_outreach_date' | 'created_at' | 'assigned_user_id';
+type SortField = 'business_name' | 'owner_name' | 'email' | 'platform' | 'status' | 'category' | 'city' | 'next_outreach_date' | 'last_outreach_date' | 'created_at' | 'assigned_user_id' | 'email_engagement';
 type SortDir = 'asc' | 'desc';
 
 interface LeadListViewProps {
