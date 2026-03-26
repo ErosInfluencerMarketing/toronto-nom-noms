@@ -164,7 +164,7 @@ export default function Influencers() {
   };
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <main className="flex-1 p-6 overflow-auto">
