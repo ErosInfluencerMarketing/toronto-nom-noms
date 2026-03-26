@@ -293,6 +293,13 @@ export function LeadFilters({
           onChange={onSequenceFiltersChange}
         />
 
+        <MultiSelectPopover
+          label="Engagement"
+          options={engagementOptions}
+          selected={engagementFilters}
+          onChange={onEngagementFiltersChange}
+        />
+
         <Popover>
           <PopoverTrigger asChild>
             <Button

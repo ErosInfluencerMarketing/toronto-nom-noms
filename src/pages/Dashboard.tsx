@@ -11,7 +11,7 @@ import { useSequences } from '@/hooks/useSequences';
 import { Lead, LeadFormData, LeadStatus, Platform } from '@/types/lead';
 import { LeadCard } from '@/components/LeadCard';
 import { LeadForm } from '@/components/LeadForm';
-import { LeadFilters, DateRange, SequenceFilter } from '@/components/LeadFilters';
+import { LeadFilters, DateRange, SequenceFilter, EngagementFilter } from '@/components/LeadFilters';
 import { LeadListView } from '@/components/LeadListView';
 import { UpcomingOutreach } from '@/components/UpcomingOutreach';
 import { AnalyticsPanel } from '@/components/AnalyticsPanel';
