@@ -226,9 +226,14 @@ export default function Dashboard() {
         });
       }
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate && matchesSequence;
+      let matchesEngagement = true;
+      if (engagementFilters.length > 0) {
+        matchesEngagement = engagementFilters.includes((lead as any).email_engagement || 'none');
+      }
+      
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate && matchesSequence && matchesEngagement;
     });
-  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, leadIdsInSequence, dateRange]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, engagementFilters, leadIdsInSequence, dateRange]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
