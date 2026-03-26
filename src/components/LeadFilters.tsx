@@ -184,6 +184,8 @@ export function LeadFilters({
   assignedOptions,
   sequenceFilters,
   onSequenceFiltersChange,
+  engagementFilters,
+  onEngagementFiltersChange,
   dateRange,
   onDateRangeChange,
   onReset,
@@ -197,6 +199,7 @@ export function LeadFilters({
     contactFilters.length > 0 ||
     assignedFilters.length > 0 ||
     sequenceFilters.length > 0 ||
+    engagementFilters.length > 0 ||
     dateRange.from !== undefined ||
     dateRange.to !== undefined;
 
