@@ -434,6 +434,8 @@ export default function Dashboard() {
             assignedOptions={assignedOptions}
             sequenceFilters={sequenceFilters}
             onSequenceFiltersChange={setSequenceFilters}
+            engagementFilters={engagementFilters}
+            onEngagementFiltersChange={setEngagementFilters}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
             onReset={handleResetFilters}
