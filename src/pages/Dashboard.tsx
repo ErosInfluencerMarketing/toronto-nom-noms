@@ -268,6 +268,7 @@ export default function Dashboard() {
     setContactFilters([]);
     setAssignedFilters([]);
     setSequenceFilters([]);
+    setEngagementFilters([]);
     setDateRange({});
   };
 
