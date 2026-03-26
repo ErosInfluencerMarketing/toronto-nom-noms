@@ -240,6 +240,7 @@ export default function Dashboard() {
   useEffect(() => { localStorage.setItem('dashboard_contactFilters', JSON.stringify(contactFilters)); }, [contactFilters]);
   useEffect(() => { localStorage.setItem('dashboard_assignedFilters', JSON.stringify(assignedFilters)); }, [assignedFilters]);
   useEffect(() => { localStorage.setItem('dashboard_sequenceFilters', JSON.stringify(sequenceFilters)); }, [sequenceFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_engagementFilters', JSON.stringify(engagementFilters)); }, [engagementFilters]);
   useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
   useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
 
