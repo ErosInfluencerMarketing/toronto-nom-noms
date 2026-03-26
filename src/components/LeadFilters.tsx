@@ -75,6 +75,14 @@ const sequenceOptions: { value: SequenceFilter; label: string }[] = [
   { value: 'not_in_sequence', label: 'Not in Sequence' },
 ];
 
+const engagementOptions: { value: EngagementFilter; label: string }[] = [
+  { value: 'none', label: 'No Email' },
+  { value: 'sent', label: 'Sent' },
+  { value: 'opened', label: 'Opened' },
+  { value: 'clicked', label: 'Clicked' },
+  { value: 'replied', label: 'Replied' },
+];
+
 const platformOptions: { value: Platform; label: string }[] = [
   { value: 'eros', label: 'Eros' },
   { value: 'noms', label: 'Noms' },
