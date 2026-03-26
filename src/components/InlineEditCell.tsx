@@ -35,6 +35,7 @@ export function InlineEditCell({
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -100,9 +101,14 @@ export function InlineEditCell({
 
   return (
     <span
-      onClick={() => {
+      onClick={(e) => {
         if (onDisplayClick) {
-          onDisplayClick();
+          // Delay single click to allow double-click to cancel it
+          if (clickTimer.current) clearTimeout(clickTimer.current);
+          clickTimer.current = setTimeout(() => {
+            onDisplayClick();
+            clickTimer.current = null;
+          }, 250);
         } else {
           setEditValue(value);
           setEditing(true);
@@ -111,6 +117,10 @@ export function InlineEditCell({
       onDoubleClick={(e) => {
         if (onDisplayClick) {
           e.stopPropagation();
+          if (clickTimer.current) {
+            clearTimeout(clickTimer.current);
+            clickTimer.current = null;
+          }
           setEditValue(value);
           setEditing(true);
         }
