@@ -101,14 +101,26 @@ export function InlineEditCell({
   return (
     <span
       onClick={() => {
-        setEditValue(value);
-        setEditing(true);
+        if (onDisplayClick) {
+          onDisplayClick();
+        } else {
+          setEditValue(value);
+          setEditing(true);
+        }
+      }}
+      onDoubleClick={(e) => {
+        if (onDisplayClick) {
+          e.stopPropagation();
+          setEditValue(value);
+          setEditing(true);
+        }
       }}
       className={cn(
         'cursor-pointer rounded px-1.5 py-0.5 hover:bg-secondary/80 transition-colors inline-block min-w-[30px]',
+        onDisplayClick && 'hover:text-primary',
         className
       )}
-      title="Click to edit"
+      title={onDisplayClick ? 'Click to view, double-click to edit' : 'Click to edit'}
     >
       {displayRender ? displayRender(value) : value || <span className="text-muted-foreground">{placeholder}</span>}
     </span>
