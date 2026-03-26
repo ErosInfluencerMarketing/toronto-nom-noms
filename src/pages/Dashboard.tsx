@@ -355,7 +355,7 @@ export default function Dashboard() {
   };
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <AppSidebar />
       <div className="min-h-screen bg-background flex-1 w-full">
         {/* Header */}
