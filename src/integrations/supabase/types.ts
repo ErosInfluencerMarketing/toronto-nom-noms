@@ -104,6 +104,7 @@ export type Database = {
           city: string | null
           created_at: string
           email: string | null
+          email_engagement: Database["public"]["Enums"]["email_engagement_type"]
           id: string
           instagram_handle: string | null
           last_outreach_date: string | null
@@ -125,6 +126,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           email?: string | null
+          email_engagement?: Database["public"]["Enums"]["email_engagement_type"]
           id?: string
           instagram_handle?: string | null
           last_outreach_date?: string | null
@@ -146,6 +148,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           email?: string | null
+          email_engagement?: Database["public"]["Enums"]["email_engagement_type"]
           id?: string
           instagram_handle?: string | null
           last_outreach_date?: string | null
@@ -384,6 +387,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       channel_type: "email" | "instagram"
+      email_engagement_type: "none" | "sent" | "opened" | "clicked" | "replied"
       lead_status: "new" | "contacted" | "demo_booked" | "onboarded"
       platform_type: "eros" | "noms"
     }
@@ -515,6 +519,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       channel_type: ["email", "instagram"],
+      email_engagement_type: ["none", "sent", "opened", "clicked", "replied"],
       lead_status: ["new", "contacted", "demo_booked", "onboarded"],
       platform_type: ["eros", "noms"],
     },
