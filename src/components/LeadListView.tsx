@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { normalizeInstagramHandle } from '@/lib/utils';
-import { Lead, LeadStatus, Platform } from '@/types/lead';
+import { Lead, LeadStatus, Platform, EmailEngagement } from '@/types/lead';
 import { StatusBadge } from './StatusBadge';
 import { PlatformBadge } from './PlatformBadge';
+import { EngagementBadge } from './EngagementBadge';
 import { QuickMessage } from './QuickMessage';
 import { InlineEditCell } from './InlineEditCell';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
