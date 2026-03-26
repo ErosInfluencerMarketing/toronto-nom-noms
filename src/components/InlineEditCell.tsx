@@ -30,6 +30,7 @@ export function InlineEditCell({
   placeholder = '-',
   className,
   displayRender,
+  onDisplayClick,
 }: InlineEditCellProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
