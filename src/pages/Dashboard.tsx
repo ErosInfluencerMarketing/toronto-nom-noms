@@ -11,7 +11,7 @@ import { useSequences } from '@/hooks/useSequences';
 import { Lead, LeadFormData, LeadStatus, Platform } from '@/types/lead';
 import { LeadCard } from '@/components/LeadCard';
 import { LeadForm } from '@/components/LeadForm';
-import { LeadFilters, DateRange, SequenceFilter } from '@/components/LeadFilters';
+import { LeadFilters, DateRange, SequenceFilter, EngagementFilter } from '@/components/LeadFilters';
 import { LeadListView } from '@/components/LeadListView';
 import { UpcomingOutreach } from '@/components/UpcomingOutreach';
 import { AnalyticsPanel } from '@/components/AnalyticsPanel';
@@ -130,6 +130,9 @@ export default function Dashboard() {
   const [sequenceFilters, setSequenceFilters] = useState<SequenceFilter[]>(() => {
     try { const v = localStorage.getItem('dashboard_sequenceFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
+  const [engagementFilters, setEngagementFilters] = useState<EngagementFilter[]>(() => {
+    try { const v = localStorage.getItem('dashboard_engagementFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
   const [dateRange, setDateRange] = useState<DateRange>({});
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -223,9 +226,14 @@ export default function Dashboard() {
         });
       }
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate && matchesSequence;
+      let matchesEngagement = true;
+      if (engagementFilters.length > 0) {
+        matchesEngagement = engagementFilters.includes((lead as any).email_engagement || 'none');
+      }
+      
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate && matchesSequence && matchesEngagement;
     });
-  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, leadIdsInSequence, dateRange]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, engagementFilters, leadIdsInSequence, dateRange]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
@@ -237,10 +245,11 @@ export default function Dashboard() {
   useEffect(() => { localStorage.setItem('dashboard_contactFilters', JSON.stringify(contactFilters)); }, [contactFilters]);
   useEffect(() => { localStorage.setItem('dashboard_assignedFilters', JSON.stringify(assignedFilters)); }, [assignedFilters]);
   useEffect(() => { localStorage.setItem('dashboard_sequenceFilters', JSON.stringify(sequenceFilters)); }, [sequenceFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_engagementFilters', JSON.stringify(engagementFilters)); }, [engagementFilters]);
   useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
   useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
 
-  const filterKey = JSON.stringify([search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, dateRange.from?.getTime(), dateRange.to?.getTime()]);
+  const filterKey = JSON.stringify([search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, engagementFilters, dateRange.from?.getTime(), dateRange.to?.getTime()]);
   const prevFilterKey = useRef(filterKey);
   useEffect(() => {
     if (prevFilterKey.current !== filterKey) {
@@ -259,6 +268,7 @@ export default function Dashboard() {
     setContactFilters([]);
     setAssignedFilters([]);
     setSequenceFilters([]);
+    setEngagementFilters([]);
     setDateRange({});
   };
 
@@ -424,6 +434,8 @@ export default function Dashboard() {
             assignedOptions={assignedOptions}
             sequenceFilters={sequenceFilters}
             onSequenceFiltersChange={setSequenceFilters}
+            engagementFilters={engagementFilters}
+            onEngagementFiltersChange={setEngagementFilters}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
             onReset={handleResetFilters}

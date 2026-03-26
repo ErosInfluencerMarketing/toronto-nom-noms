@@ -1,4 +1,4 @@
-import { Platform, LeadStatus } from '@/types/lead';
+import { Platform, LeadStatus, EmailEngagement } from '@/types/lead';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,7 @@ import { format } from 'date-fns';
 
 export type ContactFilter = 'both' | 'email_only' | 'instagram_only' | 'neither';
 export type SequenceFilter = 'in_sequence' | 'not_in_sequence';
+export type EngagementFilter = EmailEngagement;
 
 export interface DateRange {
   from?: Date;
@@ -48,6 +49,8 @@ interface LeadFiltersProps {
   assignedOptions: { value: string; label: string }[];
   sequenceFilters: SequenceFilter[];
   onSequenceFiltersChange: (value: SequenceFilter[]) => void;
+  engagementFilters: EngagementFilter[];
+  onEngagementFiltersChange: (value: EngagementFilter[]) => void;
   dateRange: DateRange;
   onDateRangeChange: (value: DateRange) => void;
   onReset: () => void;
@@ -70,6 +73,14 @@ const contactOptions: { value: ContactFilter; label: string }[] = [
 const sequenceOptions: { value: SequenceFilter; label: string }[] = [
   { value: 'in_sequence', label: 'In Sequence' },
   { value: 'not_in_sequence', label: 'Not in Sequence' },
+];
+
+const engagementOptions: { value: EngagementFilter; label: string }[] = [
+  { value: 'none', label: 'No Email' },
+  { value: 'sent', label: 'Sent' },
+  { value: 'opened', label: 'Opened' },
+  { value: 'clicked', label: 'Clicked' },
+  { value: 'replied', label: 'Replied' },
 ];
 
 const platformOptions: { value: Platform; label: string }[] = [
@@ -173,6 +184,8 @@ export function LeadFilters({
   assignedOptions,
   sequenceFilters,
   onSequenceFiltersChange,
+  engagementFilters,
+  onEngagementFiltersChange,
   dateRange,
   onDateRangeChange,
   onReset,
@@ -186,6 +199,7 @@ export function LeadFilters({
     contactFilters.length > 0 ||
     assignedFilters.length > 0 ||
     sequenceFilters.length > 0 ||
+    engagementFilters.length > 0 ||
     dateRange.from !== undefined ||
     dateRange.to !== undefined;
 
@@ -277,6 +291,13 @@ export function LeadFilters({
           options={sequenceOptions}
           selected={sequenceFilters}
           onChange={onSequenceFiltersChange}
+        />
+
+        <MultiSelectPopover
+          label="Engagement"
+          options={engagementOptions}
+          selected={engagementFilters}
+          onChange={onEngagementFiltersChange}
         />
 
         <Popover>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { normalizeInstagramHandle } from '@/lib/utils';
-import { Lead, LeadStatus, Platform } from '@/types/lead';
+import { Lead, LeadStatus, Platform, EmailEngagement } from '@/types/lead';
 import { StatusBadge } from './StatusBadge';
 import { PlatformBadge } from './PlatformBadge';
+import { EngagementBadge } from './EngagementBadge';
 import { QuickMessage } from './QuickMessage';
 import { InlineEditCell } from './InlineEditCell';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
@@ -23,7 +24,7 @@ import { Trash2, Calendar, Mail, Instagram, Send, ArrowUp, ArrowDown, ArrowUpDow
 import { format, parseISO, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-type SortField = 'business_name' | 'owner_name' | 'email' | 'platform' | 'status' | 'category' | 'city' | 'next_outreach_date' | 'last_outreach_date' | 'created_at' | 'assigned_user_id';
+type SortField = 'business_name' | 'owner_name' | 'email' | 'platform' | 'status' | 'category' | 'city' | 'next_outreach_date' | 'last_outreach_date' | 'created_at' | 'assigned_user_id' | 'email_engagement';
 type SortDir = 'asc' | 'desc';
 
 interface LeadListViewProps {
@@ -147,10 +148,11 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                 <SortableHead field="category" className="w-[8%]">Category</SortableHead>
                 <SortableHead field="city" className="w-[7%]">City</SortableHead>
                 <SortableHead field="platform" className="w-[6%]">Platform</SortableHead>
-                <SortableHead field="status" className="w-[8%]">Status</SortableHead>
-                <SortableHead field="assigned_user_id" className="w-[9%]">Assigned</SortableHead>
-                <SortableHead field="next_outreach_date" className="w-[8%]">Next</SortableHead>
-                <SortableHead field="last_outreach_date" className="w-[8%]">Last</SortableHead>
+                <SortableHead field="status" className="w-[7%]">Status</SortableHead>
+                <SortableHead field="email_engagement" className="w-[7%]">Engagement</SortableHead>
+                <SortableHead field="assigned_user_id" className="w-[8%]">Assigned</SortableHead>
+                <SortableHead field="next_outreach_date" className="w-[7%]">Next</SortableHead>
+                <SortableHead field="last_outreach_date" className="w-[7%]">Last</SortableHead>
                 <SortableHead field="created_at" className="w-[7%]">Created</SortableHead>
                 <TableHead className="text-muted-foreground font-medium text-right w-[5%]">Actions</TableHead>
               </TableRow>
@@ -250,6 +252,9 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                         options={statusOptions}
                         displayRender={(v) => <StatusBadge status={v as LeadStatus} />}
                       />
+                    </TableCell>
+                    <TableCell>
+                      <EngagementBadge engagement={(lead.email_engagement || 'none') as EmailEngagement} />
                     </TableCell>
                     <TableCell>
                       {(() => {

@@ -1,5 +1,6 @@
 export type Platform = 'eros' | 'noms';
 export type LeadStatus = 'new' | 'contacted' | 'demo_booked' | 'onboarded';
+export type EmailEngagement = 'none' | 'sent' | 'opened' | 'clicked' | 'replied';
 
 export interface Lead {
   id: string;
@@ -20,6 +21,7 @@ export interface Lead {
   last_outreach_date: string | null;
   notes: string | null;
   created_at: string;
+  email_engagement: EmailEngagement;
   updated_at: string;
 }
 
