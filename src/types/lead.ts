@@ -21,6 +21,7 @@ export interface Lead {
   last_outreach_date: string | null;
   notes: string | null;
   created_at: string;
+  email_engagement: EmailEngagement;
   updated_at: string;
 }
 
