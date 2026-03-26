@@ -101,9 +101,14 @@ export function InlineEditCell({
 
   return (
     <span
-      onClick={() => {
+      onClick={(e) => {
         if (onDisplayClick) {
-          onDisplayClick();
+          // Delay single click to allow double-click to cancel it
+          if (clickTimer.current) clearTimeout(clickTimer.current);
+          clickTimer.current = setTimeout(() => {
+            onDisplayClick();
+            clickTimer.current = null;
+          }, 250);
         } else {
           setEditValue(value);
           setEditing(true);
@@ -112,6 +117,10 @@ export function InlineEditCell({
       onDoubleClick={(e) => {
         if (onDisplayClick) {
           e.stopPropagation();
+          if (clickTimer.current) {
+            clearTimeout(clickTimer.current);
+            clickTimer.current = null;
+          }
           setEditValue(value);
           setEditing(true);
         }
