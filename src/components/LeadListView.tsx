@@ -170,15 +170,11 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                       </TableCell>
                     )}
                     <TableCell className="font-medium text-foreground truncate">
-                      <span
-                        className="cursor-pointer hover:text-primary transition-colors block truncate"
-                        onClick={() => onViewDetails?.(lead)}
-                      >
-                        <InlineEditCell
-                          value={lead.business_name}
-                          onSave={(v) => handleFieldUpdate(lead, 'business_name', v)}
-                        />
-                      </span>
+                      <InlineEditCell
+                        value={lead.business_name}
+                        onSave={(v) => handleFieldUpdate(lead, 'business_name', v)}
+                        onDisplayClick={() => onViewDetails?.(lead)}
+                      />
                     </TableCell>
                     <TableCell>
                       <InlineEditCell
