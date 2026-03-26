@@ -104,12 +104,22 @@ export function useLeads() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead updated successfully');
+    onMutate: async (updatedLead) => {
+      await queryClient.cancelQueries({ queryKey: ['leads'] });
+      const previous = queryClient.getQueryData<Lead[]>(['leads', user?.id]);
+      queryClient.setQueryData<Lead[]>(['leads', user?.id], (old) =>
+        old?.map((l) => (l.id === updatedLead.id ? { ...l, ...updatedLead } : l)) ?? []
+      );
+      return { previous };
     },
-    onError: (error) => {
+    onError: (error, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['leads', user?.id], context.previous);
+      }
       toast.error('Failed to update lead: ' + error.message);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
     },
   });
 
