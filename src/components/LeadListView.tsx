@@ -3,6 +3,7 @@ import { normalizeInstagramHandle } from '@/lib/utils';
 import { Lead, LeadStatus, Platform, EmailEngagement } from '@/types/lead';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { StatusBadge } from './StatusBadge';
 import { PlatformBadge } from './PlatformBadge';
 import { EngagementBadge } from './EngagementBadge';
