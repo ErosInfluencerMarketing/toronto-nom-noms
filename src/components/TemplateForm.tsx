@@ -50,7 +50,9 @@ interface TemplateFormProps {
 
 export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading }: TemplateFormProps) {
   const { templates: allTemplates } = useTemplates();
+  const { attachments: allAttachments, uploading, uploadAttachment, getTemplateAttachments, setTemplateAttachments } = useAttachments();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [selectedAttachments, setSelectedAttachments] = useState<Attachment[]>([]);
   const [formData, setFormData] = useState<TemplateFormData>({
     name: '',
     platform: 'eros',
