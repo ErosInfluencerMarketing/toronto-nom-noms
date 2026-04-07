@@ -279,7 +279,7 @@ export default function Dashboard() {
   useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
   useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
 
-  const filterKey = JSON.stringify([search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, engagementFilters, groupFilters, dateRange.from?.getTime(), dateRange.to?.getTime()]);
+  const filterKey = JSON.stringify([search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, engagementFilters, groupFilters, dateRange.from?.getTime(), dateRange.to?.getTime(), activeTab]);
   const prevFilterKey = useRef(filterKey);
   useEffect(() => {
     if (prevFilterKey.current !== filterKey) {
