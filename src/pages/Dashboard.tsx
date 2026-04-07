@@ -101,6 +101,7 @@ export default function Dashboard() {
   const { leads, isLoading, createLead, updateLead, deleteLead, bulkCreateLeads } = useLeads();
   const { members } = useTeamMembers();
   const { sequences, statusCounts } = useSequences();
+  const { groups } = useRestaurantGroups();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
