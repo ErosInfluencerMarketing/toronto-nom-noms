@@ -140,6 +140,7 @@ export default function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRange>({});
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
   const [sequencePreSelectedLeadIds, setSequencePreSelectedLeadIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(() => Number(localStorage.getItem('dashboard_page')) || 1);
