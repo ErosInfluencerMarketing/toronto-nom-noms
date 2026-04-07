@@ -51,6 +51,9 @@ interface LeadFiltersProps {
   onSequenceFiltersChange: (value: SequenceFilter[]) => void;
   engagementFilters: EngagementFilter[];
   onEngagementFiltersChange: (value: EngagementFilter[]) => void;
+  groupFilters: string[];
+  onGroupFiltersChange: (value: string[]) => void;
+  groupOptions: { value: string; label: string }[];
   dateRange: DateRange;
   onDateRangeChange: (value: DateRange) => void;
   onReset: () => void;
@@ -186,6 +189,9 @@ export function LeadFilters({
   onSequenceFiltersChange,
   engagementFilters,
   onEngagementFiltersChange,
+  groupFilters,
+  onGroupFiltersChange,
+  groupOptions,
   dateRange,
   onDateRangeChange,
   onReset,
@@ -200,6 +206,7 @@ export function LeadFilters({
     assignedFilters.length > 0 ||
     sequenceFilters.length > 0 ||
     engagementFilters.length > 0 ||
+    groupFilters.length > 0 ||
     dateRange.from !== undefined ||
     dateRange.to !== undefined;
 
@@ -299,6 +306,15 @@ export function LeadFilters({
           selected={engagementFilters}
           onChange={onEngagementFiltersChange}
         />
+
+        {groupOptions.length > 1 && (
+          <MultiSelectPopover
+            label="Group"
+            options={groupOptions}
+            selected={groupFilters}
+            onChange={onGroupFiltersChange}
+          />
+        )}
 
         <Popover>
           <PopoverTrigger asChild>

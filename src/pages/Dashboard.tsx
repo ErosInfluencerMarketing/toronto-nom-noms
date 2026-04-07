@@ -22,7 +22,10 @@ import { LeadImport } from '@/components/LeadImport';
 import { LeadScraper } from '@/components/LeadScraper';
 import { BulkMessage } from '@/components/BulkMessage';
 import { AssignLeadsDialog } from '@/components/AssignLeadsDialog';
+import { AssignGroupDialog } from '@/components/AssignGroupDialog';
 import { LeadDetailsPanel } from '@/components/LeadDetailsPanel';
+import { RestaurantGroupManager } from '@/components/RestaurantGroupManager';
+import { useRestaurantGroups } from '@/hooks/useRestaurantGroups';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -37,7 +40,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
+import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, ChevronLeft, ChevronRight, Repeat, Building2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -98,6 +101,7 @@ export default function Dashboard() {
   const { leads, isLoading, createLead, updateLead, deleteLead, bulkCreateLeads } = useLeads();
   const { members } = useTeamMembers();
   const { sequences, statusCounts } = useSequences();
+  const { groups } = useRestaurantGroups();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -133,9 +137,13 @@ export default function Dashboard() {
   const [engagementFilters, setEngagementFilters] = useState<EngagementFilter[]>(() => {
     try { const v = localStorage.getItem('dashboard_engagementFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
+  const [groupFilters, setGroupFilters] = useState<string[]>(() => {
+    try { const v = localStorage.getItem('dashboard_groupFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
   const [dateRange, setDateRange] = useState<DateRange>({});
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [detailsLead, setDetailsLead] = useState<Lead | null>(null);
   const [sequencePreSelectedLeadIds, setSequencePreSelectedLeadIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(() => Number(localStorage.getItem('dashboard_page')) || 1);
@@ -163,6 +171,13 @@ export default function Dashboard() {
       label: m.full_name || m.email || m.id.slice(0, 8),
     }));
   }, [members]);
+
+  const groupOptions = useMemo(() => {
+    return [
+      { value: '__none__', label: 'No Group' },
+      ...groups.map((g) => ({ value: g.id, label: g.name })),
+    ];
+  }, [groups]);
 
   const leadIdsInSequence = useMemo(() => {
     const ids = new Set<string>();
@@ -230,10 +245,19 @@ export default function Dashboard() {
       if (engagementFilters.length > 0) {
         matchesEngagement = engagementFilters.includes((lead as any).email_engagement || 'none');
       }
+
+      let matchesGroup = true;
+      if (groupFilters.length > 0) {
+        const leadGroupId = (lead as any).group_id;
+        matchesGroup = groupFilters.some((f) => {
+          if (f === '__none__') return !leadGroupId;
+          return leadGroupId === f;
+        });
+      }
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate && matchesSequence && matchesEngagement;
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate && matchesSequence && matchesEngagement && matchesGroup;
     });
-  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, engagementFilters, leadIdsInSequence, dateRange]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, engagementFilters, groupFilters, leadIdsInSequence, dateRange]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
@@ -246,10 +270,11 @@ export default function Dashboard() {
   useEffect(() => { localStorage.setItem('dashboard_assignedFilters', JSON.stringify(assignedFilters)); }, [assignedFilters]);
   useEffect(() => { localStorage.setItem('dashboard_sequenceFilters', JSON.stringify(sequenceFilters)); }, [sequenceFilters]);
   useEffect(() => { localStorage.setItem('dashboard_engagementFilters', JSON.stringify(engagementFilters)); }, [engagementFilters]);
+  useEffect(() => { localStorage.setItem('dashboard_groupFilters', JSON.stringify(groupFilters)); }, [groupFilters]);
   useEffect(() => { localStorage.setItem('dashboard_page', String(currentPage)); }, [currentPage]);
   useEffect(() => { localStorage.setItem('dashboard_pageSize', String(pageSize)); }, [pageSize]);
 
-  const filterKey = JSON.stringify([search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, engagementFilters, dateRange.from?.getTime(), dateRange.to?.getTime()]);
+  const filterKey = JSON.stringify([search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, engagementFilters, groupFilters, dateRange.from?.getTime(), dateRange.to?.getTime()]);
   const prevFilterKey = useRef(filterKey);
   useEffect(() => {
     if (prevFilterKey.current !== filterKey) {
@@ -269,6 +294,7 @@ export default function Dashboard() {
     setAssignedFilters([]);
     setSequenceFilters([]);
     setEngagementFilters([]);
+    setGroupFilters([]);
     setDateRange({});
   };
 
@@ -436,6 +462,9 @@ export default function Dashboard() {
             onSequenceFiltersChange={setSequenceFilters}
             engagementFilters={engagementFilters}
             onEngagementFiltersChange={setEngagementFilters}
+            groupFilters={groupFilters}
+            onGroupFiltersChange={setGroupFilters}
+            groupOptions={groupOptions}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
             onReset={handleResetFilters}
@@ -506,6 +535,14 @@ export default function Dashboard() {
                 Assign to Member
               </Button>
              )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setGroupDialogOpen(true)}
+            >
+              <Building2 className="h-4 w-4 mr-2" />
+              Assign to Group
+            </Button>
             <Button
               size="sm"
               variant="outline"
@@ -607,6 +644,12 @@ export default function Dashboard() {
           </div>
         )}
 
+          {/* Restaurant Groups Section */}
+          <Separator className="my-8" />
+          <div id="groups" className="scroll-mt-20">
+            <RestaurantGroupManager leads={leads} />
+          </div>
+
           {/* Templates Section */}
           <Separator className="my-8" />
           <div id="templates" className="scroll-mt-20">
@@ -669,6 +712,14 @@ export default function Dashboard() {
       <AssignLeadsDialog
         open={assignDialogOpen}
         onOpenChange={setAssignDialogOpen}
+        leadIds={Array.from(selectedLeadIds)}
+        onAssigned={() => setSelectedLeadIds(new Set())}
+      />
+
+      {/* Assign Group Dialog */}
+      <AssignGroupDialog
+        open={groupDialogOpen}
+        onOpenChange={setGroupDialogOpen}
         leadIds={Array.from(selectedLeadIds)}
         onAssigned={() => setSelectedLeadIds(new Set())}
       />

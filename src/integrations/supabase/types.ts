@@ -105,6 +105,7 @@ export type Database = {
           created_at: string
           email: string | null
           email_engagement: Database["public"]["Enums"]["email_engagement_type"]
+          group_id: string | null
           id: string
           instagram_handle: string | null
           last_outreach_date: string | null
@@ -127,6 +128,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           email_engagement?: Database["public"]["Enums"]["email_engagement_type"]
+          group_id?: string | null
           id?: string
           instagram_handle?: string | null
           last_outreach_date?: string | null
@@ -149,6 +151,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           email_engagement?: Database["public"]["Enums"]["email_engagement_type"]
+          group_id?: string | null
           id?: string
           instagram_handle?: string | null
           last_outreach_date?: string | null
@@ -162,7 +165,15 @@ export type Database = {
           user_id?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leads_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -185,6 +196,33 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      restaurant_groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
