@@ -106,6 +106,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'restaurants' | 'fitness'>(() => (localStorage.getItem('dashboard_activeTab') as 'restaurants' | 'fitness') || 'restaurants');
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
