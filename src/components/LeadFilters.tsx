@@ -89,6 +89,7 @@ const engagementOptions: { value: EngagementFilter; label: string }[] = [
 const platformOptions: { value: Platform; label: string }[] = [
   { value: 'eros', label: 'Eros' },
   { value: 'noms', label: 'Noms' },
+  { value: 'fitness', label: 'Fitness' },
 ];
 
 function toggleValue<T>(arr: T[], val: T): T[] {

@@ -490,7 +490,7 @@ export type Database = {
       channel_type: "email" | "instagram"
       email_engagement_type: "none" | "sent" | "opened" | "clicked" | "replied"
       lead_status: "new" | "contacted" | "demo_booked" | "onboarded"
-      platform_type: "eros" | "noms"
+      platform_type: "eros" | "noms" | "fitness"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -622,7 +622,7 @@ export const Constants = {
       channel_type: ["email", "instagram"],
       email_engagement_type: ["none", "sent", "opened", "clicked", "replied"],
       lead_status: ["new", "contacted", "demo_booked", "onboarded"],
-      platform_type: ["eros", "noms"],
+      platform_type: ["eros", "noms", "fitness"],
     },
   },
 } as const

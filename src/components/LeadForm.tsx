@@ -25,7 +25,7 @@ const leadSchema = z.object({
   owner_name: z.string().max(100).optional(),
   email: z.string().email('Invalid email').max(255).optional().or(z.literal('')),
   instagram_handle: z.string().max(50).optional(),
-  platform: z.enum(['eros', 'noms']),
+  platform: z.enum(['eros', 'noms', 'fitness']),
   status: z.enum(['new', 'contacted', 'demo_booked', 'onboarded']),
   city: z.string().max(100).optional(),
   category: z.string().max(100).optional(),
@@ -216,6 +216,7 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
                 <SelectContent>
                   <SelectItem value="eros">Eros</SelectItem>
                   <SelectItem value="noms">Noms</SelectItem>
+                  <SelectItem value="fitness">Fitness</SelectItem>
                 </SelectContent>
               </Select>
             </div>
