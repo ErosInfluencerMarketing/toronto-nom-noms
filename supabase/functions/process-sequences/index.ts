@@ -135,9 +135,49 @@ Deno.serve(async (req) => {
           ? fillPlaceholders(template.subject, lead)
           : defaultSubject;
 
+        // Fetch template attachments
+        let resendAttachments: { filename: string; content: string }[] = [];
+        const { data: templateAttRows } = await supabase
+          .from("template_attachments")
+          .select("attachment_id")
+          .eq("template_id", templateId);
+
+        if (templateAttRows && templateAttRows.length > 0) {
+          const attIds = templateAttRows.map((r: any) => r.attachment_id);
+          const { data: attachmentRows } = await supabase
+            .from("email_attachments")
+            .select("file_name, storage_path")
+            .in("id", attIds);
+
+          if (attachmentRows) {
+            for (const att of attachmentRows) {
+              const { data: fileData } = await supabase.storage
+                .from("email-attachments")
+                .download(att.storage_path);
+              if (fileData) {
+                const buffer = await fileData.arrayBuffer();
+                const base64 = btoa(
+                  new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
+                );
+                resendAttachments.push({ filename: att.file_name, content: base64 });
+              }
+            }
+          }
+        }
+
         const fromAddress = seq.sender === "eros"
           ? "Eros Marketing <hello@erosmarketing.io>"
           : "The Noms Company Inc. <hello@nomspass.com>";
+
+        const emailPayload: Record<string, any> = {
+          from: fromAddress,
+          to: [lead.email],
+          subject,
+          html: message,
+        };
+        if (resendAttachments.length > 0) {
+          emailPayload.attachments = resendAttachments;
+        }
 
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -145,12 +185,7 @@ Deno.serve(async (req) => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            from: fromAddress,
-            to: [lead.email],
-            subject,
-            html: message,
-          }),
+          body: JSON.stringify(emailPayload),
         });
 
         if (!res.ok) {
