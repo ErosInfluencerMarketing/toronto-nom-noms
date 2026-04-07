@@ -106,6 +106,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
             message: personalizedMessage.trim(),
             subject: personalizedSubject.trim(),
             sender,
+            attachment_ids: selectedAttachments.map((a) => a.id),
           },
         });
 

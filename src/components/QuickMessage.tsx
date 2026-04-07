@@ -252,6 +252,19 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
             />
           </div>
 
+          {/* Attachments */}
+          {sendEmail && (
+            <AttachmentManager
+              selectedAttachments={selectedAttachments}
+              onAdd={(att) => setSelectedAttachments((prev) => [...prev, att])}
+              onRemove={(id) => setSelectedAttachments((prev) => prev.filter((a) => a.id !== id))}
+              allAttachments={allAttachments}
+              onUpload={uploadAttachment}
+              uploading={uploading}
+              compact
+            />
+          )}
+
           {/* Actions */}
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
