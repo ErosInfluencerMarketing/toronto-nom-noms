@@ -28,6 +28,7 @@ const navItems = [
   { title: 'Upcoming', icon: Calendar, sectionId: 'analytics' },
   { title: 'Leads', icon: Users, sectionId: 'leads' },
   { title: 'Templates', icon: FileText, sectionId: 'templates' },
+  { title: 'Groups', icon: Building2, sectionId: 'groups' },
   { title: 'Sequences', icon: Zap, sectionId: 'sequences' },
 ];
 
