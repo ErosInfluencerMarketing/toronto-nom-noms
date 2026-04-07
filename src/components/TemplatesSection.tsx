@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTemplates } from '@/hooks/useTemplates';
+import { useAttachments } from '@/hooks/useAttachments';
 import { Template, TemplateFormData } from '@/types/template';
 import { Lead } from '@/types/lead';
 import { TemplateCard } from './TemplateCard';
