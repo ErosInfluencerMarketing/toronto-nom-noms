@@ -716,6 +716,14 @@ export default function Dashboard() {
         onAssigned={() => setSelectedLeadIds(new Set())}
       />
 
+      {/* Assign Group Dialog */}
+      <AssignGroupDialog
+        open={groupDialogOpen}
+        onOpenChange={setGroupDialogOpen}
+        leadIds={Array.from(selectedLeadIds)}
+        onAssigned={() => setSelectedLeadIds(new Set())}
+      />
+
       {/* Lead Details Panel */}
       <LeadDetailsPanel
         lead={detailsLead}
