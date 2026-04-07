@@ -40,7 +40,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
+import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, ChevronLeft, ChevronRight, Repeat, Building2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
