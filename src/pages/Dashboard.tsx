@@ -137,6 +137,9 @@ export default function Dashboard() {
   const [engagementFilters, setEngagementFilters] = useState<EngagementFilter[]>(() => {
     try { const v = localStorage.getItem('dashboard_engagementFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
   });
+  const [groupFilters, setGroupFilters] = useState<string[]>(() => {
+    try { const v = localStorage.getItem('dashboard_groupFilters'); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
   const [dateRange, setDateRange] = useState<DateRange>({});
   const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
