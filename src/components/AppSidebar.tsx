@@ -9,6 +9,7 @@ import {
   Instagram,
   Star,
   Coffee,
+  Building2,
 } from 'lucide-react';
 import {
   Sidebar,
