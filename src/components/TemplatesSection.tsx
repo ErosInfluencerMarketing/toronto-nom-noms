@@ -56,12 +56,16 @@ export function TemplatesSection({ leads }: TemplatesSectionProps) {
 
   const handleUpdateTemplate = (data: TemplateFormData) => {
     if (!editingTemplate) return;
+    const { attachment_ids, ...templateData } = data;
     
     updateTemplate.mutate({
       id: editingTemplate.id,
-      ...data,
+      ...templateData,
     }, {
       onSuccess: () => {
+        if (attachment_ids) {
+          setTemplateAttachments(editingTemplate.id, attachment_ids);
+        }
         setEditingTemplate(null);
         setIsFormOpen(false);
       },

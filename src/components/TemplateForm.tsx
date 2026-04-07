@@ -297,6 +297,18 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
               Use the toolbar to format text with HTML tags. Click placeholders to insert dynamic fields.
             </p>
           </div>
+
+          {/* Attachments */}
+          {formData.channel === 'email' && (
+            <AttachmentManager
+              selectedAttachments={selectedAttachments}
+              onAdd={(att) => setSelectedAttachments((prev) => [...prev, att])}
+              onRemove={(id) => setSelectedAttachments((prev) => prev.filter((a) => a.id !== id))}
+              allAttachments={allAttachments}
+              onUpload={uploadAttachment}
+              uploading={uploading}
+            />
+          )}
           
           <div className="flex justify-end gap-3 pt-4">
             <Button
