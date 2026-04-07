@@ -46,6 +46,7 @@ function fillPlaceholders(message: string, lead: Lead): string {
 
 export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
   const { templates } = useTemplates();
+  const { attachments: allAttachments, uploading, uploadAttachment, getTemplateAttachments } = useAttachments();
   const queryClient = useQueryClient();
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
@@ -55,6 +56,7 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
   const [sendInstagram, setSendInstagram] = useState(!!lead.instagram_handle);
   const [sender, setSender] = useState<string>(lead.platform === 'eros' ? 'eros' : 'noms');
   const [isSending, setIsSending] = useState(false);
+  const [selectedAttachments, setSelectedAttachments] = useState<Attachment[]>([]);
 
   const hasEmail = !!lead.email;
   const hasInstagram = !!lead.instagram_handle;
