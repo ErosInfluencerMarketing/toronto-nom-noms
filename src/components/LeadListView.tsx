@@ -367,6 +367,22 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {!lead.instagram_handle && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-pink-500"
+                            onClick={() => handleFindInstagram(lead)}
+                            disabled={findingIgId === lead.id}
+                            title="Find Instagram"
+                          >
+                            {findingIgId === lead.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Instagram className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
                         {canMessage && (
                           <Button
                             variant="ghost"
