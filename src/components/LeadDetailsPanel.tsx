@@ -36,6 +36,7 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
   const [saving, setSaving] = useState(false);
   const [sequences, setSequences] = useState<SequenceInfo[]>([]);
   const [loadingSeqs, setLoadingSeqs] = useState(false);
+  const [findingIg, setFindingIg] = useState(false);
 
   useEffect(() => {
     if (lead && open) {
