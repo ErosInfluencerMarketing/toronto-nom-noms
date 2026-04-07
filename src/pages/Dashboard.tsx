@@ -503,6 +503,17 @@ export default function Dashboard() {
               <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
               {isSyncing ? 'Syncing...' : 'Sync'}
             </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="shrink-0">
+                  <Instagram className="h-4 w-4 mr-2" />
+                  Find IG
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-96 p-0" align="end">
+                <InstagramSearchTool />
+              </PopoverContent>
+            </Popover>
             <LeadImport onImport={handleImportLeads} isLoading={isImporting} />
             <Button
               variant="outline"
