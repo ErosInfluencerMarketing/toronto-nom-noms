@@ -294,6 +294,7 @@ export default function Dashboard() {
     setAssignedFilters([]);
     setSequenceFilters([]);
     setEngagementFilters([]);
+    setGroupFilters([]);
     setDateRange({});
   };
 
