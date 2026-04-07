@@ -189,7 +189,9 @@ export default function Dashboard() {
 
   const filteredLeads = useMemo(() => {
     const s = search.trim().toLowerCase();
+    const tabPlatforms: Platform[] = activeTab === 'fitness' ? ['fitness'] : ['eros', 'noms'];
     return leads.filter((lead) => {
+      if (!tabPlatforms.includes(lead.platform)) return false;
       const matchesSearch =
         s === '' ||
         (lead.business_name && lead.business_name.toLowerCase().includes(s)) ||
