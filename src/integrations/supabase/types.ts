@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      email_attachments: {
+        Row: {
+          content_type: string
+          created_at: string
+          file_name: string
+          file_size: number
+          id: string
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          content_type?: string
+          created_at?: string
+          file_name: string
+          file_size?: number
+          id?: string
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          file_name?: string
+          file_size?: number
+          id?: string
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       influencers: {
         Row: {
           avg_comments: number | null
@@ -324,6 +354,39 @@ export type Database = {
           },
           {
             foreignKeyName: "sequences_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_attachments: {
+        Row: {
+          attachment_id: string
+          id: string
+          template_id: string
+        }
+        Insert: {
+          attachment_id: string
+          id?: string
+          template_id: string
+        }
+        Update: {
+          attachment_id?: string
+          id?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_attachments_attachment_id_fkey"
+            columns: ["attachment_id"]
+            isOneToOne: false
+            referencedRelation: "email_attachments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_attachments_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "templates"
