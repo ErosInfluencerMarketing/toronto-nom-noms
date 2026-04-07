@@ -172,6 +172,13 @@ export default function Dashboard() {
     }));
   }, [members]);
 
+  const groupOptions = useMemo(() => {
+    return [
+      { value: '__none__', label: 'No Group' },
+      ...groups.map((g) => ({ value: g.id, label: g.name })),
+    ];
+  }, [groups]);
+
   const leadIdsInSequence = useMemo(() => {
     const ids = new Set<string>();
     sequences.forEach((seq) => ids.add(seq.lead_id));
