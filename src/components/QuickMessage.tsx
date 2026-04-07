@@ -69,6 +69,8 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
       if (template.subject) {
         setSubject(fillPlaceholders(template.subject, lead));
       }
+      // Load template attachments
+      getTemplateAttachments(templateId).then(setSelectedAttachments);
     }
   };
 
