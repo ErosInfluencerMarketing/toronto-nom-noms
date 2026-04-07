@@ -36,13 +36,41 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { channels, lead, message, subject, sender } = await req.json();
+    const { channels, lead, message, subject, sender, attachment_ids } = await req.json();
 
     if (!channels || !lead || !message) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: channels, lead, message" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Fetch attachments if any
+    let resendAttachments: { filename: string; content: string }[] = [];
+    if (attachment_ids && attachment_ids.length > 0) {
+      const serviceClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      const { data: attachmentRows } = await serviceClient
+        .from("email_attachments")
+        .select("file_name, storage_path, content_type")
+        .in("id", attachment_ids);
+
+      if (attachmentRows) {
+        for (const att of attachmentRows) {
+          const { data: fileData } = await serviceClient.storage
+            .from("email-attachments")
+            .download(att.storage_path);
+          if (fileData) {
+            const buffer = await fileData.arrayBuffer();
+            const base64 = btoa(
+              new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
+            );
+            resendAttachments.push({ filename: att.file_name, content: base64 });
+          }
+        }
+      }
     }
 
     const results: Record<string, { success: boolean; error?: string }> = {};
@@ -56,20 +84,25 @@ Deno.serve(async (req) => {
         results.email = { success: false, error: "Lead has no email address" };
       } else {
         try {
+          const emailPayload: Record<string, any> = {
+            from: sender === "eros"
+              ? "Eros Marketing <hello@erosmarketing.io>"
+              : "The Noms Company Inc. <hello@nomspass.com>",
+            to: [lead.email],
+            subject: subject || `Hey ${lead.business_name}!`,
+            html: message.replace(/\n/g, '<br>'),
+          };
+          if (resendAttachments.length > 0) {
+            emailPayload.attachments = resendAttachments;
+          }
+
           const res = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
               Authorization: `Bearer ${RESEND_API_KEY}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              from: sender === "eros"
-                ? "Eros Marketing <hello@erosmarketing.io>"
-                : "The Noms Company Inc. <hello@nomspass.com>",
-              to: [lead.email],
-              subject: subject || `Hey ${lead.business_name}!`,
-              html: message.replace(/\n/g, '<br>'),
-            }),
+            body: JSON.stringify(emailPayload),
           });
 
           const data = await res.json();
