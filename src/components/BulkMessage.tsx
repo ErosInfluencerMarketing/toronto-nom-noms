@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Lead } from '@/types/lead';
 import { useTemplates } from '@/hooks/useTemplates';
+import { useAttachments, Attachment } from '@/hooks/useAttachments';
+import { AttachmentManager } from '@/components/AttachmentManager';
 import { supabase } from '@/integrations/supabase/client';
 import { AIEmailWriter } from '@/components/AIEmailWriter';
 import { useQueryClient } from '@tanstack/react-query';
