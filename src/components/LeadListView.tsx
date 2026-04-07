@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Trash2, Calendar, Mail, Instagram, Send, ArrowUp, ArrowDown, ArrowUpDown, UserCircle } from 'lucide-react';
+import { Trash2, Calendar, Mail, Instagram, Send, ArrowUp, ArrowDown, ArrowUpDown, UserCircle, Search, Loader2 } from 'lucide-react';
 import { format, parseISO, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 
