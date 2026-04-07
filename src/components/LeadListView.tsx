@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { normalizeInstagramHandle } from '@/lib/utils';
 import { Lead, LeadStatus, Platform, EmailEngagement } from '@/types/lead';
-import { StatusBadge } from './StatusBadge';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { PlatformBadge } from './PlatformBadge';
 import { EngagementBadge } from './EngagementBadge';
 import { QuickMessage } from './QuickMessage';
