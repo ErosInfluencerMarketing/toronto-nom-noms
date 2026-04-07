@@ -265,6 +265,7 @@ export default function Dashboard() {
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
+  useEffect(() => { localStorage.setItem('dashboard_activeTab', activeTab); }, [activeTab]);
   // Search is intentionally not persisted to localStorage to avoid stale filter state
   useEffect(() => { localStorage.setItem('dashboard_statusFilters', JSON.stringify(statusFilters)); }, [statusFilters]);
   useEffect(() => { localStorage.setItem('dashboard_platformFilters', JSON.stringify(platformFilters)); }, [platformFilters]);
