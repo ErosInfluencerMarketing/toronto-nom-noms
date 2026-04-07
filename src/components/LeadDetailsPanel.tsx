@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Mail, Instagram, Calendar, Globe, MapPin, Building2, Save, Loader2, Repeat } from 'lucide-react';
+import { Mail, Instagram, Calendar, Globe, MapPin, Building2, Save, Loader2, Repeat, Search } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -36,6 +36,7 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
   const [saving, setSaving] = useState(false);
   const [sequences, setSequences] = useState<SequenceInfo[]>([]);
   const [loadingSeqs, setLoadingSeqs] = useState(false);
+  const [findingIg, setFindingIg] = useState(false);
 
   useEffect(() => {
     if (lead && open) {
@@ -105,6 +106,33 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
     }
   };
 
+  const handleFindInstagram = async () => {
+    if (!lead) return;
+    setFindingIg(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('find-instagram', {
+        body: {
+          businessName: lead.business_name,
+          city: lead.city || 'Toronto',
+          website: lead.website || '',
+          leadId: lead.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.instagram_handle) {
+        queryClient.invalidateQueries({ queryKey: ['leads'] });
+        toast.success(`Found Instagram: @${data.instagram_handle}`);
+      } else {
+        toast.info('No Instagram handle found for this business');
+      }
+    } catch (e) {
+      toast.error('Failed to search for Instagram');
+      console.error(e);
+    } finally {
+      setFindingIg(false);
+    }
+  };
+
   if (!lead) return null;
 
   const statusColor: Record<string, string> = {
@@ -144,7 +172,7 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
               <span className="text-foreground">{lead.email}</span>
             </div>
           )}
-          {lead.instagram_handle && (
+          {lead.instagram_handle ? (
             <div className="flex items-center gap-2 text-sm">
               <Instagram className="h-4 w-4 text-muted-foreground shrink-0" />
               <a
@@ -155,6 +183,23 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
               >
                 @{normalizeInstagramHandle(lead.instagram_handle)}
               </a>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm">
+              <Instagram className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
+                onClick={handleFindInstagram}
+                disabled={findingIg}
+              >
+                {findingIg ? (
+                  <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Searching...</>
+                ) : (
+                  <><Search className="h-3 w-3 mr-1" /> Find Instagram</>
+                )}
+              </Button>
             </div>
           )}
           {lead.website && (

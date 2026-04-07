@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { normalizeInstagramHandle } from '@/lib/utils';
 import { Lead, LeadStatus, Platform, EmailEngagement } from '@/types/lead';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { StatusBadge } from './StatusBadge';
 import { PlatformBadge } from './PlatformBadge';
 import { EngagementBadge } from './EngagementBadge';
@@ -20,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Trash2, Calendar, Mail, Instagram, Send, ArrowUp, ArrowDown, ArrowUpDown, UserCircle } from 'lucide-react';
+import { Trash2, Calendar, Mail, Instagram, Send, ArrowUp, ArrowDown, ArrowUpDown, UserCircle, Search, Loader2 } from 'lucide-react';
 import { format, parseISO, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -53,6 +56,8 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
   const [messageLead, setMessageLead] = useState<Lead | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [findingIgId, setFindingIgId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const { members } = useTeamMembers();
   const selectable = !!onSelectionChange && !!selectedIds;
 
@@ -117,6 +122,31 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
   const handleFieldUpdate = (lead: Lead, field: string, value: string) => {
     if (onUpdate) {
       onUpdate({ id: lead.id, [field]: value || null });
+    }
+  };
+
+  const handleFindInstagram = async (lead: Lead) => {
+    setFindingIgId(lead.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('find-instagram', {
+        body: {
+          businessName: lead.business_name,
+          city: lead.city || 'Toronto',
+          website: lead.website || '',
+          leadId: lead.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.instagram_handle) {
+        queryClient.invalidateQueries({ queryKey: ['leads'] });
+        toast.success(`Found: @${data.instagram_handle}`);
+      } else {
+        toast.info(`No Instagram found for ${lead.business_name}`);
+      }
+    } catch {
+      toast.error('Failed to search for Instagram');
+    } finally {
+      setFindingIgId(null);
     }
   };
 
@@ -337,6 +367,22 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {!lead.instagram_handle && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-pink-500"
+                            onClick={() => handleFindInstagram(lead)}
+                            disabled={findingIgId === lead.id}
+                            title="Find Instagram"
+                          >
+                            {findingIgId === lead.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Instagram className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
                         {canMessage && (
                           <Button
                             variant="ghost"

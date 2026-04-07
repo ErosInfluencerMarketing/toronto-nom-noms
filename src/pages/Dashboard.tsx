@@ -26,6 +26,7 @@ import { AssignLeadsDialog } from '@/components/AssignLeadsDialog';
 import { AssignGroupDialog } from '@/components/AssignGroupDialog';
 import { LeadDetailsPanel } from '@/components/LeadDetailsPanel';
 import { RestaurantGroupManager } from '@/components/RestaurantGroupManager';
+import { InstagramSearchTool } from '@/components/InstagramSearchTool';
 import { useRestaurantGroups } from '@/hooks/useRestaurantGroups';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, ChevronLeft, ChevronRight, Repeat, Building2, Dumbbell } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, ChevronLeft, ChevronRight, Repeat, Building2, Dumbbell, Instagram } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -501,6 +503,17 @@ export default function Dashboard() {
               <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
               {isSyncing ? 'Syncing...' : 'Sync'}
             </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="shrink-0">
+                  <Instagram className="h-4 w-4 mr-2" />
+                  Find IG
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-96 p-0" align="end">
+                <InstagramSearchTool />
+              </PopoverContent>
+            </Popover>
             <LeadImport onImport={handleImportLeads} isLoading={isImporting} />
             <Button
               variant="outline"
