@@ -307,6 +307,15 @@ export function LeadFilters({
           onChange={onEngagementFiltersChange}
         />
 
+        {groupOptions.length > 1 && (
+          <MultiSelectPopover
+            label="Group"
+            options={groupOptions}
+            selected={groupFilters}
+            onChange={onGroupFiltersChange}
+          />
+        )}
+
         <Popover>
           <PopoverTrigger asChild>
             <Button
