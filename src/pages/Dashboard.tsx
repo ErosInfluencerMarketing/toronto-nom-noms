@@ -245,10 +245,19 @@ export default function Dashboard() {
       if (engagementFilters.length > 0) {
         matchesEngagement = engagementFilters.includes((lead as any).email_engagement || 'none');
       }
+
+      let matchesGroup = true;
+      if (groupFilters.length > 0) {
+        const leadGroupId = (lead as any).group_id;
+        matchesGroup = groupFilters.some((f) => {
+          if (f === '__none__') return !leadGroupId;
+          return leadGroupId === f;
+        });
+      }
       
-      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate && matchesSequence && matchesEngagement;
+      return matchesSearch && matchesStatus && matchesPlatform && matchesCategory && matchesCity && matchesContact && matchesAssigned && matchesDate && matchesSequence && matchesEngagement && matchesGroup;
     });
-  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, engagementFilters, leadIdsInSequence, dateRange]);
+  }, [leads, search, statusFilters, platformFilters, categoryFilters, cityFilters, contactFilters, assignedFilters, sequenceFilters, engagementFilters, groupFilters, leadIdsInSequence, dateRange]);
 
   // Persist filter state to localStorage
   useEffect(() => { localStorage.setItem('dashboard_viewMode', viewMode); }, [viewMode]);
