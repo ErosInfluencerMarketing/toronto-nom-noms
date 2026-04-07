@@ -55,6 +55,8 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
   const [messageLead, setMessageLead] = useState<Lead | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [findingIgId, setFindingIgId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const { members } = useTeamMembers();
   const selectable = !!onSelectionChange && !!selectedIds;
 
