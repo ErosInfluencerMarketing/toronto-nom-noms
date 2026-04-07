@@ -35,6 +35,7 @@ interface TemplatesSectionProps {
 
 export function TemplatesSection({ leads }: TemplatesSectionProps) {
   const { templates, isLoading, createTemplate, updateTemplate, deleteTemplate } = useTemplates();
+  const { setTemplateAttachments } = useAttachments();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
@@ -42,8 +43,14 @@ export function TemplatesSection({ leads }: TemplatesSectionProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('card');
 
   const handleCreateTemplate = (data: TemplateFormData) => {
-    createTemplate.mutate(data, {
-      onSuccess: () => setIsFormOpen(false),
+    const { attachment_ids, ...templateData } = data;
+    createTemplate.mutate(templateData, {
+      onSuccess: (created: any) => {
+        if (attachment_ids?.length && created?.id) {
+          setTemplateAttachments(created.id, attachment_ids);
+        }
+        setIsFormOpen(false);
+      },
     });
   };
 
