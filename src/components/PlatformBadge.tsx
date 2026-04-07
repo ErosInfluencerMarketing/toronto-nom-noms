@@ -15,6 +15,10 @@ const platformConfig: Record<Platform, { label: string; className: string }> = {
     label: 'Noms',
     className: 'bg-platform-noms/20 text-platform-noms border-platform-noms/30',
   },
+  fitness: {
+    label: 'Fitness',
+    className: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  },
 };
 
 export function PlatformBadge({ platform, className }: PlatformBadgeProps) {
