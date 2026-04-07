@@ -21,7 +21,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { Search, MapPin, Loader2, Globe, Star } from 'lucide-react';
+import { Search, MapPin, Loader2, Globe, Star, Dumbbell } from 'lucide-react';
 
 interface ScrapedBusiness {
   business_name: string;
@@ -38,13 +38,42 @@ interface ScrapedBusiness {
 interface LeadScraperProps {
   onImport: (leads: LeadFormData[]) => Promise<void>;
   isLoading: boolean;
+  activeTab?: 'restaurants' | 'fitness';
 }
 
-export function LeadScraper({ onImport, isLoading }: LeadScraperProps) {
+const TAB_CONFIG = {
+  restaurants: {
+    icon: Globe,
+    title: 'Scrape Restaurants & Cafes',
+    buttonLabel: 'Scrape Maps',
+    buttonIcon: MapPin,
+    placeholder: 'e.g. Italian restaurants, coffee shops, sushi bars',
+    defaultPlatform: 'noms' as Platform,
+    platforms: [
+      { value: 'noms', label: 'Noms' },
+      { value: 'eros', label: 'Eros' },
+    ],
+  },
+  fitness: {
+    icon: Dumbbell,
+    title: 'Scrape Fitness Gyms & Brands',
+    buttonLabel: 'Scrape Gyms',
+    buttonIcon: Dumbbell,
+    placeholder: 'e.g. CrossFit gyms, yoga studios, boxing gyms, fitness brands',
+    defaultPlatform: 'fitness' as Platform,
+    platforms: [
+      { value: 'fitness', label: 'Fitness' },
+    ],
+  },
+};
+
+export function LeadScraper({ onImport, isLoading, activeTab = 'restaurants' }: LeadScraperProps) {
+  const config = TAB_CONFIG[activeTab];
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [location, setLocation] = useState('Toronto');
-  const [platform, setPlatform] = useState<Platform>('noms');
+  const [platform, setPlatform] = useState<Platform>(config.defaultPlatform);
   const [scraping, setScraping] = useState(false);
   const [businesses, setBusinesses] = useState<ScrapedBusiness[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -63,7 +92,11 @@ export function LeadScraper({ onImport, isLoading }: LeadScraperProps) {
 
     try {
       const { data, error } = await supabase.functions.invoke('scrape-google-maps', {
-        body: { query: query.trim(), location: location.trim() },
+        body: {
+          query: query.trim(),
+          location: location.trim(),
+          mode: activeTab,
+        },
       });
 
       if (error) throw error;
@@ -73,7 +106,7 @@ export function LeadScraper({ onImport, isLoading }: LeadScraperProps) {
       }
 
       const found: ScrapedBusiness[] = data.businesses || [];
-      
+
       if (found.length === 0) {
         toast.info('No businesses found. Try a different search query.');
       } else {
@@ -92,21 +125,15 @@ export function LeadScraper({ onImport, isLoading }: LeadScraperProps) {
   const toggleSelect = (index: number) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
       return next;
     });
   };
 
   const toggleAll = () => {
-    if (selected.size === businesses.length) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(businesses.map((_, i) => i)));
-    }
+    if (selected.size === businesses.length) setSelected(new Set());
+    else setSelected(new Set(businesses.map((_, i) => i)));
   };
 
   const handleImport = async () => {
@@ -149,30 +176,31 @@ export function LeadScraper({ onImport, isLoading }: LeadScraperProps) {
     }
   };
 
+  const ButtonIcon = config.buttonIcon;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="shrink-0">
-          <MapPin className="h-4 w-4 mr-2" />
-          Scrape Maps
+          <ButtonIcon className="h-4 w-4 mr-2" />
+          {config.buttonLabel}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl bg-card border-border max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Globe className="h-5 w-5 text-primary" />
-            Scrape Restaurants & Cafes
+            <config.icon className="h-5 w-5 text-primary" />
+            {config.title}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 flex-1 min-h-0 flex flex-col">
-          {/* Search controls */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
               <Label htmlFor="scrape-query">Search Query</Label>
               <Input
                 id="scrape-query"
-                placeholder="e.g. Italian restaurants, coffee shops, sushi bars"
+                placeholder={config.placeholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleScrape()}
@@ -190,19 +218,22 @@ export function LeadScraper({ onImport, isLoading }: LeadScraperProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="w-40">
-              <Label>Platform</Label>
-              <Select value={platform} onValueChange={(v) => setPlatform(v as Platform)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="noms">Noms</SelectItem>
-                  <SelectItem value="eros">Eros</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleScrape} disabled={scraping} className="mt-5">
+            {config.platforms.length > 1 && (
+              <div className="w-40">
+                <Label>Platform</Label>
+                <Select value={platform} onValueChange={(v) => setPlatform(v as Platform)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {config.platforms.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <Button onClick={handleScrape} disabled={scraping} className={config.platforms.length > 1 ? 'mt-5' : ''}>
               {scraping ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
@@ -212,7 +243,6 @@ export function LeadScraper({ onImport, isLoading }: LeadScraperProps) {
             </Button>
           </div>
 
-          {/* Results */}
           {businesses.length > 0 && (
             <div className="flex-1 min-h-0 flex flex-col">
               <div className="flex items-center justify-between mb-2">
@@ -271,7 +301,6 @@ export function LeadScraper({ onImport, isLoading }: LeadScraperProps) {
             </div>
           )}
 
-          {/* Import button */}
           {businesses.length > 0 && (
             <Button
               onClick={handleImport}

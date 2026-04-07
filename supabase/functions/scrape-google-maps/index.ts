@@ -5,13 +5,48 @@ const corsHeaders = {
 
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
+const PROMPTS = {
+  restaurants: {
+    searchSuffix: 'restaurant cafe',
+    system: `You extract restaurant and cafe business information from search results. Return ONLY a JSON array of businesses. Each business object must have these fields:
+- business_name: string (the business name)
+- address: string (full street address if available)
+- phone_number: string (phone number if available)
+- website: string (website URL if available)
+- email: string (email address if found in content, look for contact emails, info@ addresses, etc.)
+- instagram_handle: string (Instagram handle WITHOUT the @ symbol, look for instagram.com links or @mentions)
+- rating: string (Google rating if available)
+- category: string (type of business e.g. "Coffee Shop", "Italian Restaurant")
+- price_range: string (price range if available)
+
+If a field is unknown, use an empty string. Only include actual businesses (restaurants, cafes, coffee shops, etc). Do not include directories, articles, or non-business results. Return valid JSON only, no markdown.`,
+    userPrefix: 'Extract all restaurant and cafe businesses from these search results',
+  },
+  fitness: {
+    searchSuffix: 'gym fitness studio',
+    system: `You extract fitness gym and brand information from search results. Return ONLY a JSON array of businesses. Each business object must have these fields:
+- business_name: string (the business name)
+- address: string (full street address if available)
+- phone_number: string (phone number if available)
+- website: string (website URL if available)
+- email: string (email address if found in content, look for contact emails, info@ addresses, membership@ addresses, etc.)
+- instagram_handle: string (Instagram handle WITHOUT the @ symbol, look for instagram.com links or @mentions)
+- rating: string (Google rating if available)
+- category: string (type of business e.g. "CrossFit Box", "Yoga Studio", "Boxing Gym", "Personal Training", "Fitness Brand", "Supplement Store")
+- price_range: string (membership price range if available)
+
+If a field is unknown, use an empty string. Only include actual fitness businesses (gyms, studios, fitness brands, supplement stores, athletic facilities). Do not include directories, articles, or non-business results. Return valid JSON only, no markdown.`,
+    userPrefix: 'Extract all fitness gyms, studios, and fitness brands from these search results',
+  },
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { query, location } = await req.json();
+    const { query, location, mode } = await req.json();
 
     if (!query) {
       return new Response(
@@ -36,9 +71,10 @@ Deno.serve(async (req) => {
       );
     }
 
+    const promptConfig = PROMPTS[mode as keyof typeof PROMPTS] || PROMPTS.restaurants;
     const searchLocation = location || 'Toronto';
 
-    console.log('Searching for:', query, 'in', searchLocation);
+    console.log('Searching for:', query, 'in', searchLocation, 'mode:', mode);
 
     const searchResponse = await fetch('https://api.firecrawl.dev/v1/search', {
       method: 'POST',
@@ -47,7 +83,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        query: `${query} in ${searchLocation} restaurant cafe`,
+        query: `${query} in ${searchLocation} ${promptConfig.searchSuffix}`,
         limit: 20,
         scrapeOptions: {
           formats: ['markdown'],
@@ -88,24 +124,10 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          {
-            role: 'system',
-            content: `You extract restaurant and cafe business information from search results. Return ONLY a JSON array of businesses. Each business object must have these fields:
-- business_name: string (the business name)
-- address: string (full street address if available)
-- phone_number: string (phone number if available)
-- website: string (website URL if available)
-- email: string (email address if found in content, look for contact emails, info@ addresses, etc.)
-- instagram_handle: string (Instagram handle WITHOUT the @ symbol, look for instagram.com links or @mentions)
-- rating: string (Google rating if available)
-- category: string (type of business e.g. "Coffee Shop", "Italian Restaurant")
-- price_range: string (price range if available)
-
-If a field is unknown, use an empty string. Only include actual businesses (restaurants, cafes, coffee shops, etc). Do not include directories, articles, or non-business results. Return valid JSON only, no markdown.`
-          },
+          { role: 'system', content: promptConfig.system },
           {
             role: 'user',
-            content: `Extract all restaurant and cafe businesses from these search results about "${query}" in ${searchLocation}. Pay special attention to finding email addresses and Instagram handles:\n\n${combinedContent}`
+            content: `${promptConfig.userPrefix} about "${query}" in ${searchLocation}. Pay special attention to finding email addresses and Instagram handles:\n\n${combinedContent}`
           }
         ],
         temperature: 0.1,
