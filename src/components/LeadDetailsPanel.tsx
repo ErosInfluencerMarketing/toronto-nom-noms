@@ -106,6 +106,33 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
     }
   };
 
+  const handleFindInstagram = async () => {
+    if (!lead) return;
+    setFindingIg(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('find-instagram', {
+        body: {
+          businessName: lead.business_name,
+          city: lead.city || 'Toronto',
+          website: lead.website || '',
+          leadId: lead.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.instagram_handle) {
+        queryClient.invalidateQueries({ queryKey: ['leads'] });
+        toast.success(`Found Instagram: @${data.instagram_handle}`);
+      } else {
+        toast.info('No Instagram handle found for this business');
+      }
+    } catch (e) {
+      toast.error('Failed to search for Instagram');
+      console.error(e);
+    } finally {
+      setFindingIg(false);
+    }
+  };
+
   if (!lead) return null;
 
   const statusColor: Record<string, string> = {
