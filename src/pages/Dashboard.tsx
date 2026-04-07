@@ -443,6 +443,20 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Platform Tabs */}
+          <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as 'restaurants' | 'fitness'); setCurrentPage(1); }} className="mb-6">
+            <TabsList className="bg-secondary">
+              <TabsTrigger value="restaurants" className="gap-2">
+                <MapPin className="h-4 w-4" />
+                Restaurants
+              </TabsTrigger>
+              <TabsTrigger value="fitness" className="gap-2">
+                <Dumbbell className="h-4 w-4" />
+                Fitness
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           {/* Filters and Actions */}
           <div id="leads" className="scroll-mt-20 flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 w-full">
           <LeadFilters
