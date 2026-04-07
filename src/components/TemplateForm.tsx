@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Template, TemplateFormData, Channel, PLACEHOLDERS } from '@/types/template';
 import { useTemplates } from '@/hooks/useTemplates';
+import { useAttachments, Attachment } from '@/hooks/useAttachments';
+import { AttachmentManager } from '@/components/AttachmentManager';
 import { AIEmailWriter } from '@/components/AIEmailWriter';
 import { Platform } from '@/types/lead';
 import { Button } from '@/components/ui/button';
@@ -48,7 +50,9 @@ interface TemplateFormProps {
 
 export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading }: TemplateFormProps) {
   const { templates: allTemplates } = useTemplates();
+  const { attachments: allAttachments, uploading, uploadAttachment, getTemplateAttachments, setTemplateAttachments } = useAttachments();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [selectedAttachments, setSelectedAttachments] = useState<Attachment[]>([]);
   const [formData, setFormData] = useState<TemplateFormData>({
     name: '',
     platform: 'eros',
@@ -67,6 +71,8 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
         subject: template.subject || '',
         message_body: template.message_body,
       });
+      // Load template attachments
+      getTemplateAttachments(template.id).then(setSelectedAttachments);
     } else {
       setFormData({
         name: '',
@@ -75,6 +81,7 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
         subject: '',
         message_body: '',
       });
+      setSelectedAttachments([]);
     }
     setErrors({});
   }, [template, open]);
@@ -94,7 +101,7 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
       return;
     }
     
-    onSubmit(formData);
+    onSubmit({ ...formData, attachment_ids: selectedAttachments.map((a) => a.id) });
   };
 
   const insertPlaceholder = (placeholder: string) => {
@@ -290,6 +297,18 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
               Use the toolbar to format text with HTML tags. Click placeholders to insert dynamic fields.
             </p>
           </div>
+
+          {/* Attachments */}
+          {formData.channel === 'email' && (
+            <AttachmentManager
+              selectedAttachments={selectedAttachments}
+              onAdd={(att) => setSelectedAttachments((prev) => [...prev, att])}
+              onRemove={(id) => setSelectedAttachments((prev) => prev.filter((a) => a.id !== id))}
+              allAttachments={allAttachments}
+              onUpload={uploadAttachment}
+              uploading={uploading}
+            />
+          )}
           
           <div className="flex justify-end gap-3 pt-4">
             <Button

@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Lead } from '@/types/lead';
 import { useTemplates } from '@/hooks/useTemplates';
+import { useAttachments, Attachment } from '@/hooks/useAttachments';
+import { AttachmentManager } from '@/components/AttachmentManager';
 import { supabase } from '@/integrations/supabase/client';
 import { AIEmailWriter } from '@/components/AIEmailWriter';
 import { useQueryClient } from '@tanstack/react-query';
@@ -44,6 +46,7 @@ function fillPlaceholders(message: string, lead: Lead): string {
 
 export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessageProps) {
   const { templates } = useTemplates();
+  const { attachments: allAttachments, uploading, uploadAttachment, getTemplateAttachments } = useAttachments();
   const queryClient = useQueryClient();
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
@@ -52,6 +55,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
   const [sender, setSender] = useState<string>('noms');
   const [isSending, setIsSending] = useState(false);
   const [progress, setProgress] = useState({ sent: 0, failed: 0, total: 0 });
+  const [selectedAttachments, setSelectedAttachments] = useState<Attachment[]>([]);
 
   const leadsWithEmail = useMemo(() => leads.filter((l) => !!l.email), [leads]);
   const leadsWithoutEmail = leads.length - leadsWithEmail.length;
@@ -64,6 +68,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
       if (template.subject) {
         setSubjectTemplate(template.subject);
       }
+      getTemplateAttachments(templateId).then(setSelectedAttachments);
     }
   };
 
@@ -101,6 +106,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
             message: personalizedMessage.trim(),
             subject: personalizedSubject.trim(),
             sender,
+            attachment_ids: selectedAttachments.map((a) => a.id),
           },
         });
 
@@ -232,6 +238,16 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
               Placeholders like [Business Name], [Owner Name] will be replaced per lead
             </p>
           </div>
+
+          {/* Attachments */}
+          <AttachmentManager
+            selectedAttachments={selectedAttachments}
+            onAdd={(att) => setSelectedAttachments((prev) => [...prev, att])}
+            onRemove={(id) => setSelectedAttachments((prev) => prev.filter((a) => a.id !== id))}
+            allAttachments={allAttachments}
+            onUpload={uploadAttachment}
+            uploading={uploading}
+          />
 
           {/* Progress */}
           {isSending && (

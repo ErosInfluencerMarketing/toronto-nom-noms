@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import { Lead } from '@/types/lead';
 import { Template } from '@/types/template';
 import { useTemplates } from '@/hooks/useTemplates';
+import { useAttachments, Attachment } from '@/hooks/useAttachments';
+import { AttachmentManager } from '@/components/AttachmentManager';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -44,6 +46,7 @@ function fillPlaceholders(message: string, lead: Lead): string {
 
 export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
   const { templates } = useTemplates();
+  const { attachments: allAttachments, uploading, uploadAttachment, getTemplateAttachments } = useAttachments();
   const queryClient = useQueryClient();
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
@@ -53,6 +56,7 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
   const [sendInstagram, setSendInstagram] = useState(!!lead.instagram_handle);
   const [sender, setSender] = useState<string>(lead.platform === 'eros' ? 'eros' : 'noms');
   const [isSending, setIsSending] = useState(false);
+  const [selectedAttachments, setSelectedAttachments] = useState<Attachment[]>([]);
 
   const hasEmail = !!lead.email;
   const hasInstagram = !!lead.instagram_handle;
@@ -65,6 +69,8 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
       if (template.subject) {
         setSubject(fillPlaceholders(template.subject, lead));
       }
+      // Load template attachments
+      getTemplateAttachments(templateId).then(setSelectedAttachments);
     }
   };
 
@@ -98,6 +104,7 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
           message: message.trim(),
           subject: subject.trim(),
           sender,
+          attachment_ids: selectedAttachments.map((a) => a.id),
         },
       });
 
@@ -244,6 +251,19 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
               placeholder="Type your message or select a template above..."
             />
           </div>
+
+          {/* Attachments */}
+          {sendEmail && (
+            <AttachmentManager
+              selectedAttachments={selectedAttachments}
+              onAdd={(att) => setSelectedAttachments((prev) => [...prev, att])}
+              onRemove={(id) => setSelectedAttachments((prev) => prev.filter((a) => a.id !== id))}
+              allAttachments={allAttachments}
+              onUpload={uploadAttachment}
+              uploading={uploading}
+              compact
+            />
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-3">
