@@ -46,6 +46,7 @@ function fillPlaceholders(message: string, lead: Lead): string {
 
 export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessageProps) {
   const { templates } = useTemplates();
+  const { attachments: allAttachments, uploading, uploadAttachment, getTemplateAttachments } = useAttachments();
   const queryClient = useQueryClient();
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
@@ -54,6 +55,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
   const [sender, setSender] = useState<string>('noms');
   const [isSending, setIsSending] = useState(false);
   const [progress, setProgress] = useState({ sent: 0, failed: 0, total: 0 });
+  const [selectedAttachments, setSelectedAttachments] = useState<Attachment[]>([]);
 
   const leadsWithEmail = useMemo(() => leads.filter((l) => !!l.email), [leads]);
   const leadsWithoutEmail = leads.length - leadsWithEmail.length;
