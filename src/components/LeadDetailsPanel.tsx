@@ -172,7 +172,7 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
               <span className="text-foreground">{lead.email}</span>
             </div>
           )}
-          {lead.instagram_handle && (
+          {lead.instagram_handle ? (
             <div className="flex items-center gap-2 text-sm">
               <Instagram className="h-4 w-4 text-muted-foreground shrink-0" />
               <a
@@ -183,6 +183,23 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
               >
                 @{normalizeInstagramHandle(lead.instagram_handle)}
               </a>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm">
+              <Instagram className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
+                onClick={handleFindInstagram}
+                disabled={findingIg}
+              >
+                {findingIg ? (
+                  <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Searching...</>
+                ) : (
+                  <><Search className="h-3 w-3 mr-1" /> Find Instagram</>
+                )}
+              </Button>
             </div>
           )}
           {lead.website && (
