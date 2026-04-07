@@ -124,6 +124,31 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
     }
   };
 
+  const handleFindInstagram = async (lead: Lead) => {
+    setFindingIgId(lead.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('find-instagram', {
+        body: {
+          businessName: lead.business_name,
+          city: lead.city || 'Toronto',
+          website: lead.website || '',
+          leadId: lead.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.instagram_handle) {
+        queryClient.invalidateQueries({ queryKey: ['leads'] });
+        toast.success(`Found: @${data.instagram_handle}`);
+      } else {
+        toast.info(`No Instagram found for ${lead.business_name}`);
+      }
+    } catch {
+      toast.error('Failed to search for Instagram');
+    } finally {
+      setFindingIgId(null);
+    }
+  };
+
   const getOutreachDateStyle = (dateString: string | null) => {
     if (!dateString) return '';
     const date = parseISO(dateString);
