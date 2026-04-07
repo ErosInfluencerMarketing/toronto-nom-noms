@@ -216,6 +216,7 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
                 <SelectContent>
                   <SelectItem value="eros">Eros</SelectItem>
                   <SelectItem value="noms">Noms</SelectItem>
+                  <SelectItem value="fitness">Fitness</SelectItem>
                 </SelectContent>
               </Select>
             </div>

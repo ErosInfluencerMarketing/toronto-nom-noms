@@ -1,4 +1,4 @@
-export type Platform = 'eros' | 'noms';
+export type Platform = 'eros' | 'noms' | 'fitness';
 export type LeadStatus = 'new' | 'contacted' | 'demo_booked' | 'onboarded';
 export type EmailEngagement = 'none' | 'sent' | 'opened' | 'clicked' | 'replied';
 
