@@ -71,6 +71,8 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
         subject: template.subject || '',
         message_body: template.message_body,
       });
+      // Load template attachments
+      getTemplateAttachments(template.id).then(setSelectedAttachments);
     } else {
       setFormData({
         name: '',
@@ -79,6 +81,7 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
         subject: '',
         message_body: '',
       });
+      setSelectedAttachments([]);
     }
     setErrors({});
   }, [template, open]);
