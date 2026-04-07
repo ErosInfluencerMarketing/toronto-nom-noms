@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Template, TemplateFormData, Channel, PLACEHOLDERS } from '@/types/template';
 import { useTemplates } from '@/hooks/useTemplates';
+import { useAttachments, Attachment } from '@/hooks/useAttachments';
+import { AttachmentManager } from '@/components/AttachmentManager';
 import { AIEmailWriter } from '@/components/AIEmailWriter';
 import { Platform } from '@/types/lead';
 import { Button } from '@/components/ui/button';
