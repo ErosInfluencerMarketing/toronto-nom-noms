@@ -206,6 +206,7 @@ export function LeadFilters({
     assignedFilters.length > 0 ||
     sequenceFilters.length > 0 ||
     engagementFilters.length > 0 ||
+    groupFilters.length > 0 ||
     dateRange.from !== undefined ||
     dateRange.to !== undefined;
 
