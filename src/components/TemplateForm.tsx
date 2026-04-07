@@ -101,10 +101,7 @@ export function TemplateForm({ open, onOpenChange, onSubmit, template, isLoading
       return;
     }
     
-    onSubmit(formData);
-    // Save template attachments after submit (the parent will create/update the template)
-    // We handle this via a callback approach - save attachment IDs for post-submit
-    (window as any).__pendingTemplateAttachments = selectedAttachments.map((a) => a.id);
+    onSubmit({ ...formData, attachment_ids: selectedAttachments.map((a) => a.id) });
   };
 
   const insertPlaceholder = (placeholder: string) => {
