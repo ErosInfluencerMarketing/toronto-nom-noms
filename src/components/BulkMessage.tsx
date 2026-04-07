@@ -239,6 +239,16 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
             </p>
           </div>
 
+          {/* Attachments */}
+          <AttachmentManager
+            selectedAttachments={selectedAttachments}
+            onAdd={(att) => setSelectedAttachments((prev) => [...prev, att])}
+            onRemove={(id) => setSelectedAttachments((prev) => prev.filter((a) => a.id !== id))}
+            allAttachments={allAttachments}
+            onUpload={uploadAttachment}
+            uploading={uploading}
+          />
+
           {/* Progress */}
           {isSending && (
             <div className="text-sm text-muted-foreground">
