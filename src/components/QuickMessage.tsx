@@ -104,6 +104,7 @@ export function QuickMessage({ open, onOpenChange, lead }: QuickMessageProps) {
           message: message.trim(),
           subject: subject.trim(),
           sender,
+          attachment_ids: selectedAttachments.map((a) => a.id),
         },
       });
 
