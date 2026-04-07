@@ -20,6 +20,7 @@ export interface TemplateFormData {
   channel: Channel;
   subject: string;
   message_body: string;
+  attachment_ids?: string[];
 }
 
 export const PLACEHOLDERS = [
