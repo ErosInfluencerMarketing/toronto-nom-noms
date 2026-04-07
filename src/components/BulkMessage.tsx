@@ -68,6 +68,7 @@ export function BulkMessage({ open, onOpenChange, leads, onComplete }: BulkMessa
       if (template.subject) {
         setSubjectTemplate(template.subject);
       }
+      getTemplateAttachments(templateId).then(setSelectedAttachments);
     }
   };
 
