@@ -538,6 +538,14 @@ export default function Dashboard() {
             <Button
               size="sm"
               variant="outline"
+              onClick={() => setGroupDialogOpen(true)}
+            >
+              <Building2 className="h-4 w-4 mr-2" />
+              Assign to Group
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => {
                 setSequencePreSelectedLeadIds(Array.from(selectedLeadIds));
                 setSelectedLeadIds(new Set());
