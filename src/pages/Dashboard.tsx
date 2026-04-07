@@ -644,6 +644,12 @@ export default function Dashboard() {
           </div>
         )}
 
+          {/* Restaurant Groups Section */}
+          <Separator className="my-8" />
+          <div id="groups" className="scroll-mt-20">
+            <RestaurantGroupManager leads={leads} />
+          </div>
+
           {/* Templates Section */}
           <Separator className="my-8" />
           <div id="templates" className="scroll-mt-20">
