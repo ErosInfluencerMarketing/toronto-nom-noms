@@ -7,6 +7,166 @@ const corsHeaders = {
 
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
+// ── Helpers ──
+
+function extractIgFromUrl(url: string): string {
+  const match = url.match(/instagram\.com\/([a-zA-Z0-9._]+)/);
+  if (match && !['p', 'explore', 'accounts', 'stories', 'reel', 'reels', 'tv'].includes(match[1])) {
+    return match[1];
+  }
+  return '';
+}
+
+function normalize(handle: string): string {
+  let h = handle.trim();
+  const urlMatch = h.match(/(?:https?:\/\/)?(?:www\.)?instagram\.com\/([a-zA-Z0-9._]+)\/?/);
+  if (urlMatch) h = urlMatch[1];
+  h = h.replace(/^@/, '').split(/[?/#]/)[0];
+  return h;
+}
+
+async function searchWeb(apiKey: string, query: string, limit = 5): Promise<{ snippets: string; urls: string[] }> {
+  try {
+    const res = await fetch('https://api.firecrawl.dev/v1/search', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, limit }),
+    });
+    if (!res.ok) return { snippets: '', urls: [] };
+    const data = await res.json();
+    const results = data.data || [];
+    return {
+      urls: results.map((r: any) => r.url).filter(Boolean),
+      snippets: results.map((r: any) => [r.title || '', r.url || '', r.description || ''].join(' | ')).join('\n\n'),
+    };
+  } catch { return { snippets: '', urls: [] }; }
+}
+
+async function scrapeUrl(apiKey: string, url: string): Promise<string> {
+  try {
+    const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, formats: ['markdown'], onlyMainContent: false }),
+    });
+    if (!res.ok) return '';
+    const data = await res.json();
+    return data.data?.markdown || data.markdown || '';
+  } catch { return ''; }
+}
+
+async function extractInstagram(lovableApiKey: string, content: string, businessName: string, location: string): Promise<string> {
+  try {
+    const aiResponse = await fetch(AI_GATEWAY_URL, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${lovableApiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [{
+          role: 'user',
+          content: `Extract the Instagram handle/username for the business "${businessName}" in ${location}.
+Look for @username patterns, instagram.com/username links, "Follow us on Instagram" text, "IG: username" patterns, social media links.
+Return ONLY JSON: {"instagram_handle": "username_without_at"} or {"instagram_handle": ""} if not found.
+Do NOT guess or fabricate.
+
+Content:
+${content.slice(0, 5000)}`
+        }],
+        temperature: 0,
+      }),
+    });
+    if (!aiResponse.ok) return '';
+    const aiData = await aiResponse.json();
+    const aiContent = aiData.choices?.[0]?.message?.content || '{}';
+    const cleaned = aiContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    return JSON.parse(cleaned).instagram_handle || '';
+  } catch { return ''; }
+}
+
+// ── Core search for a single lead ──
+
+async function findInstagramForLead(
+  apiKey: string,
+  lovableApiKey: string,
+  businessName: string,
+  city: string,
+  website: string,
+): Promise<string> {
+  const location = city || 'Toronto';
+  let foundHandle = '';
+
+  // STRATEGY 1: Scrape website for IG links (fast regex check first)
+  if (website && !website.includes('yelp.com') && !website.includes('facebook.com')) {
+    const content = await scrapeUrl(apiKey, website);
+    if (content) {
+      // Quick regex before AI
+      const igMatch = content.match(/instagram\.com\/([a-zA-Z0-9._]+)/);
+      if (igMatch) {
+        const h = extractIgFromUrl(`instagram.com/${igMatch[1]}`);
+        if (h) return normalize(h);
+      }
+      foundHandle = await extractInstagram(lovableApiKey, content, businessName, location);
+      if (foundHandle) return normalize(foundHandle);
+    }
+  }
+
+  // STRATEGY 2: Direct Instagram search (parallel queries)
+  const queries = [
+    `"${businessName}" site:instagram.com`,
+    `"${businessName}" ${location} instagram`,
+  ];
+  const searchResults = await Promise.all(queries.map(q => searchWeb(apiKey, q, 5)));
+  for (const { urls, snippets } of searchResults) {
+    for (const url of urls) {
+      const h = extractIgFromUrl(url);
+      if (h) return normalize(h);
+    }
+    if (snippets) {
+      foundHandle = await extractInstagram(lovableApiKey, snippets, businessName, location);
+      if (foundHandle) return normalize(foundHandle);
+    }
+  }
+
+  // STRATEGY 3: Directory + Facebook (parallel)
+  const [dirResult, fbResult] = await Promise.all([
+    searchWeb(apiKey, `"${businessName}" ${location} site:yelp.com OR site:tripadvisor.com`, 3),
+    searchWeb(apiKey, `"${businessName}" ${location} site:facebook.com`, 2),
+  ]);
+
+  if (dirResult.snippets) {
+    foundHandle = await extractInstagram(lovableApiKey, dirResult.snippets, businessName, location);
+    if (foundHandle) return normalize(foundHandle);
+  }
+
+  if (fbResult.urls.length > 0) {
+    const fbContent = await scrapeUrl(apiKey, fbResult.urls[0]);
+    if (fbContent) {
+      const igMatch = fbContent.match(/instagram\.com\/([a-zA-Z0-9._]+)/);
+      if (igMatch) {
+        const h = extractIgFromUrl(`instagram.com/${igMatch[1]}`);
+        if (h) return normalize(h);
+      }
+      foundHandle = await extractInstagram(lovableApiKey, fbContent, businessName, location);
+      if (foundHandle) return normalize(foundHandle);
+    }
+  }
+
+  // STRATEGY 4: Broad search
+  const { snippets, urls } = await searchWeb(apiKey, `"${businessName}" ${location} contact instagram social media`, 5);
+  for (const url of urls) {
+    const h = extractIgFromUrl(url);
+    if (h) return normalize(h);
+  }
+  if (snippets) {
+    foundHandle = await extractInstagram(lovableApiKey, snippets, businessName, location);
+    if (foundHandle) return normalize(foundHandle);
+  }
+
+  return '';
+}
+
+// ── Main handler ──
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -29,215 +189,54 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { businessName, city, website, leadId } = await req.json();
-    if (!businessName) {
-      return new Response(JSON.stringify({ error: 'businessName is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
     const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-
     if (!apiKey || !lovableApiKey) {
       return new Response(JSON.stringify({ error: 'API keys not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const location = city || 'Toronto';
-    let foundHandle = '';
+    const body = await req.json();
 
-    // Helper: Firecrawl search
-    async function searchWeb(query: string, limit = 5): Promise<{ snippets: string; urls: string[] }> {
-      try {
-        const res = await fetch('https://api.firecrawl.dev/v1/search', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query, limit }),
-        });
-        if (!res.ok) return { snippets: '', urls: [] };
-        const data = await res.json();
-        const results = data.data || [];
-        const urls = results.map((r: any) => r.url).filter(Boolean);
-        const snippets = results.map((r: any) =>
-          [r.title || '', r.url || '', r.description || ''].join(' | ')
-        ).join('\n\n');
-        return { snippets, urls };
-      } catch (e) {
-        console.error('Search error:', e);
-        return { snippets: '', urls: [] };
+    // ── Batch mode ──
+    if (body.batch && Array.isArray(body.leads)) {
+      const leads: { leadId: string; businessName: string; city?: string; website?: string }[] = body.leads;
+      const CONCURRENCY = 2; // Process 2 leads in parallel
+      const results: { leadId: string; instagram_handle: string; updated: boolean }[] = [];
+
+      for (let i = 0; i < leads.length; i += CONCURRENCY) {
+        const chunk = leads.slice(i, i + CONCURRENCY);
+        const chunkResults = await Promise.all(
+          chunk.map(async (lead) => {
+            const handle = await findInstagramForLead(apiKey, lovableApiKey, lead.businessName, lead.city || 'Toronto', lead.website || '');
+            if (handle && lead.leadId) {
+              await supabase.from('leads').update({ instagram_handle: handle }).eq('id', lead.leadId);
+            }
+            return { leadId: lead.leadId, instagram_handle: handle, updated: !!handle };
+          })
+        );
+        results.push(...chunkResults);
       }
-    }
 
-    // Helper: scrape URL
-    async function scrapeUrl(url: string): Promise<string> {
-      try {
-        const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, formats: ['markdown'], onlyMainContent: false }),
-        });
-        if (!res.ok) return '';
-        const data = await res.json();
-        return data.data?.markdown || data.markdown || '';
-      } catch {
-        return '';
-      }
-    }
-
-    // Helper: AI extract Instagram
-    async function extractInstagram(content: string): Promise<string> {
-      try {
-        const aiResponse = await fetch(AI_GATEWAY_URL, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${lovableApiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            messages: [{
-              role: 'user',
-              content: `Extract the Instagram handle/username for the business "${businessName}" in ${location}.
-
-Look for:
-- @username patterns
-- instagram.com/username links
-- "Follow us on Instagram" text
-- "IG: username" patterns
-- Social media links sections
-
-Return ONLY a JSON object: {"instagram_handle": "username_without_at"} or {"instagram_handle": ""} if not found.
-Do NOT guess or fabricate. Only return what you find in the content.
-
-Content:
-${content}`
-            }],
-            temperature: 0,
-          }),
-        });
-        if (!aiResponse.ok) return '';
-        const aiData = await aiResponse.json();
-        const aiContent = aiData.choices?.[0]?.message?.content || '{}';
-        const cleaned = aiContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        const parsed = JSON.parse(cleaned);
-        return parsed.instagram_handle || '';
-      } catch {
-        return '';
-      }
-    }
-
-    // Helper: check URL for IG profile
-    function extractIgFromUrl(url: string): string {
-      const match = url.match(/instagram\.com\/([a-zA-Z0-9._]+)/);
-      if (match && !['p', 'explore', 'accounts', 'stories', 'reel', 'reels', 'tv'].includes(match[1])) {
-        return match[1];
-      }
-      return '';
-    }
-
-    // Normalize handle
-    function normalize(handle: string): string {
-      let h = handle.trim();
-      const urlMatch = h.match(/(?:https?:\/\/)?(?:www\.)?instagram\.com\/([a-zA-Z0-9._]+)\/?/);
-      if (urlMatch) h = urlMatch[1];
-      h = h.replace(/^@/, '').split(/[?/#]/)[0];
-      return h;
-    }
-
-    // STRATEGY 1: Scrape their website for Instagram links
-    if (website && !website.includes('yelp.com') && !website.includes('facebook.com')) {
-      console.log(`Strategy 1: Scraping website ${website}`);
-      const content = await scrapeUrl(website);
-      if (content.length > 0) {
-        foundHandle = await extractInstagram(content.slice(0, 6000));
-      }
-      // Also try /contact and /about
-      if (!foundHandle) {
-        const baseUrl = website.replace(/\/$/, '');
-        for (const page of ['/contact', '/about', '/contact-us']) {
-          if (foundHandle) break;
-          const subContent = await scrapeUrl(baseUrl + page);
-          if (subContent.length > 200) {
-            foundHandle = await extractInstagram(subContent.slice(0, 4000));
-          }
-        }
-      }
-    }
-
-    // STRATEGY 2: Direct Instagram search
-    if (!foundHandle) {
-      console.log('Strategy 2: Direct Instagram search');
-      const queries = [
-        `"${businessName}" site:instagram.com`,
-        `"${businessName}" ${location} instagram`,
-        `"${businessName}" ${location} "@" instagram OR ig`,
-      ];
-      for (const q of queries) {
-        if (foundHandle) break;
-        const { snippets, urls } = await searchWeb(q, 5);
-        // Check URLs first for direct IG profile links
-        for (const url of urls) {
-          const handle = extractIgFromUrl(url);
-          if (handle) { foundHandle = handle; break; }
-        }
-        // Fall back to AI extraction from snippets
-        if (!foundHandle && snippets.length > 0) {
-          foundHandle = await extractInstagram(snippets.slice(0, 6000));
-        }
-      }
-    }
-
-    // STRATEGY 3: Search directories (Yelp, TripAdvisor, Google)
-    if (!foundHandle) {
-      console.log('Strategy 3: Directory search');
-      const { snippets } = await searchWeb(
-        `"${businessName}" ${location} site:yelp.com OR site:tripadvisor.com OR site:google.com/maps`,
-        true
+      return new Response(
+        JSON.stringify({ success: true, results }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-      if (snippets.length > 0) {
-        foundHandle = await extractInstagram(snippets.slice(0, 6000));
-      }
     }
 
-    // STRATEGY 4: Facebook cross-link
-    if (!foundHandle) {
-      console.log('Strategy 4: Facebook cross-link');
-      const { urls } = await searchWeb(`"${businessName}" ${location} site:facebook.com`, 3);
-      if (urls.length > 0) {
-        const fbContent = await scrapeUrl(urls[0]);
-        if (fbContent.length > 0) {
-          foundHandle = await extractInstagram(fbContent.slice(0, 4000));
-          if (!foundHandle) {
-            const match = fbContent.match(/instagram\.com\/([a-zA-Z0-9._]+)/);
-            if (match) foundHandle = extractIgFromUrl(`instagram.com/${match[1]}`);
-          }
-        }
-      }
+    // ── Single mode ──
+    const { businessName, city, website, leadId } = body;
+    if (!businessName) {
+      return new Response(JSON.stringify({ error: 'businessName is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // STRATEGY 5: Broad search
-    if (!foundHandle) {
-      console.log('Strategy 5: Broad search');
-      const { snippets, urls } = await searchWeb(`"${businessName}" ${location} contact instagram social media`, 5);
-      for (const url of urls) {
-        const handle = extractIgFromUrl(url);
-        if (handle) { foundHandle = handle; break; }
-      }
-      if (!foundHandle && snippets.length > 0) {
-        foundHandle = await extractInstagram(snippets.slice(0, 6000));
-      }
-    }
+    const handle = await findInstagramForLead(apiKey, lovableApiKey, businessName, city || 'Toronto', website || '');
 
-    // Normalize the result
-    const normalizedHandle = foundHandle ? normalize(foundHandle) : '';
-
-    // If we have a leadId, update the lead directly
-    if (normalizedHandle && leadId) {
-      await supabase.from('leads').update({ instagram_handle: normalizedHandle }).eq('id', leadId);
-      console.log(`Updated lead ${leadId} with Instagram: ${normalizedHandle}`);
+    if (handle && leadId) {
+      await supabase.from('leads').update({ instagram_handle: handle }).eq('id', leadId);
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        instagram_handle: normalizedHandle,
-        updated: !!(normalizedHandle && leadId),
-      }),
+      JSON.stringify({ success: true, instagram_handle: handle, updated: !!(handle && leadId) }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
