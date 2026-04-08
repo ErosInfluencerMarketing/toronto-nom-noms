@@ -27,6 +27,7 @@ import { AssignGroupDialog } from '@/components/AssignGroupDialog';
 import { LeadDetailsPanel } from '@/components/LeadDetailsPanel';
 import { RestaurantGroupManager } from '@/components/RestaurantGroupManager';
 import { InstagramSearchTool } from '@/components/InstagramSearchTool';
+import { IGSyncProgress, IGSyncResult } from '@/components/IGSyncProgress';
 import { useRestaurantGroups } from '@/hooks/useRestaurantGroups';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
