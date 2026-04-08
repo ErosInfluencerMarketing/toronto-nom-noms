@@ -154,7 +154,12 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(() => Number(localStorage.getItem('dashboard_page')) || 1);
   const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem('dashboard_pageSize')) || 100);
   const [isBulkFindingIG, setIsBulkFindingIG] = useState(false);
-
+  const [igSyncOpen, setIgSyncOpen] = useState(false);
+  const [igSyncResults, setIgSyncResults] = useState<IGSyncResult[]>([]);
+  const [igSyncProcessed, setIgSyncProcessed] = useState(0);
+  const [igSyncFound, setIgSyncFound] = useState(0);
+  const [igSyncTotal, setIgSyncTotal] = useState(0);
+  const [igSyncStartTime, setIgSyncStartTime] = useState<number | null>(null);
   const categories = useMemo(() => {
     const cats = new Set<string>();
     leads.forEach((lead) => {
