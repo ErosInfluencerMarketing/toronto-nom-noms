@@ -875,6 +875,18 @@ export default function Dashboard() {
         open={!!detailsLead}
         onOpenChange={(open) => !open && setDetailsLead(null)}
       />
+
+      {/* IG Sync Progress Overlay */}
+      <IGSyncProgress
+        isOpen={igSyncOpen}
+        onClose={() => setIgSyncOpen(false)}
+        results={igSyncResults}
+        totalLeads={igSyncTotal}
+        processedCount={igSyncProcessed}
+        foundCount={igSyncFound}
+        startTime={igSyncStartTime}
+        isRunning={isBulkFindingIG}
+      />
       </div>
     </SidebarProvider>
   );
