@@ -630,6 +630,15 @@ export default function Dashboard() {
             </Button>
             <Button
               size="sm"
+              variant="outline"
+              onClick={handleBulkFindIG}
+              disabled={isBulkFindingIG}
+            >
+              <Instagram className={`h-4 w-4 mr-2 ${isBulkFindingIG ? 'animate-pulse' : ''}`} />
+              {isBulkFindingIG ? 'Finding IGs...' : 'Find IGs'}
+            </Button>
+            <Button
+              size="sm"
               onClick={() => setSelectedLeadIds(new Set())}
               className="text-muted-foreground"
             >
