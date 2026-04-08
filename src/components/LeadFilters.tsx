@@ -67,6 +67,7 @@ const statusOptions: { value: LeadStatus; label: string }[] = [
 ];
 
 const contactOptions: { value: ContactFilter; label: string }[] = [
+  { value: 'no_instagram', label: '❌ No Instagram' },
   { value: 'both', label: 'Email & Instagram' },
   { value: 'email_only', label: 'Email Only' },
   { value: 'instagram_only', label: 'Instagram Only' },

@@ -219,6 +219,7 @@ export default function Dashboard() {
           if (f === 'email_only') return hasEmail && !hasIg;
           if (f === 'instagram_only') return !hasEmail && hasIg;
           if (f === 'neither') return !hasEmail && !hasIg;
+          if (f === 'no_instagram') return !hasIg;
           return false;
         });
       }
