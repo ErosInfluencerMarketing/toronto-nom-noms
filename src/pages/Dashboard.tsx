@@ -398,6 +398,46 @@ export default function Dashboard() {
     }
   };
 
+  const handleBulkFindIG = async () => {
+    const leadsToSearch = leads.filter(
+      (l) => selectedLeadIds.has(l.id) && !l.instagram_handle
+    );
+    if (leadsToSearch.length === 0) {
+      toast.info('All selected leads already have Instagram handles');
+      return;
+    }
+    setIsBulkFindingIG(true);
+    let found = 0;
+    try {
+      for (const lead of leadsToSearch) {
+        toast.info(`Searching IG for ${lead.business_name}... (${found} found so far)`);
+        try {
+          const { data, error } = await supabase.functions.invoke('find-instagram', {
+            body: {
+              businessName: lead.business_name,
+              city: lead.city || 'Toronto',
+              website: lead.website || '',
+              leadId: lead.id,
+            },
+          });
+          if (!error && data?.instagram_handle) {
+            found++;
+          }
+        } catch (e) {
+          console.error(`IG search failed for ${lead.business_name}:`, e);
+        }
+        queryClient.invalidateQueries({ queryKey: ['leads'] });
+      }
+      toast.success(`Done! Found Instagram for ${found} of ${leadsToSearch.length} leads`);
+    } catch (error) {
+      console.error('Bulk IG search error:', error);
+      toast.error('Bulk Instagram search failed');
+    } finally {
+      setIsBulkFindingIG(false);
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+    }
+  };
+
   return (
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />
