@@ -20,7 +20,7 @@ import { Search, X, RotateCcw, ChevronDown, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
-export type ContactFilter = 'both' | 'email_only' | 'instagram_only' | 'neither';
+export type ContactFilter = 'both' | 'email_only' | 'instagram_only' | 'neither' | 'no_instagram';
 export type SequenceFilter = 'in_sequence' | 'not_in_sequence';
 export type EngagementFilter = EmailEngagement;
 
@@ -67,6 +67,7 @@ const statusOptions: { value: LeadStatus; label: string }[] = [
 ];
 
 const contactOptions: { value: ContactFilter; label: string }[] = [
+  { value: 'no_instagram', label: '❌ No Instagram' },
   { value: 'both', label: 'Email & Instagram' },
   { value: 'email_only', label: 'Email Only' },
   { value: 'instagram_only', label: 'Instagram Only' },
