@@ -152,6 +152,7 @@ export default function Dashboard() {
   const [sequencePreSelectedLeadIds, setSequencePreSelectedLeadIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(() => Number(localStorage.getItem('dashboard_page')) || 1);
   const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem('dashboard_pageSize')) || 100);
+  const [isBulkFindingIG, setIsBulkFindingIG] = useState(false);
 
   const categories = useMemo(() => {
     const cats = new Set<string>();
