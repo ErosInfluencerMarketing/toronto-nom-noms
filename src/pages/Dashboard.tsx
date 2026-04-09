@@ -27,6 +27,7 @@ import { AssignGroupDialog } from '@/components/AssignGroupDialog';
 import { LeadDetailsPanel } from '@/components/LeadDetailsPanel';
 import { RestaurantGroupManager } from '@/components/RestaurantGroupManager';
 import { InstagramSearchTool } from '@/components/InstagramSearchTool';
+import { IGSyncProgress, IGSyncResult } from '@/components/IGSyncProgress';
 import { useRestaurantGroups } from '@/hooks/useRestaurantGroups';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
@@ -153,7 +154,12 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(() => Number(localStorage.getItem('dashboard_page')) || 1);
   const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem('dashboard_pageSize')) || 100);
   const [isBulkFindingIG, setIsBulkFindingIG] = useState(false);
-
+  const [igSyncOpen, setIgSyncOpen] = useState(false);
+  const [igSyncResults, setIgSyncResults] = useState<IGSyncResult[]>([]);
+  const [igSyncProcessed, setIgSyncProcessed] = useState(0);
+  const [igSyncFound, setIgSyncFound] = useState(0);
+  const [igSyncTotal, setIgSyncTotal] = useState(0);
+  const [igSyncStartTime, setIgSyncStartTime] = useState<number | null>(null);
   const categories = useMemo(() => {
     const cats = new Set<string>();
     leads.forEach((lead) => {
@@ -407,26 +413,82 @@ export default function Dashboard() {
       toast.info('All selected leads already have Instagram handles');
       return;
     }
+
+    // Initialize progress UI
+    const initialResults: IGSyncResult[] = leadsToSearch.map((l) => ({
+      leadId: l.id,
+      businessName: l.business_name,
+      status: 'pending' as const,
+    }));
+    setIgSyncResults(initialResults);
+    setIgSyncTotal(leadsToSearch.length);
+    setIgSyncProcessed(0);
+    setIgSyncFound(0);
+    setIgSyncStartTime(Date.now());
+    setIgSyncOpen(true);
     setIsBulkFindingIG(true);
+
     let found = 0;
+    let processed = 0;
+    const BATCH_SIZE = 2;
+
     try {
-      for (const lead of leadsToSearch) {
-        toast.info(`Searching IG for ${lead.business_name}... (${found} found so far)`);
+      for (let i = 0; i < leadsToSearch.length; i += BATCH_SIZE) {
+        const batch = leadsToSearch.slice(i, i + BATCH_SIZE);
+
+        // Mark batch as searching
+        setIgSyncResults((prev) =>
+          prev.map((r) =>
+            batch.some((b) => b.id === r.leadId) ? { ...r, status: 'searching' as const } : r
+          )
+        );
+
+        const batchPayload = batch.map((l) => ({
+          leadId: l.id,
+          businessName: l.business_name,
+          city: l.city || 'Toronto',
+          website: l.website || '',
+        }));
+
         try {
           const { data, error } = await supabase.functions.invoke('find-instagram', {
-            body: {
-              businessName: lead.business_name,
-              city: lead.city || 'Toronto',
-              website: lead.website || '',
-              leadId: lead.id,
-            },
+            body: { batch: true, leads: batchPayload },
           });
-          if (!error && data?.instagram_handle) {
-            found++;
+
+          if (!error && data?.results) {
+            for (const result of data.results) {
+              const handle = result.instagram_handle;
+              setIgSyncResults((prev) =>
+                prev.map((r) =>
+                  r.leadId === result.leadId
+                    ? { ...r, status: handle ? 'found' : 'not_found', handle: handle || undefined }
+                    : r
+                )
+              );
+              if (handle) found++;
+              processed++;
+            }
+          } else {
+            // Mark batch as error
+            for (const b of batch) {
+              setIgSyncResults((prev) =>
+                prev.map((r) => (r.leadId === b.id ? { ...r, status: 'error' as const } : r))
+              );
+              processed++;
+            }
           }
         } catch (e) {
-          console.error(`IG search failed for ${lead.business_name}:`, e);
+          console.error('Batch IG search failed:', e);
+          for (const b of batch) {
+            setIgSyncResults((prev) =>
+              prev.map((r) => (r.leadId === b.id ? { ...r, status: 'error' as const } : r))
+            );
+            processed++;
+          }
         }
+
+        setIgSyncProcessed(processed);
+        setIgSyncFound(found);
         queryClient.invalidateQueries({ queryKey: ['leads'] });
       }
       toast.success(`Done! Found Instagram for ${found} of ${leadsToSearch.length} leads`);
@@ -812,6 +874,18 @@ export default function Dashboard() {
         lead={detailsLead}
         open={!!detailsLead}
         onOpenChange={(open) => !open && setDetailsLead(null)}
+      />
+
+      {/* IG Sync Progress Overlay */}
+      <IGSyncProgress
+        isOpen={igSyncOpen}
+        onClose={() => setIgSyncOpen(false)}
+        results={igSyncResults}
+        totalLeads={igSyncTotal}
+        processedCount={igSyncProcessed}
+        foundCount={igSyncFound}
+        startTime={igSyncStartTime}
+        isRunning={isBulkFindingIG}
       />
       </div>
     </SidebarProvider>
