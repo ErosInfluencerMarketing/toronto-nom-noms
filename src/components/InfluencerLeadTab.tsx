@@ -540,7 +540,7 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
                 <TableHead>Niche</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Contact</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
