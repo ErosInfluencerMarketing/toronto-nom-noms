@@ -35,6 +35,11 @@ interface QuickMessageProps {
 }
 
 function fillPlaceholders(message: string, lead: Lead): string {
+  // If lead has no business name, remove [Business Name] placeholder entirely
+  if (!lead.business_name) {
+    message = message.replace(/\[Business Name\]/g, '');
+  }
+  
   return message
     .replace(/\[Business Name\]/g, lead.business_name || '')
     .replace(/\[Owner Name\]/g, lead.owner_name || 'there')
