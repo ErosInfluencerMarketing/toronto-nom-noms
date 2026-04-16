@@ -1,14 +1,17 @@
 import { useState, useMemo } from 'react';
 import { useInfluencers, Influencer } from '@/hooks/useInfluencers';
+import { Lead } from '@/types/lead';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ViewToggle, ViewMode } from '@/components/ViewToggle';
 import { InfluencerFilters, InfluencerContactFilter, InfluencerDateRange } from '@/components/InfluencerFilters';
 import { InfluencerImport } from '@/components/InfluencerImport';
+import { BulkMessage } from '@/components/BulkMessage';
 import {
   Plus,
   Users,
@@ -22,6 +25,8 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Send,
+  Repeat,
 } from 'lucide-react';
 
 function formatNumber(n: number): string {
@@ -42,12 +47,49 @@ function contentTypeLabel(ct: string): string {
   return map[ct] || ct;
 }
 
-function InfluencerCard({ influencer, onDelete }: { influencer: Influencer; onDelete: (id: string) => void }) {
+/** Map an Influencer to a Lead-compatible shape for BulkMessage / QuickMessage */
+function influencerToLead(inf: Influencer): Lead {
+  return {
+    id: inf.id,
+    user_id: inf.user_id,
+    business_name: inf.full_name || `@${inf.username}`,
+    owner_name: inf.full_name || null,
+    email: inf.email || null,
+    instagram_handle: inf.username,
+    website: inf.website || null,
+    address: null,
+    category: inf.niche || null,
+    city: inf.city || null,
+    phone: null,
+    platform: 'eros',
+    status: 'new',
+    email_engagement: 'none',
+    notes: inf.notes || null,
+    created_at: inf.created_at,
+    updated_at: inf.updated_at,
+    last_outreach_date: null,
+    next_outreach_date: null,
+    assigned_user_id: null,
+  };
+}
+
+function InfluencerCard({
+  influencer,
+  onDelete,
+  selected,
+  onToggleSelect,
+}: {
+  influencer: Influencer;
+  onDelete: (id: string) => void;
+  selected: boolean;
+  onToggleSelect: () => void;
+}) {
   return (
-    <Card className="group hover:shadow-lg transition-shadow">
+    <Card className={`group hover:shadow-lg transition-shadow ${selected ? 'ring-2 ring-primary' : ''}`}>
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
+            <Checkbox checked={selected} onCheckedChange={onToggleSelect} />
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
               {influencer.full_name?.[0] || influencer.username[0].toUpperCase()}
             </div>
@@ -121,7 +163,11 @@ function InfluencerCard({ influencer, onDelete }: { influencer: Influencer; onDe
   );
 }
 
-export function InfluencerLeadTab() {
+interface InfluencerLeadTabProps {
+  onSequenceRequest?: (leadIds: string[]) => void;
+}
+
+export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps) {
   const { influencers, isLoading, discoverInfluencers, addInfluencer, deleteInfluencer } = useInfluencers();
   const [search, setSearch] = useState('');
   const [discoverQuery, setDiscoverQuery] = useState('Toronto food influencers');
@@ -131,6 +177,10 @@ export function InfluencerLeadTab() {
   const [viewMode, setViewMode] = useState<ViewMode>('card');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
+
+  // Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
 
   // Filter state
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
@@ -143,13 +193,11 @@ export function InfluencerLeadTab() {
   const isDiscovering = discoverInfluencers.isPending;
   const isAdding = addInfluencer.isPending;
 
-  // Derive unique niches and cities
   const niches = useMemo(() => [...new Set(influencers.map(i => i.niche).filter(Boolean))].sort(), [influencers]);
   const cities = useMemo(() => [...new Set(influencers.map(i => i.city).filter(Boolean) as string[])].sort(), [influencers]);
 
   const filtered = useMemo(() => {
     return influencers.filter((i) => {
-      // Search
       if (search.trim()) {
         const s = search.toLowerCase();
         const matchesSearch =
@@ -160,20 +208,10 @@ export function InfluencerLeadTab() {
           (i.email && i.email.toLowerCase().includes(s));
         if (!matchesSearch) return false;
       }
-
-      // Status
       if (statusFilters.length > 0 && !statusFilters.includes(i.status)) return false;
-
-      // Niche
       if (nicheFilters.length > 0 && (!i.niche || !nicheFilters.includes(i.niche))) return false;
-
-      // City
       if (cityFilters.length > 0 && (!i.city || !cityFilters.includes(i.city))) return false;
-
-      // Content type
       if (contentTypeFilters.length > 0 && !contentTypeFilters.includes(i.content_type)) return false;
-
-      // Contact
       if (contactFilters.length > 0) {
         const match = contactFilters.some((f) => {
           if (f === 'has_email') return !!i.email;
@@ -184,8 +222,6 @@ export function InfluencerLeadTab() {
         });
         if (!match) return false;
       }
-
-      // Date range
       if (dateRange.from || dateRange.to) {
         const created = new Date(i.created_at);
         if (dateRange.from && created < dateRange.from) return false;
@@ -195,7 +231,6 @@ export function InfluencerLeadTab() {
           if (created > endOfDay) return false;
         }
       }
-
       return true;
     });
   }, [influencers, search, statusFilters, nicheFilters, cityFilters, contentTypeFilters, contactFilters, dateRange]);
@@ -234,6 +269,28 @@ export function InfluencerLeadTab() {
     setDateRange({});
     setCurrentPage(1);
   };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllFiltered = () => {
+    setSelectedIds(new Set(filtered.map((i) => i.id)));
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const isAllSelected = filtered.length > 0 && filtered.every((i) => selectedIds.has(i.id));
+
+  const selectedInfluencersAsLeads = useMemo(
+    () => influencers.filter((i) => selectedIds.has(i.id)).map(influencerToLead),
+    [influencers, selectedIds]
+  );
 
   return (
     <div className="space-y-6">
@@ -325,6 +382,50 @@ export function InfluencerLeadTab() {
         </div>
       </div>
 
+      {/* Bulk Selection Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 flex-wrap">
+          <span className="text-sm text-foreground font-medium">
+            {selectedIds.size} influencer{selectedIds.size !== 1 ? 's' : ''} selected
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={selectAllFiltered}
+          >
+            Select All {filtered.length} Filtered
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setBulkMessageOpen(true)}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Send Email
+          </Button>
+          {onSequenceRequest && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                onSequenceRequest(Array.from(selectedIds));
+                clearSelection();
+              }}
+            >
+              <Repeat className="h-4 w-4 mr-2" />
+              Create Sequence
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={clearSelection}
+            className="text-muted-foreground"
+          >
+            Clear selection
+          </Button>
+        </div>
+      )}
+
       {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
@@ -343,7 +444,13 @@ export function InfluencerLeadTab() {
       ) : viewMode === 'card' ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {paginated.map((inf) => (
-            <InfluencerCard key={inf.id} influencer={inf} onDelete={(id) => deleteInfluencer.mutate(id)} />
+            <InfluencerCard
+              key={inf.id}
+              influencer={inf}
+              onDelete={(id) => deleteInfluencer.mutate(id)}
+              selected={selectedIds.has(inf.id)}
+              onToggleSelect={() => toggleSelect(inf.id)}
+            />
           ))}
         </div>
       ) : (
@@ -351,6 +458,15 @@ export function InfluencerLeadTab() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={(checked) => {
+                      if (checked) selectAllFiltered();
+                      else clearSelection();
+                    }}
+                  />
+                </TableHead>
                 <TableHead>Username</TableHead>
                 <TableHead>Followers</TableHead>
                 <TableHead>Engagement</TableHead>
@@ -364,7 +480,13 @@ export function InfluencerLeadTab() {
             </TableHeader>
             <TableBody>
               {paginated.map((inf) => (
-                <TableRow key={inf.id}>
+                <TableRow key={inf.id} className={selectedIds.has(inf.id) ? 'bg-primary/5' : ''}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(inf.id)}
+                      onCheckedChange={() => toggleSelect(inf.id)}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       <span>@{inf.username}</span>
@@ -417,6 +539,14 @@ export function InfluencerLeadTab() {
           </div>
         </div>
       )}
+
+      {/* Bulk Message Dialog */}
+      <BulkMessage
+        open={bulkMessageOpen}
+        onOpenChange={setBulkMessageOpen}
+        leads={selectedInfluencersAsLeads}
+        onComplete={clearSelection}
+      />
     </div>
   );
 }
