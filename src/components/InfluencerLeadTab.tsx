@@ -232,7 +232,7 @@ interface InfluencerLeadTabProps {
 }
 
 export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps) {
-  const { influencers, isLoading, discoverInfluencers, addInfluencer, deleteInfluencer } = useInfluencers();
+  const { influencers, isLoading, discoverInfluencers, addInfluencer, updateInfluencer, deleteInfluencer } = useInfluencers();
   const [search, setSearch] = useState('');
   const [discoverQuery, setDiscoverQuery] = useState('Toronto food influencers');
   const [discoverCity, setDiscoverCity] = useState('Toronto');
