@@ -534,6 +534,7 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
                   />
                 </TableHead>
                 <TableHead>Username</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Followers</TableHead>
                 <TableHead>Engagement</TableHead>
                 <TableHead>Content Type</TableHead>
@@ -562,11 +563,13 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
                         </a>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell>
                     <InlineEdit
                       value={inf.full_name || ''}
                       placeholder="Add name"
                       onSave={(v) => updateInfluencer.mutate({ id: inf.id, full_name: v || null })}
-                      className="text-xs text-muted-foreground"
+                      className="text-sm"
                     />
                   </TableCell>
                   <TableCell>{formatNumber(inf.followers_count)}</TableCell>
