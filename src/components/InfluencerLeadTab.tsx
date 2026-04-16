@@ -205,12 +205,13 @@ function InfluencerCard({
           <Badge variant="outline" className="capitalize">{influencer.status}</Badge>
         </div>
 
-        <div className="flex gap-2 text-xs text-muted-foreground">
-          {influencer.email && (
-            <a href={`mailto:${influencer.email}`} className="flex items-center gap-1 hover:text-primary transition-colors">
-              <Mail className="h-3 w-3" /> Email
-            </a>
-          )}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Mail className="h-3 w-3 shrink-0" />
+          <InlineEdit
+            value={influencer.email || ''}
+            placeholder="Add email"
+            onSave={(v) => onUpdate({ id: influencer.id, email: v || null })}
+          />
           {influencer.website && (
             <a href={influencer.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors">
               <Globe className="h-3 w-3" /> Website
