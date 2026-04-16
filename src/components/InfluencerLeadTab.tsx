@@ -513,6 +513,7 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
               key={inf.id}
               influencer={inf}
               onDelete={(id) => deleteInfluencer.mutate(id)}
+              onUpdate={(data) => updateInfluencer.mutate(data)}
               selected={selectedIds.has(inf.id)}
               onToggleSelect={() => toggleSelect(inf.id)}
             />
