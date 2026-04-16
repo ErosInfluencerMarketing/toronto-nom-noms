@@ -29,6 +29,63 @@ import {
   Repeat,
 } from 'lucide-react';
 
+/** Inline editable text field – double-click to edit, Enter/blur to save */
+function InlineEdit({
+  value,
+  placeholder,
+  onSave,
+  className = '',
+}: {
+  value: string;
+  placeholder?: string;
+  onSave: (v: string) => void;
+  className?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      setDraft(value);
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [editing, value]);
+
+  const commit = () => {
+    setEditing(false);
+    const trimmed = draft.trim();
+    if (trimmed !== value) onSave(trimmed);
+  };
+
+  if (editing) {
+    return (
+      <Input
+        ref={inputRef}
+        value={draft}
+        placeholder={placeholder}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') setEditing(false);
+        }}
+        className={`h-7 text-sm px-1 py-0 ${className}`}
+      />
+    );
+  }
+
+  return (
+    <span
+      onDoubleClick={() => setEditing(true)}
+      className={`cursor-pointer hover:bg-muted/60 rounded px-1 -mx-1 ${className}`}
+      title="Double-click to edit"
+    >
+      {value || <span className="text-muted-foreground italic">{placeholder || '—'}</span>}
+    </span>
+  );
+}
+
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
   if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
