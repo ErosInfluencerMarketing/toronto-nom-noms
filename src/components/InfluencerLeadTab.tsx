@@ -576,9 +576,12 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
                   <TableCell>{inf.city}</TableCell>
                   <TableCell><Badge variant="outline" className="capitalize">{inf.status}</Badge></TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      {inf.email && <a href={`mailto:${inf.email}`}><Mail className="h-4 w-4 text-muted-foreground hover:text-primary" /></a>}
-                      {inf.website && <a href={inf.website} target="_blank" rel="noopener noreferrer"><Globe className="h-4 w-4 text-muted-foreground hover:text-primary" /></a>}
+                    <InlineEdit
+                      value={inf.email || ''}
+                      placeholder="Add email"
+                      onSave={(v) => updateInfluencer.mutate({ id: inf.id, email: v || null })}
+                      className="text-xs"
+                    />
                     </div>
                   </TableCell>
                   <TableCell>
