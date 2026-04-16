@@ -133,11 +133,13 @@ function influencerToLead(inf: Influencer): Lead {
 function InfluencerCard({
   influencer,
   onDelete,
+  onUpdate,
   selected,
   onToggleSelect,
 }: {
   influencer: Influencer;
   onDelete: (id: string) => void;
+  onUpdate: (data: Partial<Influencer> & { id: string }) => void;
   selected: boolean;
   onToggleSelect: () => void;
 }) {
@@ -152,7 +154,12 @@ function InfluencerCard({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-foreground">{influencer.full_name || `@${influencer.username}`}</h3>
+                <InlineEdit
+                  value={influencer.full_name || ''}
+                  placeholder={`@${influencer.username}`}
+                  onSave={(v) => onUpdate({ id: influencer.id, full_name: v || null })}
+                  className="font-semibold text-foreground"
+                />
                 <Instagram className="h-4 w-4" />
               </div>
               <p className="text-sm text-muted-foreground">@{influencer.username}</p>
