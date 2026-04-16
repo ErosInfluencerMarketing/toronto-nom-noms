@@ -44,7 +44,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, ChevronLeft, ChevronRight, Repeat, Building2, Dumbbell, Instagram } from 'lucide-react';
+import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, ChevronLeft, ChevronRight, Repeat, Building2, Dumbbell, Instagram, Star } from 'lucide-react';
+import { InfluencerLeadTab } from '@/components/InfluencerLeadTab';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -109,7 +110,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'restaurants' | 'fitness'>(() => (localStorage.getItem('dashboard_activeTab') as 'restaurants' | 'fitness') || 'restaurants');
+  const [activeTab, setActiveTab] = useState<'restaurants' | 'fitness' | 'influencers'>(() => (localStorage.getItem('dashboard_activeTab') as 'restaurants' | 'fitness' | 'influencers') || 'restaurants');
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
@@ -550,7 +551,7 @@ export default function Dashboard() {
           </div>
 
           {/* Platform Tabs */}
-          <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as 'restaurants' | 'fitness'); setCurrentPage(1); }} className="mb-6">
+          <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as 'restaurants' | 'fitness' | 'influencers'); setCurrentPage(1); }} className="mb-6">
             <TabsList className="bg-secondary">
               <TabsTrigger value="restaurants" className="gap-2">
                 <MapPin className="h-4 w-4" />
@@ -560,9 +561,17 @@ export default function Dashboard() {
                 <Dumbbell className="h-4 w-4" />
                 Fitness
               </TabsTrigger>
+              <TabsTrigger value="influencers" className="gap-2">
+                <Star className="h-4 w-4" />
+                Influencers
+              </TabsTrigger>
             </TabsList>
           </Tabs>
 
+          {activeTab === 'influencers' ? (
+            <InfluencerLeadTab />
+          ) : (
+            <>
           {/* Filters and Actions */}
           <div id="leads" className="scroll-mt-20 flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 w-full">
           <LeadFilters
@@ -788,6 +797,9 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+          </>
+          )}
 
           {/* Restaurant Groups Section */}
           <Separator className="my-8" />

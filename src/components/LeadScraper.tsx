@@ -38,7 +38,7 @@ interface ScrapedBusiness {
 interface LeadScraperProps {
   onImport: (leads: LeadFormData[]) => Promise<void>;
   isLoading: boolean;
-  activeTab?: 'restaurants' | 'fitness';
+  activeTab?: 'restaurants' | 'fitness' | 'influencers';
 }
 
 const TAB_CONFIG = {
