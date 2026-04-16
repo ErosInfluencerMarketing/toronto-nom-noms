@@ -26,6 +26,7 @@ export interface TemplateFormData {
 export const PLACEHOLDERS = [
   { key: '[Business Name]', description: 'The name of the business' },
   { key: '[Owner Name]', description: 'The owner\'s name' },
+  { key: '[Name]', description: 'Name (owner name or business name fallback)' },
   { key: '[Example Restaurant]', description: 'An example restaurant reference' },
   { key: '[Instagram Handle]', description: 'The business Instagram handle' },
   { key: '[City]', description: 'The city of the business' },

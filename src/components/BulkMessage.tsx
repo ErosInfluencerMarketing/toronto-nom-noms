@@ -38,6 +38,7 @@ function fillPlaceholders(message: string, lead: Lead): string {
   return message
     .replace(/\[Business Name\]/g, lead.business_name || '')
     .replace(/\[Owner Name\]/g, lead.owner_name || 'there')
+    .replace(/\[Name\]/g, lead.owner_name || lead.business_name || 'there')
     .replace(/\[Example Restaurant\]/g, 'La Bella Italia')
     .replace(/\[Instagram Handle\]/g, lead.instagram_handle ? `@${lead.instagram_handle}` : 'Instagram')
     .replace(/\[City\]/g, lead.city || '')
