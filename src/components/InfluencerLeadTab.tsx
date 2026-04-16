@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useInfluencers, Influencer } from '@/hooks/useInfluencers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ViewToggle, ViewMode } from '@/components/ViewToggle';
+import { InfluencerFilters, InfluencerContactFilter, InfluencerDateRange } from '@/components/InfluencerFilters';
+import { InfluencerImport } from '@/components/InfluencerImport';
 import {
-  Search,
   Plus,
   Users,
   TrendingUp,
@@ -96,6 +96,7 @@ function InfluencerCard({ influencer, onDelete }: { influencer: Influencer; onDe
           <Badge variant="secondary">{contentTypeLabel(influencer.content_type)}</Badge>
           <Badge variant="outline">{influencer.niche}</Badge>
           {influencer.city && <Badge variant="outline">{influencer.city}</Badge>}
+          <Badge variant="outline" className="capitalize">{influencer.status}</Badge>
         </div>
 
         <div className="flex gap-2 text-xs text-muted-foreground">
@@ -131,20 +132,73 @@ export function InfluencerLeadTab() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
 
+  // Filter state
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [nicheFilters, setNicheFilters] = useState<string[]>([]);
+  const [cityFilters, setCityFilters] = useState<string[]>([]);
+  const [contentTypeFilters, setContentTypeFilters] = useState<string[]>([]);
+  const [contactFilters, setContactFilters] = useState<InfluencerContactFilter[]>([]);
+  const [dateRange, setDateRange] = useState<InfluencerDateRange>({});
+
   const isDiscovering = discoverInfluencers.isPending;
   const isAdding = addInfluencer.isPending;
 
-  const filtered = search.trim()
-    ? influencers.filter((i) => {
+  // Derive unique niches and cities
+  const niches = useMemo(() => [...new Set(influencers.map(i => i.niche).filter(Boolean))].sort(), [influencers]);
+  const cities = useMemo(() => [...new Set(influencers.map(i => i.city).filter(Boolean) as string[])].sort(), [influencers]);
+
+  const filtered = useMemo(() => {
+    return influencers.filter((i) => {
+      // Search
+      if (search.trim()) {
         const s = search.toLowerCase();
-        return (
+        const matchesSearch =
           i.username.toLowerCase().includes(s) ||
           (i.full_name && i.full_name.toLowerCase().includes(s)) ||
           (i.city && i.city.toLowerCase().includes(s)) ||
-          (i.niche && i.niche.toLowerCase().includes(s))
-        );
-      })
-    : influencers;
+          (i.niche && i.niche.toLowerCase().includes(s)) ||
+          (i.email && i.email.toLowerCase().includes(s));
+        if (!matchesSearch) return false;
+      }
+
+      // Status
+      if (statusFilters.length > 0 && !statusFilters.includes(i.status)) return false;
+
+      // Niche
+      if (nicheFilters.length > 0 && (!i.niche || !nicheFilters.includes(i.niche))) return false;
+
+      // City
+      if (cityFilters.length > 0 && (!i.city || !cityFilters.includes(i.city))) return false;
+
+      // Content type
+      if (contentTypeFilters.length > 0 && !contentTypeFilters.includes(i.content_type)) return false;
+
+      // Contact
+      if (contactFilters.length > 0) {
+        const match = contactFilters.some((f) => {
+          if (f === 'has_email') return !!i.email;
+          if (f === 'no_email') return !i.email;
+          if (f === 'has_website') return !!i.website;
+          if (f === 'no_website') return !i.website;
+          return false;
+        });
+        if (!match) return false;
+      }
+
+      // Date range
+      if (dateRange.from || dateRange.to) {
+        const created = new Date(i.created_at);
+        if (dateRange.from && created < dateRange.from) return false;
+        if (dateRange.to) {
+          const endOfDay = new Date(dateRange.to);
+          endOfDay.setHours(23, 59, 59, 999);
+          if (created > endOfDay) return false;
+        }
+      }
+
+      return true;
+    });
+  }, [influencers, search, statusFilters, nicheFilters, cityFilters, contentTypeFilters, contactFilters, dateRange]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -168,6 +222,17 @@ export function InfluencerLeadTab() {
       { username: manualUsername.trim(), platform: 'instagram' },
       { onSuccess: () => { setManualUsername(''); setAddDialogOpen(false); } }
     );
+  };
+
+  const resetFilters = () => {
+    setSearch('');
+    setStatusFilters([]);
+    setNicheFilters([]);
+    setCityFilters([]);
+    setContentTypeFilters([]);
+    setContactFilters([]);
+    setDateRange({});
+    setCurrentPage(1);
   };
 
   return (
@@ -196,15 +261,30 @@ export function InfluencerLeadTab() {
         </CardContent></Card>
       </div>
 
-      {/* Discovery + Search + Actions */}
+      {/* Filters */}
+      <InfluencerFilters
+        search={search}
+        onSearchChange={(v) => { setSearch(v); setCurrentPage(1); }}
+        statusFilters={statusFilters}
+        onStatusFiltersChange={(v) => { setStatusFilters(v); setCurrentPage(1); }}
+        nicheFilters={nicheFilters}
+        onNicheFiltersChange={(v) => { setNicheFilters(v); setCurrentPage(1); }}
+        niches={niches}
+        cityFilters={cityFilters}
+        onCityFiltersChange={(v) => { setCityFilters(v); setCurrentPage(1); }}
+        cities={cities}
+        contentTypeFilters={contentTypeFilters}
+        onContentTypeFiltersChange={(v) => { setContentTypeFilters(v); setCurrentPage(1); }}
+        contactFilters={contactFilters}
+        onContactFiltersChange={(v) => { setContactFilters(v); setCurrentPage(1); }}
+        dateRange={dateRange}
+        onDateRangeChange={(v) => { setDateRange(v); setCurrentPage(1); }}
+        onReset={resetFilters}
+      />
+
+      {/* Discovery + Actions */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="flex items-center gap-3 flex-wrap flex-1">
-          <Input
-            placeholder="Search influencers..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-            className="w-full sm:w-64"
-          />
           <Input
             placeholder="Discover query..."
             value={discoverQuery}
@@ -218,14 +298,15 @@ export function InfluencerLeadTab() {
             className="w-28"
           />
           <Button onClick={handleDiscover} disabled={isDiscovering} variant="outline">
-            {isDiscovering ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Searching...</> : <><Search className="h-4 w-4 mr-2" /> Discover</>}
+            {isDiscovering ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Searching...</> : 'Discover'}
           </Button>
         </div>
         <div className="flex items-center gap-3">
+          <InfluencerImport />
           <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" /> Add Influencer</Button>
+              <Button><Plus className="h-4 w-4 mr-2" /> Add</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Add Influencer by Handle</DialogTitle></DialogHeader>
@@ -256,7 +337,7 @@ export function InfluencerLeadTab() {
           </div>
           <h3 className="text-lg font-medium text-foreground mb-1">No influencers found</h3>
           <p className="text-sm text-muted-foreground">
-            {search ? 'Try adjusting your search' : 'Use Discover or Add Influencer to get started'}
+            {search || statusFilters.length > 0 ? 'Try adjusting your filters' : 'Use Discover, Import, or Add to get started'}
           </p>
         </div>
       ) : viewMode === 'card' ? (
@@ -276,6 +357,7 @@ export function InfluencerLeadTab() {
                 <TableHead>Content Type</TableHead>
                 <TableHead>Niche</TableHead>
                 <TableHead>City</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead></TableHead>
               </TableRow>
@@ -299,6 +381,7 @@ export function InfluencerLeadTab() {
                   <TableCell><Badge variant="secondary">{contentTypeLabel(inf.content_type)}</Badge></TableCell>
                   <TableCell>{inf.niche}</TableCell>
                   <TableCell>{inf.city}</TableCell>
+                  <TableCell><Badge variant="outline" className="capitalize">{inf.status}</Badge></TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       {inf.email && <a href={`mailto:${inf.email}`}><Mail className="h-4 w-4 text-muted-foreground hover:text-primary" /></a>}
