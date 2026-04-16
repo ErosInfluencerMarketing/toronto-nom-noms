@@ -70,7 +70,6 @@ function influencerToLead(inf: Influencer): Lead {
     last_outreach_date: null,
     next_outreach_date: null,
     assigned_user_id: null,
-    group_id: null,
   };
 }
 
