@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useInfluencers, Influencer } from '@/hooks/useInfluencers';
 import { Lead } from '@/types/lead';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,63 @@ import {
   Send,
   Repeat,
 } from 'lucide-react';
+
+/** Inline editable text field – double-click to edit, Enter/blur to save */
+function InlineEdit({
+  value,
+  placeholder,
+  onSave,
+  className = '',
+}: {
+  value: string;
+  placeholder?: string;
+  onSave: (v: string) => void;
+  className?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      setDraft(value);
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [editing, value]);
+
+  const commit = () => {
+    setEditing(false);
+    const trimmed = draft.trim();
+    if (trimmed !== value) onSave(trimmed);
+  };
+
+  if (editing) {
+    return (
+      <Input
+        ref={inputRef}
+        value={draft}
+        placeholder={placeholder}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') setEditing(false);
+        }}
+        className={`h-7 text-sm px-1 py-0 ${className}`}
+      />
+    );
+  }
+
+  return (
+    <span
+      onDoubleClick={() => setEditing(true)}
+      className={`cursor-pointer hover:bg-muted/60 rounded px-1 -mx-1 ${className}`}
+      title="Double-click to edit"
+    >
+      {value || <span className="text-muted-foreground italic">{placeholder || '—'}</span>}
+    </span>
+  );
+}
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -76,11 +133,13 @@ function influencerToLead(inf: Influencer): Lead {
 function InfluencerCard({
   influencer,
   onDelete,
+  onUpdate,
   selected,
   onToggleSelect,
 }: {
   influencer: Influencer;
   onDelete: (id: string) => void;
+  onUpdate: (data: Partial<Influencer> & { id: string }) => void;
   selected: boolean;
   onToggleSelect: () => void;
 }) {
@@ -95,7 +154,12 @@ function InfluencerCard({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-foreground">{influencer.full_name || `@${influencer.username}`}</h3>
+                <InlineEdit
+                  value={influencer.full_name || ''}
+                  placeholder={`@${influencer.username}`}
+                  onSave={(v) => onUpdate({ id: influencer.id, full_name: v || null })}
+                  className="font-semibold text-foreground"
+                />
                 <Instagram className="h-4 w-4" />
               </div>
               <p className="text-sm text-muted-foreground">@{influencer.username}</p>
@@ -141,12 +205,13 @@ function InfluencerCard({
           <Badge variant="outline" className="capitalize">{influencer.status}</Badge>
         </div>
 
-        <div className="flex gap-2 text-xs text-muted-foreground">
-          {influencer.email && (
-            <a href={`mailto:${influencer.email}`} className="flex items-center gap-1 hover:text-primary transition-colors">
-              <Mail className="h-3 w-3" /> Email
-            </a>
-          )}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Mail className="h-3 w-3 shrink-0" />
+          <InlineEdit
+            value={influencer.email || ''}
+            placeholder="Add email"
+            onSave={(v) => onUpdate({ id: influencer.id, email: v || null })}
+          />
           {influencer.website && (
             <a href={influencer.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors">
               <Globe className="h-3 w-3" /> Website
@@ -168,7 +233,7 @@ interface InfluencerLeadTabProps {
 }
 
 export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps) {
-  const { influencers, isLoading, discoverInfluencers, addInfluencer, deleteInfluencer } = useInfluencers();
+  const { influencers, isLoading, discoverInfluencers, addInfluencer, updateInfluencer, deleteInfluencer } = useInfluencers();
   const [search, setSearch] = useState('');
   const [discoverQuery, setDiscoverQuery] = useState('Toronto food influencers');
   const [discoverCity, setDiscoverCity] = useState('Toronto');
@@ -448,6 +513,7 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
               key={inf.id}
               influencer={inf}
               onDelete={(id) => deleteInfluencer.mutate(id)}
+              onUpdate={(data) => updateInfluencer.mutate(data)}
               selected={selectedIds.has(inf.id)}
               onToggleSelect={() => toggleSelect(inf.id)}
             />
@@ -474,7 +540,7 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
                 <TableHead>Niche</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Contact</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -496,7 +562,12 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
                         </a>
                       )}
                     </div>
-                    {inf.full_name && <p className="text-xs text-muted-foreground">{inf.full_name}</p>}
+                    <InlineEdit
+                      value={inf.full_name || ''}
+                      placeholder="Add name"
+                      onSave={(v) => updateInfluencer.mutate({ id: inf.id, full_name: v || null })}
+                      className="text-xs text-muted-foreground"
+                    />
                   </TableCell>
                   <TableCell>{formatNumber(inf.followers_count)}</TableCell>
                   <TableCell>{inf.engagement_rate}%</TableCell>
@@ -505,10 +576,12 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
                   <TableCell>{inf.city}</TableCell>
                   <TableCell><Badge variant="outline" className="capitalize">{inf.status}</Badge></TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      {inf.email && <a href={`mailto:${inf.email}`}><Mail className="h-4 w-4 text-muted-foreground hover:text-primary" /></a>}
-                      {inf.website && <a href={inf.website} target="_blank" rel="noopener noreferrer"><Globe className="h-4 w-4 text-muted-foreground hover:text-primary" /></a>}
-                    </div>
+                    <InlineEdit
+                      value={inf.email || ''}
+                      placeholder="Add email"
+                      onSave={(v) => updateInfluencer.mutate({ id: inf.id, email: v || null })}
+                      className="text-xs"
+                    />
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" onClick={() => deleteInfluencer.mutate(inf.id)}>
