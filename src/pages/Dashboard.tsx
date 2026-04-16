@@ -569,7 +569,10 @@ export default function Dashboard() {
           </Tabs>
 
           {activeTab === 'influencers' ? (
-            <InfluencerLeadTab />
+            <InfluencerLeadTab onSequenceRequest={(ids) => {
+              setSequencePreSelectedLeadIds(ids);
+              document.getElementById('sequences')?.scrollIntoView({ behavior: 'smooth' });
+            }} />
           ) : (
             <>
           {/* Filters and Actions */}
