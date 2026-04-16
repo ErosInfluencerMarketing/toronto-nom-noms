@@ -582,7 +582,6 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
                       onSave={(v) => updateInfluencer.mutate({ id: inf.id, email: v || null })}
                       className="text-xs"
                     />
-                    </div>
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" onClick={() => deleteInfluencer.mutate(inf.id)}>
