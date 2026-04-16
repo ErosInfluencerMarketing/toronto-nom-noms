@@ -562,7 +562,12 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
                         </a>
                       )}
                     </div>
-                    {inf.full_name && <p className="text-xs text-muted-foreground">{inf.full_name}</p>}
+                    <InlineEdit
+                      value={inf.full_name || ''}
+                      placeholder="Add name"
+                      onSave={(v) => updateInfluencer.mutate({ id: inf.id, full_name: v || null })}
+                      className="text-xs text-muted-foreground"
+                    />
                   </TableCell>
                   <TableCell>{formatNumber(inf.followers_count)}</TableCell>
                   <TableCell>{inf.engagement_rate}%</TableCell>
