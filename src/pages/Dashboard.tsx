@@ -798,6 +798,9 @@ export default function Dashboard() {
           </div>
         )}
 
+          </>
+          )}
+
           {/* Restaurant Groups Section */}
           <Separator className="my-8" />
           <div id="groups" className="scroll-mt-20">
