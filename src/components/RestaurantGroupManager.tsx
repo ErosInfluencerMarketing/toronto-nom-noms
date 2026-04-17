@@ -21,20 +21,32 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Building2, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Building2, Plus, Pencil, Trash2, Eye, X, Mail, Instagram, MapPin } from 'lucide-react';
 import { Lead } from '@/types/lead';
+import { StatusBadge } from '@/components/StatusBadge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface RestaurantGroupManagerProps {
   leads: Lead[];
+  onViewLead?: (lead: Lead) => void;
 }
 
-export function RestaurantGroupManager({ leads }: RestaurantGroupManagerProps) {
-  const { groups, createGroup, updateGroup, deleteGroup } = useRestaurantGroups();
+export function RestaurantGroupManager({ leads, onViewLead }: RestaurantGroupManagerProps) {
+  const { groups, createGroup, updateGroup, deleteGroup, assignLeadsToGroup } = useRestaurantGroups();
   const [formOpen, setFormOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<RestaurantGroup | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewingGroup, setViewingGroup] = useState<RestaurantGroup | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+
+  const viewingLeads = viewingGroup
+    ? leads.filter((l) => (l as any).group_id === viewingGroup.id)
+    : [];
+
+  const handleRemoveFromGroup = (leadId: string) => {
+    assignLeadsToGroup.mutate({ leadIds: [leadId], groupId: null });
+  };
 
   const openCreate = () => {
     setEditingGroup(null);
@@ -112,6 +124,10 @@ export function RestaurantGroupManager({ leads }: RestaurantGroupManagerProps) {
                   </Badge>
                 </div>
                 <div className="flex items-center gap-1 pt-1">
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setViewingGroup(group)} disabled={count === 0}>
+                    <Eye className="h-3.5 w-3.5 mr-1" />
+                    View
+                  </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(group)}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
@@ -189,6 +205,88 @@ export function RestaurantGroupManager({ leads }: RestaurantGroupManagerProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* View Group Leads Dialog */}
+      <Dialog open={!!viewingGroup} onOpenChange={(open) => !open && setViewingGroup(null)}>
+        <DialogContent className="bg-card border-border max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              {viewingGroup?.name}
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                ({viewingLeads.length} lead{viewingLeads.length !== 1 ? 's' : ''})
+              </span>
+            </DialogTitle>
+            {viewingGroup?.description && (
+              <p className="text-sm text-muted-foreground">{viewingGroup.description}</p>
+            )}
+          </DialogHeader>
+          <ScrollArea className="flex-1 -mx-6 px-6">
+            {viewingLeads.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">No leads in this group.</p>
+            ) : (
+              <div className="space-y-2 pb-2">
+                {viewingLeads.map((lead) => (
+                  <div
+                    key={lead.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary/30 hover:bg-secondary/60 transition-colors"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onViewLead) {
+                          onViewLead(lead);
+                          setViewingGroup(null);
+                        }
+                      }}
+                      className="flex-1 min-w-0 text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground truncate hover:text-primary transition-colors">
+                          {lead.business_name || '(no name)'}
+                        </span>
+                        <StatusBadge status={lead.status} />
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        {lead.email && (
+                          <span className="flex items-center gap-1 truncate">
+                            <Mail className="h-3 w-3 shrink-0" />
+                            {lead.email}
+                          </span>
+                        )}
+                        {lead.instagram_handle && (
+                          <span className="flex items-center gap-1 truncate">
+                            <Instagram className="h-3 w-3 shrink-0" />
+                            @{lead.instagram_handle}
+                          </span>
+                        )}
+                        {lead.city && (
+                          <span className="flex items-center gap-1 truncate">
+                            <MapPin className="h-3 w-3 shrink-0" />
+                            {lead.city}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleRemoveFromGroup(lead.id)}
+                      title="Remove from group"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewingGroup(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

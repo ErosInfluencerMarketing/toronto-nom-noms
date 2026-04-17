@@ -807,7 +807,7 @@ export default function Dashboard() {
           {/* Restaurant Groups Section */}
           <Separator className="my-8" />
           <div id="groups" className="scroll-mt-20">
-            <RestaurantGroupManager leads={leads} />
+            <RestaurantGroupManager leads={leads} onViewLead={setDetailsLead} />
           </div>
 
           {/* Templates Section */}
