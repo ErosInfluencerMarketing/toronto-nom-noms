@@ -21,20 +21,32 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Building2, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Building2, Plus, Pencil, Trash2, Eye, X, Mail, Instagram, MapPin } from 'lucide-react';
 import { Lead } from '@/types/lead';
+import { StatusBadge } from '@/components/StatusBadge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface RestaurantGroupManagerProps {
   leads: Lead[];
+  onViewLead?: (lead: Lead) => void;
 }
 
-export function RestaurantGroupManager({ leads }: RestaurantGroupManagerProps) {
-  const { groups, createGroup, updateGroup, deleteGroup } = useRestaurantGroups();
+export function RestaurantGroupManager({ leads, onViewLead }: RestaurantGroupManagerProps) {
+  const { groups, createGroup, updateGroup, deleteGroup, assignLeadsToGroup } = useRestaurantGroups();
   const [formOpen, setFormOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<RestaurantGroup | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewingGroup, setViewingGroup] = useState<RestaurantGroup | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+
+  const viewingLeads = viewingGroup
+    ? leads.filter((l) => (l as any).group_id === viewingGroup.id)
+    : [];
+
+  const handleRemoveFromGroup = (leadId: string) => {
+    assignLeadsToGroup.mutate({ leadIds: [leadId], groupId: null });
+  };
 
   const openCreate = () => {
     setEditingGroup(null);
