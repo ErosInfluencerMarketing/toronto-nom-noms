@@ -124,6 +124,10 @@ export function RestaurantGroupManager({ leads, onViewLead }: RestaurantGroupMan
                   </Badge>
                 </div>
                 <div className="flex items-center gap-1 pt-1">
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setViewingGroup(group)} disabled={count === 0}>
+                    <Eye className="h-3.5 w-3.5 mr-1" />
+                    View
+                  </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(group)}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
