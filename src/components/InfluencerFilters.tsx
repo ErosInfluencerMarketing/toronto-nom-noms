@@ -184,7 +184,7 @@ export function InfluencerFilters({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search by username, name, niche, or city..."
+          placeholder="Search by username, name, email, niche, or city..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-10 bg-secondary border-border"
