@@ -141,9 +141,18 @@ export function InfluencerImport() {
         profile_url: p.profile_url || null,
       }));
 
+      // Deduplicate within the import batch (keep last occurrence) so upsert
+      // doesn't see two conflicting rows in the same statement.
+      const dedupedMap = new Map<string, typeof rows[number]>();
+      for (const row of rows) {
+        const key = `${row.user_id}|${row.username.toLowerCase()}|${row.platform.toLowerCase()}`;
+        dedupedMap.set(key, row);
+      }
+      const dedupedRows = Array.from(dedupedMap.values());
+
       const { error } = await supabase
         .from('influencers' as any)
-        .upsert(rows as any, { onConflict: 'user_id,username,platform' });
+        .upsert(dedupedRows as any, { onConflict: 'user_id,username,platform' });
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ['influencers'] });
