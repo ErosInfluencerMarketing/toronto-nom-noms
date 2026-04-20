@@ -239,7 +239,7 @@ export function InfluencerLeadTab({ onSequenceRequest }: InfluencerLeadTabProps)
   const [discoverCity, setDiscoverCity] = useState('Toronto');
   const [manualUsername, setManualUsername] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('card');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
 
