@@ -141,7 +141,9 @@ export function InfluencerImport() {
         profile_url: p.profile_url || null,
       }));
 
-      const { error } = await supabase.from('influencers' as any).insert(rows as any);
+      const { error } = await supabase
+        .from('influencers' as any)
+        .upsert(rows as any, { onConflict: 'user_id,username,platform' });
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ['influencers'] });
