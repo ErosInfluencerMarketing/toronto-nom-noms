@@ -8,6 +8,7 @@ import { StatusBadge } from './StatusBadge';
 import { PlatformBadge } from './PlatformBadge';
 import { EngagementBadge } from './EngagementBadge';
 import { QuickMessage } from './QuickMessage';
+import { LogCallDialog } from './LogCallDialog';
 import { InlineEditCell } from './InlineEditCell';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Trash2, Calendar, Mail, Instagram, Send, ArrowUp, ArrowDown, ArrowUpDown, UserCircle, Search, Loader2 } from 'lucide-react';
+import { Trash2, Calendar, Mail, Instagram, Send, ArrowUp, ArrowDown, ArrowUpDown, UserCircle, Search, Loader2, Phone } from 'lucide-react';
 import { format, parseISO, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -54,6 +55,7 @@ const platformOptions = [
 
 export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, onSelectionChange, onViewDetails }: LeadListViewProps) {
   const [messageLead, setMessageLead] = useState<Lead | null>(null);
+  const [callLead, setCallLead] = useState<Lead | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [findingIgId, setFindingIgId] = useState<string | null>(null);
@@ -383,6 +385,15 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
                             )}
                           </Button>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-status-contacted"
+                          onClick={() => setCallLead(lead)}
+                          title="Log call"
+                        >
+                          <Phone className="h-4 w-4" />
+                        </Button>
                         {canMessage && (
                           <Button
                             variant="ghost"
@@ -418,6 +429,12 @@ export function LeadListView({ leads, onEdit, onDelete, onUpdate, selectedIds, o
           lead={messageLead}
         />
       )}
+
+      <LogCallDialog
+        lead={callLead}
+        open={!!callLead}
+        onOpenChange={(open) => !open && setCallLead(null)}
+      />
     </>
   );
 }
