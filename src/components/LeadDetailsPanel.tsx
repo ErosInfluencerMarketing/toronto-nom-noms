@@ -31,6 +31,65 @@ interface SequenceInfo {
   template_name: string | null;
 }
 
+function PhoneInlineAdd({ leadId }: { leadId: string }) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    const v = value.trim();
+    if (!v) { setEditing(false); return; }
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('leads').update({ phone: v }).eq('id', leadId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success('Phone added');
+      setEditing(false);
+    } catch {
+      toast.error('Failed to save phone');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <div className="flex items-center gap-2 text-sm">
+        <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
+          onClick={() => setEditing(true)}
+        >
+          + Add phone number
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+      <Input
+        autoFocus
+        type="tel"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false); }}
+        placeholder="+1 555 123 4567"
+        className="h-7 text-xs"
+        disabled={saving}
+      />
+      <Button size="sm" className="h-7 px-2" onClick={save} disabled={saving}>
+        {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Save'}
+      </Button>
+    </div>
+  );
+}
+
 export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelProps) {
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState('');
