@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Mail, Instagram, Calendar, Globe, MapPin, Building2, Save, Loader2, Repeat, Search } from 'lucide-react';
+import { Mail, Instagram, Calendar, Globe, MapPin, Building2, Save, Loader2, Repeat, Search, Phone, PhoneCall, MailOpen, StickyNote } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 
