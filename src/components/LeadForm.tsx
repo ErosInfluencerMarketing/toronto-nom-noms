@@ -24,13 +24,14 @@ const leadSchema = z.object({
   business_name: z.string().min(1, 'Business name is required').max(100),
   owner_name: z.string().max(100).optional(),
   email: z.string().email('Invalid email').max(255).optional().or(z.literal('')),
+  phone: z.string().max(30).optional(),
   instagram_handle: z.string().max(50).optional(),
   platform: z.enum(['eros', 'noms', 'fitness']),
   status: z.enum(['new', 'contacted', 'demo_booked', 'onboarded']),
   city: z.string().max(100).optional(),
   category: z.string().max(100).optional(),
   next_outreach_date: z.string().optional(),
-  notes: z.string().max(1000).optional(),
+  notes: z.string().max(5000).optional(),
 });
 
 interface LeadFormProps {
