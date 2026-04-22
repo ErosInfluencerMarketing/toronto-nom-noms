@@ -24,13 +24,14 @@ const leadSchema = z.object({
   business_name: z.string().min(1, 'Business name is required').max(100),
   owner_name: z.string().max(100).optional(),
   email: z.string().email('Invalid email').max(255).optional().or(z.literal('')),
+  phone: z.string().max(30).optional(),
   instagram_handle: z.string().max(50).optional(),
   platform: z.enum(['eros', 'noms', 'fitness']),
   status: z.enum(['new', 'contacted', 'demo_booked', 'onboarded']),
   city: z.string().max(100).optional(),
   category: z.string().max(100).optional(),
   next_outreach_date: z.string().optional(),
-  notes: z.string().max(1000).optional(),
+  notes: z.string().max(5000).optional(),
 });
 
 interface LeadFormProps {
@@ -46,6 +47,7 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
     business_name: '',
     owner_name: '',
     email: '',
+    phone: '',
     instagram_handle: '',
     city: '',
     category: '',
@@ -62,6 +64,7 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
         business_name: lead.business_name,
         owner_name: lead.owner_name || '',
         email: lead.email || '',
+        phone: lead.phone || '',
         instagram_handle: lead.instagram_handle || '',
         city: lead.city || '',
         category: lead.category || '',
@@ -75,6 +78,7 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
         business_name: '',
         owner_name: '',
         email: '',
+        phone: '',
         instagram_handle: '',
         city: '',
         category: '',
@@ -105,6 +109,7 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
     const cleanedData: LeadFormData = {
       ...formData,
       email: formData.email || undefined,
+      phone: formData.phone || undefined,
       owner_name: formData.owner_name || undefined,
       instagram_handle: formData.instagram_handle || undefined,
       city: formData.city || undefined,
@@ -166,17 +171,29 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
                 <p className="text-xs text-destructive">{errors.email}</p>
               )}
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="instagram_handle">Instagram</Label>
+              <Label htmlFor="phone">Phone</Label>
               <Input
-                id="instagram_handle"
-                value={formData.instagram_handle}
-                onChange={(e) => setFormData({ ...formData, instagram_handle: normalizeInstagramHandle(e.target.value) })}
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="bg-secondary border-border"
-                placeholder="@handle"
+                placeholder="+1 555 123 4567"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="instagram_handle">Instagram</Label>
+            <Input
+              id="instagram_handle"
+              value={formData.instagram_handle}
+              onChange={(e) => setFormData({ ...formData, instagram_handle: normalizeInstagramHandle(e.target.value) })}
+              className="bg-secondary border-border"
+              placeholder="@handle"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

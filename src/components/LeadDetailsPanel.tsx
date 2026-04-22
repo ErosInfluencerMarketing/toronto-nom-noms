@@ -8,9 +8,10 @@ import { PlatformBadge } from './PlatformBadge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Mail, Instagram, Calendar, Globe, MapPin, Building2, Save, Loader2, Repeat, Search } from 'lucide-react';
+import { Mail, Instagram, Calendar, Globe, MapPin, Building2, Save, Loader2, Repeat, Search, Phone, PhoneCall, MailOpen, StickyNote } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -30,6 +31,65 @@ interface SequenceInfo {
   template_name: string | null;
 }
 
+function PhoneInlineAdd({ leadId }: { leadId: string }) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    const v = value.trim();
+    if (!v) { setEditing(false); return; }
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('leads').update({ phone: v }).eq('id', leadId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success('Phone added');
+      setEditing(false);
+    } catch {
+      toast.error('Failed to save phone');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <div className="flex items-center gap-2 text-sm">
+        <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
+          onClick={() => setEditing(true)}
+        >
+          + Add phone number
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+      <Input
+        autoFocus
+        type="tel"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false); }}
+        placeholder="+1 555 123 4567"
+        className="h-7 text-xs"
+        disabled={saving}
+      />
+      <Button size="sm" className="h-7 px-2" onClick={save} disabled={saving}>
+        {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Save'}
+      </Button>
+    </div>
+  );
+}
+
 export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelProps) {
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState('');
@@ -37,6 +97,8 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
   const [sequences, setSequences] = useState<SequenceInfo[]>([]);
   const [loadingSeqs, setLoadingSeqs] = useState(false);
   const [findingIg, setFindingIg] = useState(false);
+  const [quickNote, setQuickNote] = useState('');
+  const [logging, setLogging] = useState(false);
 
   useEffect(() => {
     if (lead && open) {
@@ -106,6 +168,33 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
     }
   };
 
+  const handleQuickLog = async (type: 'call' | 'email' | 'note') => {
+    if (!lead) return;
+    const text = quickNote.trim();
+    const labels = { call: '📞 Call', email: '✉️ Email', note: '📝 Note' };
+    const stamp = format(new Date(), 'MMM d, yyyy h:mm a');
+    const entry = `[${stamp}] ${labels[type]}${text ? ': ' + text : ''}`;
+    const updated = entry + (notes ? '\n\n' + notes : '');
+    setLogging(true);
+    try {
+      const updates: Record<string, unknown> = { notes: updated };
+      if (type === 'call' || type === 'email') {
+        updates.last_outreach_date = new Date().toISOString().split('T')[0];
+        if (lead.status === 'new') updates.status = 'contacted';
+      }
+      const { error } = await supabase.from('leads').update(updates).eq('id', lead.id);
+      if (error) throw error;
+      setNotes(updated);
+      setQuickNote('');
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success(`${labels[type]} logged`);
+    } catch {
+      toast.error('Failed to log');
+    } finally {
+      setLogging(false);
+    }
+  };
+
   const handleFindInstagram = async () => {
     if (!lead) return;
     setFindingIg(true);
@@ -169,8 +258,20 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
           {lead.email && (
             <div className="flex items-center gap-2 text-sm">
               <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-foreground">{lead.email}</span>
+              <a href={`mailto:${lead.email}`} className="text-foreground hover:text-primary transition-colors truncate">
+                {lead.email}
+              </a>
             </div>
+          )}
+          {lead.phone ? (
+            <div className="flex items-center gap-2 text-sm">
+              <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+              <a href={`tel:${lead.phone}`} className="text-foreground hover:text-primary transition-colors font-medium">
+                {lead.phone}
+              </a>
+            </div>
+          ) : (
+            <PhoneInlineAdd leadId={lead.id} />
           )}
           {lead.instagram_handle ? (
             <div className="flex items-center gap-2 text-sm">
@@ -283,14 +384,48 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
 
         <Separator />
 
-        {/* Notes */}
+        {/* Quick Log */}
         <div className="py-4 space-y-3">
-          <h3 className="text-sm font-semibold text-foreground">Notes</h3>
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <StickyNote className="h-4 w-4" />
+            Quick Log
+          </h3>
+          <Textarea
+            value={quickNote}
+            onChange={(e) => setQuickNote(e.target.value)}
+            placeholder="What happened? (e.g. Left voicemail, owner asked to follow up next week...)"
+            className="min-h-[70px] resize-none text-sm"
+            disabled={logging}
+          />
+          <div className="grid grid-cols-3 gap-2">
+            <Button size="sm" variant="outline" onClick={() => handleQuickLog('call')} disabled={logging} className="text-xs">
+              <PhoneCall className="h-3.5 w-3.5 mr-1.5" />
+              Log Call
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleQuickLog('email')} disabled={logging} className="text-xs">
+              <MailOpen className="h-3.5 w-3.5 mr-1.5" />
+              Log Email
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleQuickLog('note')} disabled={logging} className="text-xs">
+              <StickyNote className="h-3.5 w-3.5 mr-1.5" />
+              Add Note
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Calls and emails update last outreach date and mark new leads as contacted.
+          </p>
+        </div>
+
+        <Separator />
+
+        {/* Notes & History */}
+        <div className="py-4 space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Notes & History</h3>
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add notes about this lead..."
-            className="min-h-[120px] resize-none"
+            className="min-h-[180px] resize-none font-mono text-xs"
           />
           <Button
             size="sm"
