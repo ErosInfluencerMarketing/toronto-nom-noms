@@ -384,14 +384,48 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
 
         <Separator />
 
-        {/* Notes */}
+        {/* Quick Log */}
         <div className="py-4 space-y-3">
-          <h3 className="text-sm font-semibold text-foreground">Notes</h3>
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <StickyNote className="h-4 w-4" />
+            Quick Log
+          </h3>
+          <Textarea
+            value={quickNote}
+            onChange={(e) => setQuickNote(e.target.value)}
+            placeholder="What happened? (e.g. Left voicemail, owner asked to follow up next week...)"
+            className="min-h-[70px] resize-none text-sm"
+            disabled={logging}
+          />
+          <div className="grid grid-cols-3 gap-2">
+            <Button size="sm" variant="outline" onClick={() => handleQuickLog('call')} disabled={logging} className="text-xs">
+              <PhoneCall className="h-3.5 w-3.5 mr-1.5" />
+              Log Call
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleQuickLog('email')} disabled={logging} className="text-xs">
+              <MailOpen className="h-3.5 w-3.5 mr-1.5" />
+              Log Email
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleQuickLog('note')} disabled={logging} className="text-xs">
+              <StickyNote className="h-3.5 w-3.5 mr-1.5" />
+              Add Note
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Calls and emails update last outreach date and mark new leads as contacted.
+          </p>
+        </div>
+
+        <Separator />
+
+        {/* Notes & History */}
+        <div className="py-4 space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Notes & History</h3>
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add notes about this lead..."
-            className="min-h-[120px] resize-none"
+            className="min-h-[180px] resize-none font-mono text-xs"
           />
           <Button
             size="sm"
