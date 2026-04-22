@@ -171,17 +171,29 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
                 <p className="text-xs text-destructive">{errors.email}</p>
               )}
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="instagram_handle">Instagram</Label>
+              <Label htmlFor="phone">Phone</Label>
               <Input
-                id="instagram_handle"
-                value={formData.instagram_handle}
-                onChange={(e) => setFormData({ ...formData, instagram_handle: normalizeInstagramHandle(e.target.value) })}
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="bg-secondary border-border"
-                placeholder="@handle"
+                placeholder="+1 555 123 4567"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="instagram_handle">Instagram</Label>
+            <Input
+              id="instagram_handle"
+              value={formData.instagram_handle}
+              onChange={(e) => setFormData({ ...formData, instagram_handle: normalizeInstagramHandle(e.target.value) })}
+              className="bg-secondary border-border"
+              placeholder="@handle"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
