@@ -109,6 +109,7 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, isLoading }: Lead
     const cleanedData: LeadFormData = {
       ...formData,
       email: formData.email || undefined,
+      phone: formData.phone || undefined,
       owner_name: formData.owner_name || undefined,
       instagram_handle: formData.instagram_handle || undefined,
       city: formData.city || undefined,
