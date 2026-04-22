@@ -198,8 +198,20 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
           {lead.email && (
             <div className="flex items-center gap-2 text-sm">
               <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-foreground">{lead.email}</span>
+              <a href={`mailto:${lead.email}`} className="text-foreground hover:text-primary transition-colors truncate">
+                {lead.email}
+              </a>
             </div>
+          )}
+          {lead.phone ? (
+            <div className="flex items-center gap-2 text-sm">
+              <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+              <a href={`tel:${lead.phone}`} className="text-foreground hover:text-primary transition-colors font-medium">
+                {lead.phone}
+              </a>
+            </div>
+          ) : (
+            <PhoneInlineAdd leadId={lead.id} />
           )}
           {lead.instagram_handle ? (
             <div className="flex items-center gap-2 text-sm">
