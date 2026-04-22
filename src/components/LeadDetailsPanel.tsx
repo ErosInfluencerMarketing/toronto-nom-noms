@@ -108,6 +108,33 @@ export function LeadDetailsPanel({ lead, open, onOpenChange }: LeadDetailsPanelP
     }
   };
 
+  const handleQuickLog = async (type: 'call' | 'email' | 'note') => {
+    if (!lead) return;
+    const text = quickNote.trim();
+    const labels = { call: '📞 Call', email: '✉️ Email', note: '📝 Note' };
+    const stamp = format(new Date(), 'MMM d, yyyy h:mm a');
+    const entry = `[${stamp}] ${labels[type]}${text ? ': ' + text : ''}`;
+    const updated = entry + (notes ? '\n\n' + notes : '');
+    setLogging(true);
+    try {
+      const updates: Record<string, unknown> = { notes: updated };
+      if (type === 'call' || type === 'email') {
+        updates.last_outreach_date = new Date().toISOString().split('T')[0];
+        if (lead.status === 'new') updates.status = 'contacted';
+      }
+      const { error } = await supabase.from('leads').update(updates).eq('id', lead.id);
+      if (error) throw error;
+      setNotes(updated);
+      setQuickNote('');
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success(`${labels[type]} logged`);
+    } catch {
+      toast.error('Failed to log');
+    } finally {
+      setLogging(false);
+    }
+  };
+
   const handleFindInstagram = async () => {
     if (!lead) return;
     setFindingIg(true);
