@@ -111,6 +111,8 @@ export default function Dashboard() {
   const { members } = useTeamMembers();
   const { sequences, statusCounts } = useSequences();
   const { groups } = useRestaurantGroups();
+  const { templates } = useTemplates();
+  const { influencers } = useInfluencers();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
