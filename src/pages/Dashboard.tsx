@@ -48,6 +48,10 @@ import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, Chev
 import { InfluencerLeadTab } from '@/components/InfluencerLeadTab';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useTemplates } from '@/hooks/useTemplates';
+import { useInfluencers } from '@/hooks/useInfluencers';
+import { exportLeadsCSV, exportTemplatesCSV, exportInfluencersCSV, exportEverything } from '@/lib/export';
 
 const exportLeadsToCSV = (leads: Lead[]) => {
   const headers = [
