@@ -48,6 +48,10 @@ import { Plus, LogOut, MapPin, Users, Download, RefreshCw, Send, UserCheck, Chev
 import { InfluencerLeadTab } from '@/components/InfluencerLeadTab';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useTemplates } from '@/hooks/useTemplates';
+import { useInfluencers } from '@/hooks/useInfluencers';
+import { exportLeadsCSV, exportTemplatesCSV, exportInfluencersCSV, exportEverything } from '@/lib/export';
 
 const exportLeadsToCSV = (leads: Lead[]) => {
   const headers = [
@@ -107,6 +111,8 @@ export default function Dashboard() {
   const { members } = useTeamMembers();
   const { sequences, statusCounts } = useSequences();
   const { groups } = useRestaurantGroups();
+  const { templates } = useTemplates();
+  const { influencers } = useInfluencers();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -631,15 +637,46 @@ export default function Dashboard() {
               </PopoverContent>
             </Popover>
             <LeadImport onImport={handleImportLeads} isLoading={isImporting} />
-            <Button
-              variant="outline"
-              onClick={() => exportLeadsToCSV(filteredLeads)}
-              disabled={filteredLeads.length === 0}
-              className="shrink-0"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="shrink-0">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem
+                  onClick={() => exportLeadsCSV(filteredLeads, 'leads-filtered')}
+                  disabled={filteredLeads.length === 0}
+                >
+                  Export filtered leads ({filteredLeads.length})
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => exportLeadsCSV(leads, 'leads-all')}
+                  disabled={leads.length === 0}
+                >
+                  Export all leads ({leads.length})
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => exportTemplatesCSV(templates)}
+                  disabled={templates.length === 0}
+                >
+                  Export all templates ({templates.length})
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => exportInfluencersCSV(influencers)}
+                  disabled={influencers.length === 0}
+                >
+                  Export all influencers ({influencers.length})
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => exportEverything(leads, templates, influencers)}
+                >
+                  Export everything
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               onClick={() => {
                 setEditingLead(null);
