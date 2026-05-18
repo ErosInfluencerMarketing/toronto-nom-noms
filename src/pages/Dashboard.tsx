@@ -617,9 +617,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-3 flex-wrap">
             <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
             <LeadScraper onImport={handleImportLeads} isLoading={isImporting} activeTab={activeTab} />
-            {activeTab !== 'influencers' && (
-              <BulkScrape onImport={handleImportLeads} activeTab={activeTab as 'restaurants' | 'fitness'} />
-            )}
+            <BulkScrape onImport={handleImportLeads} activeTab={activeTab} />
             <Button
               variant="outline"
               onClick={handleSync}
