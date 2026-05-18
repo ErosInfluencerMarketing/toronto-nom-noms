@@ -21,6 +21,7 @@ import { TemplatesSection } from '@/components/TemplatesSection';
 import { SequencesSection } from '@/components/SequencesSection';
 import { LeadImport } from '@/components/LeadImport';
 import { LeadScraper } from '@/components/LeadScraper';
+import { BulkScrape } from '@/components/BulkScrape';
 import { BulkMessage } from '@/components/BulkMessage';
 import { AssignLeadsDialog } from '@/components/AssignLeadsDialog';
 import { AssignGroupDialog } from '@/components/AssignGroupDialog';
@@ -616,6 +617,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-3 flex-wrap">
             <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
             <LeadScraper onImport={handleImportLeads} isLoading={isImporting} activeTab={activeTab} />
+            <BulkScrape onImport={handleImportLeads} activeTab={activeTab} />
             <Button
               variant="outline"
               onClick={handleSync}
